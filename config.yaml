@@ -25,3 +25,216 @@ subscriptions:
     stage: A
     diff_threshold_pct: 15
   keyword_recall_mode: or
+  intent_profiles:
+    - tag: eli
+      description: 查找大语言模型高效推理领域的最新研究论文，包括推理加速、低延迟优化、高吞吐量技术、动态批处理、投机解码、连续批处理、KV 缓存优化、推理引擎设计等方向的顶会和 arXiv 论文，重点关注 2025-2026 年的突破性工作
+      enabled: true
+      paper_sources:
+        - arxiv
+      keywords:
+        - keyword: Low Latency Inference
+          keyword_cn: 低延迟推理
+          query: Low Latency Inference
+        - keyword: KV Cache Optimization
+          keyword_cn: KV缓存优化
+          query: KV cache optimization strategies for transformer inference
+        - keyword: Speculative Decoding
+          keyword_cn: 投机解码
+          query: speculative decoding for accelerating LLM generation
+        - keyword: LLM Acceleration
+          keyword_cn: 大语言模型加速
+          query: LLM Acceleration
+        - keyword: Efficient LLM Inference
+          keyword_cn: 高效大语言模型推理
+          query: efficient inference for large language models
+      intent_queries:
+        - query: latest advances in efficient inference for large language models
+          query_cn: 大语言模型高效推理的最新进展
+          enabled: true
+          source: generated
+          note: ''
+        - query: high throughput and low latency techniques for LLM serving
+          query_cn: 高吞吐量和低延迟的LLM服务技术
+          enabled: true
+          source: generated
+          note: ''
+        - query: KV cache optimization methods for LLM inference
+          query_cn: LLM推理中的KV缓存优化方法
+          enabled: true
+          source: generated
+          note: ''
+        - query: speculative decoding and continuous batching breakthroughs
+          query_cn: 投机解码和连续批处理的突破性工作
+          enabled: true
+          source: generated
+          note: ''
+      updated_at: '2026-06-09T13:05:03.848Z'
+    - tag: mg
+      description: >-
+        查找多模态生成领域的最新研究论文，包括文本生成图像、文本生成视频、文本生成 3D、音频生成、多模态内容创作、扩散模型、Transformer
+        生成架构、多模态大模型生成能力，超分技术等方向，基于DiT，flow-matching等技术，以及dmd，pcm，meanflow，cfg，gan等。
+      enabled: true
+      paper_sources:
+        - arxiv
+      keywords:
+        - keyword: text-to-image generation
+          keyword_cn: 文本到图像生成
+          query: text-to-image generation using diffusion models
+        - keyword: text-to-video generation
+          keyword_cn: 文本到视频生成
+          query: text-to-video generation with transformers
+        - keyword: diffusion models
+          keyword_cn: 扩散模型
+          query: diffusion models for generative tasks
+        - keyword: multimodal large models
+          keyword_cn: 多模态大模型生成能力
+          query: multimodal large language models generation
+        - keyword: super resolution
+          keyword_cn: 超分辨率
+          query: image super resolution deep learning
+        - keyword: flow matching
+          keyword_cn: 流匹配
+          query: flow matching generative models
+      intent_queries:
+        - query: Research papers on text to image generation using diffusion transformers and flow matching
+          query_cn: 使用扩散变压器和流匹配的文本到图像生成研究论文
+          enabled: true
+          source: manual
+          note: ''
+        - query: Latest methods for multimodal content creation including text to video and audio generation
+          query_cn: 包含文本到视频和音频生成的多模态内容创建最新方法
+          enabled: true
+          source: manual
+          note: ''
+        - query: Advances in generative adversarial networks and classifier free guidance for diffusion models
+          query_cn: 生成对抗网络和扩散模型无分类器指导的进展
+          enabled: true
+          source: manual
+          note: ''
+        - query: Model distillation techniques for efficient generative models
+          query_cn: 高效生成模型的模型蒸馏技术
+          enabled: true
+          source: manual
+          note: ''
+      updated_at: '2026-06-09T13:07:14.523Z'
+    - tag: LLM-kernel
+      description: >-
+        查找大语言模型系统设计和 GPU 内核优化领域的研究论文，包括 CUDA 内核优化、张量并行、流水线并行、分布式训练与推理、GPU 架构适配、CUTLASS
+        库应用、FlashAttention、MegaKernel、DeepGemm、内存管理、大模型训练框架等方向
+      enabled: true
+      paper_sources:
+        - arxiv
+      keywords:
+        - keyword: cuda kernel optimization
+          keyword_cn: CUDA内核优化
+          query: CUDA kernel optimization techniques for large language models
+        - keyword: distributed training
+          keyword_cn: 分布式训练
+          query: distributed training of large language models
+        - keyword: distributed inference
+          keyword_cn: 分布式推理
+          query: distributed inference for large models
+        - keyword: flash attention
+          keyword_cn: FlashAttention
+          query: FlashAttention mechanism for efficient transformer
+        - keyword: megakernel
+          keyword_cn: MegaKernel
+          query: MegaKernel approach for large-scale training
+        - keyword: memory management
+          keyword_cn: 内存管理
+          query: memory management in large model training
+      intent_queries:
+        - query: Find research papers on CUDA kernel optimization for large language model inference
+          query_cn: 寻找关于大语言模型推理中CUDA内核优化的研究论文
+          enabled: true
+          source: manual
+          note: ''
+        - query: Search for tensor and pipeline parallelism techniques for distributed LLM training
+          query_cn: 搜索用于分布式大语言模型训练的张量并行和流水线并行技术
+          enabled: true
+          source: manual
+          note: ''
+        - query: Look for implementations of FlashAttention and MegaKernel in GPU kernel design
+          query_cn: 查找FlashAttention和MegaKernel在GPU内核设计中的实现
+          enabled: true
+          source: manual
+          note: ''
+        - query: Find memory optimization strategies in large scale model training frameworks
+          query_cn: 寻找大规模模型训练框架中的内存优化策略
+          enabled: true
+          source: manual
+          note: ''
+      updated_at: '2026-06-09T13:10:25.926Z'
+    - tag: Compression
+      description: >-
+        查找 2025-2026
+        年大语言模型和多模态模型压缩领域的前沿论文，聚焦后训练量化（PTQ）技术，包括极低比特量化（MXFP4、NVFP4、FP4、INT3、INT2）及最新算法（SpinQuant、Quarot、QTIP、AWQ v2、GPTQ
+        v3、SmoothQuant v2），同时覆盖剪枝、蒸馏、低秩分解、混合精度推理，要求包含精度指标和推理性能对比，以及针对 Blackwell 架构的硬件细节。
+      enabled: true
+      paper_sources:
+        - arxiv
+      keywords:
+        - keyword: model compression
+          keyword_cn: 模型压缩
+          query: model compression techniques for large language models
+        - keyword: knowledge distillation
+          keyword_cn: 知识蒸馏
+          query: >-
+            knowledge distillation for compression of large language models including mutual distillation and
+            task-specific distillation
+        - keyword: sparsity
+          keyword_cn: 稀疏化
+          query: sparse models and sparsity techniques for neural networks
+        - keyword: lossless compression
+          keyword_cn: 无损压缩
+          query: lossless compression of large language models
+        - keyword: post-training quantization
+          keyword_cn: 后训练量化
+          query: post-training quantization for large language models
+        - keyword: quantization-aware training
+          keyword_cn: 量化感知训练
+          query: quantization-aware training and post-training quantization comparisons for extreme compression
+      intent_queries:
+        - query: Search for studies on maintaining performance under extreme compression ratios for LLMs
+          query_cn: 搜索关于大语言模型极端压缩比下保持性能的研究
+          enabled: true
+          source: manual
+          note: ''
+        - query: Look for survey papers on LLM compression techniques including quantization pruning distillation
+          query_cn: 查找涵盖量化、剪枝、蒸馏的大语言模型压缩技术综述
+          enabled: true
+          source: manual
+          note: ''
+        - query: >-
+            Post training quantization for large language models using FP4 INT3 INT2 precision with methods SpinQuant
+            Quarot QTIP AWQ v2 GPTQ v3 SmoothQuant v2 and evaluation on perplexity MMLU HumanEval and inference
+            throughput on NVIDIA H100 H200 B100 B200
+          query_cn: >-
+            大语言模型后训练量化，使用 FP4、INT3、INT2 精度，方法包括 SpinQuant、Quarot、QTIP、AWQ v2、GPTQ v3、SmoothQuant v2，评测困惑度、MMLU、HumanEval
+            以及 NVIDIA H100/H200/B100/B200 上的推理吞吐量。
+          enabled: true
+          source: manual
+          note: ''
+        - query: >-
+            Structured pruning knowledge distillation low rank decomposition and mixed precision inference for extreme
+            compression of large language models with hardware optimization for NVIDIA Blackwell architecture
+          query_cn: 针对大语言模型极端压缩的结构化剪枝、知识蒸馏、低秩分解和混合精度推理，并针对 NVIDIA Blackwell 架构进行硬件优化。
+          enabled: true
+          source: manual
+          note: ''
+      updated_at: '2026-06-09T13:20:55.794Z'
+source_backends:
+  arxiv:
+    papers_table: arxiv_papers
+    use_vector_rpc: true
+    vector_rpc: match_arxiv_papers
+    vector_rpc_exact: match_arxiv_papers_exact
+    use_bm25_rpc: true
+    bm25_rpc: match_arxiv_papers_bm25
+    sync_table: arxiv_sync_status
+    sync_success_value: success
+    schema: public
+    kind: supabase
+    enabled: true
+    url: https://lyucdwgefyfbmaiopjbk.supabase.co
+    anon_key: sb_publishable_lX-oi64Uxyd7SIVv3_w2Uw_MTOojeKq
