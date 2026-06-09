@@ -1,0 +1,1090 @@
+Title: Rethinking the Role of Tensor Decompositions in Post-Training LLM Compression
+
+URL Source: https://arxiv.org/pdf/2606.03465v1
+
+Published Time: Wed, 03 Jun 2026 00:59:33 GMT
+
+Number of Pages: 23
+
+Markdown Content:
+# Rethinking the Role of Tensor Decompositions in Post-Training LLM Compression 
+
+Artur Zagitov *, Alexander Miasnikov *, Maxim Krutikov, Vladimir Aletov, Gleb Molodtsov, Nail Bashirov, Artem Tsedenov, Aleksandr Beznosikov 
+
+BRAIn Lab, Moscow, Russia 
+
+> ∗
+
+Equal contribution 
+
+Post-training compression is essential for deploying large language models (LLMs) under tight resource constraints. Tensor decompositions have emerged as a promising direction, offering compact parameterizations well suited to Transformer weight structures. However, existing studies evaluate these methods in narrow settings, leaving unclear whether tensorization is effective at large-scale deployment. We systematically evaluate tensor compression across dense and MoE architectures, establishing performance trade-offs grounded in both empirical analysis and theoretical analysis. We identify a fundamental mismatch between the shared subspaces assumed by tensor decompositions and the heterogeneous representations learned by modern LLMs, thereby delineating their practical limits and clarifying their viable role in large-scale deployment. The code is available at https://github.com/brain-lab-research/TT-LLM .
+
+1 Introduction 
+
+In recent years, large language models (LLMs) have grown considerably in scale, increasing the storage and deployment costs and limiting their applicability in resource-constrained settings. Consequently, compression techniques are widely used to improve efficiency while preserving quality. The primary goal of model compression is to reduce redundancy while preserving the model’s functional behavior. Standard approaches include pruning, which removes redundant components to decrease model size [ 10 , 24 , 15 ]; quantization, which represents weights and activations with lower-precision data types [ 11 , 3 , 7 , 22 , 51 ]; and knowledge distillation (KD), which trains a compact student model to approximate the behavior of a larger teacher model [ 18 , 36 ]. However, achieving state-of-the-art performance with these techniques typically requires extensive fine-tuning or data-driven calibration. A natural alternative is matrix and tensor decompositions, which are appealing due to their established theoretical background. Methods in this category decompose a dense layer into a product of smaller factors, achieving parameter reduction while approximately maintaining the functionality of the original layer. For a weight matrix 𝑊 ∈ R𝑚 ×𝑛 ,the SVD writes 𝑊 = 𝑈 Σ𝑉 ⊤; truncating to the top 𝑟 singular values gives 
+
+b𝑊 = 𝑈 𝑟 Σ𝑟 𝑉 ⊤ 
+
+> 𝑟
+
+, (1) which by the Eckart–Young–Mirsky theorem [ 6, 27 ] is globally optimal in any unitarily invariant norm. Tensor decompositions extend this idea to multi-dimensional weight tensors in multi-head attention (MHA) [ 42 ] and mixture of experts (MoE) [ 8 ]: Tucker decomposition [ 40 , 20 ] approximates a tensor X ∈ R𝐼 1 ×···× 𝐼 𝑁 via a compressed core tensor G ∈ R𝑅 1 ×···× 𝑅 𝑁 and per-mode factor matrices 𝑈 (𝑛 ) ∈ R𝐼 𝑛 ×𝑅 𝑛 :
+
+X ≈ G × 1 𝑈 (1) ×2 𝑈 (2) · · · × 𝑁 𝑈 ( 𝑁 ) , (2) where (𝑅 1, . . . , 𝑅 𝑁 ) are the Tucker ranks. Tensor Train (TT) [30] chains three-dimensional cores: 
+
+X𝑖 1 ,...,𝑖 𝑁 ≈∑︁ 𝑟 1 ,...,𝑟 𝑁 −1
+
+G (1)  
+
+> 1,𝑖 1,𝑟 1
+
+G (2)   
+
+> 𝑟 1,𝑖 2,𝑟 2
+
+· · · G ( 𝑁 )   
+
+> 𝑟 𝑁 −1,𝑖 𝑁 ,1
+
+, (3) where G (𝑛 ) ∈ R𝑅 𝑛 −1 ×𝐼 𝑛 ×𝑅 𝑛 , 𝑅 0 = 𝑅 𝑁 = 1, and (𝑅 1, . . . , 𝑅 𝑁 −1) are the TT ranks. 1
+
+> arXiv:2606.03465v1 [cs.LG] 2 Jun 2026
+
+Despite their theoretical appeal, existing studies on tensor decompositions [ 16 , 21 ] report positive results under evaluation protocols that do not reflect full-scale deployment constraints, leaving the practical utility of these methods unclear in realistic settings. Therefore, we contribute the following: 
+
+• Systematic empirical validation and deep diagnosis of matrix and tensor decompositions. We conduct the first large-scale study of post-training tensor decompositions under realistic deployment conditions, covering dense and MoE architectures, evaluated on perplexity, downstream accuracy, and a lightweight LoRA repair baseline. Across all settings, tensor formats fail to outperform their matrix counterparts at matched compression ratios. We attribute this to a consistent failure mechanism, identified through perplexity, metrics and residual-stream geometry, and also providing an ablation of super-weight [50] restoration sensitivity to Frobenius-optimal truncation. 
+
+• Partial theoretical explanation. We formalize three chained obstructions that prevent any Frobenius-optimal tensor decomposition from serving as an effective compressor of Transformer weights without significant fine-tuning. 
+
+2 Related Work 
+
+Low-rank matrix compression. As mentioned in Section 1 truncated SVD (Eq. 1) guarantees globally optimal low-rank approximation. LASER [ 32 ] applies truncated SVD directly to selected weight matrices without retraining. SliceGPT [ 2] exploits the rotational invariance of RMSNorm-connected Transformers to absorb PCA bases into adjacent layers. SVD-LLM [ 45 ] improves rank selection via truncation-aware data whitening and a layer-wise closed-form update. Dobi-SVD [ 44 ] makes the truncation position differentiable, optimising it on calibration data with respect to the activation. SoLA [ 19 ] preserves a small set of high-activation-norm FFN neurons in dense form and applies low-rank decomposition only to the remainder. FLAT-LLM [ 38 ] applies head-wise PCA for attention blocks and Nyström approximation for MLP blocks. HASSLE-free [ 25 ] decomposes each weight into a sparse plus low-rank component. COALA [ 31 ] addresses numerical instabilities inherent in context-aware low-rank compression by replacing explicit Gramm matrix formation and inversion with a stable QR-based projection, thereby avoiding the singularity issues that arise in prior methods such as SVD-LLM. 
+
+Tensor decomposition for LLMs. TensorLLM [ 16 ] and LeSTD [ 21 ] apply Tucker decomposition to multi-head attention projections, with LeSTD additionally sparsifying the Tucker core for higher compression ratios. TD-MoE [ 46 ] extends Tucker decomposition to sparse MoE models by stacking expert weights into a three-dimensional tensor. TRAWL [ 23 ] stacks related weight matrices across layers and applies CP/Tucker-style decomposition as a training-free denoising intervention. A separate line of work uses TT for parameter-efficient fine-tuning rather than post-training compression: LoRETTA [ 49 ] introduces TT-based adapters, TT-LoRA [ 1] parameterizes adaptation updates with TT cores, and AdaZeta [48] combines tensorized adapters with zeroth-order fine-tuning. 0 4 8 12 16 20 24            
+
+> Layer index
+> 14
+> 15
+> 16
+> 17
+> 18
+> 19
+> C4 perplexity
+> GPT-J 6B
+> baseline = 13.99
+> off-scale layer 0
+> MHA: 19.64
+> FFN: 4.1e+03
+> Block: 3.0e+04
+> 04812 16 20 24 28
+> Layer index
+> 7.0
+> 7.5
+> 8.0
+> 8.5
+> 9.0
+> 9.5
+> 10.0
+> C4 perplexity
+> Llama 2 7B
+> baseline = 6.97
+> off-scale layer 0
+> MHA: 132
+> FFN: 11.32
+> Block: 1.3e+04
+> MHA skipped FFN skipped Block skipped dense baseline off-scale layer 0
+
+Figure 1: Perplexity (PPL) over pruning. Displays the final PPL when each layer is individually pruned. 
+
+23 Compression Strategies 3.1 Pruning 
+
+Pruning removes parameters or components that contribute least to the model’s behavior. It is done by exploiting the highly non-uniform parameter redundancy inherent in LLMs. Notably, both prior research [ 15 ] and our own experiments (Figure 1) demonstrate that intermediate layers have relatively little impact on final quality and can tolerate aggressive pruning. This phenomenon arises because the earliest and latest layers disproportionately handle critical tasks, such as forming token representations and generating final predictions, while the intermediate layers play a comparatively smaller role. However, while pruning effectively discards these middle-layer tails, it limits the maximum achievable compression ratio due to the dominant mass of the parameters intact. It does not compactly reparameterize the remaining structure, making it a naïve baseline for more structurally advanced decompositions. 
+
+3.2 Matrix Decompositions 
+
+A natural next step is matrix factorization, which compresses weights via low-rank reparameterization rather than deletion. For Feed-Forward Networks (FFNs), which contain the majority of model parameters [ 13 ], we select and evaluate several matrix decompositions using the protocol described in Appendix B.1. 
+
+LASER [ 32 ] applies Eq. 1 to individual FFN weight matrices without retraining or calibration data via selecting the layer, matrix type, and rank 𝑟 by grid search over downstream task accuracy. Rank reduction can improve performance on reasoning tasks, which is interpreted as a denoising effect: low-singular-value directions are hypothesised to encode competing responses that suppress weakly learned facts. LASER applies no correction for truncation error, making it a natural training-free baseline. 
+
+HASSLE-free [25] method decomposes each weight matrix into a sparse and a low-rank component, namely 
+
+𝑊 ≈ 𝑆 + 𝐴𝐵 ⊤, (4) minimizing the layer-wise activation reconstruction error ∥𝑊𝑥 − ( 𝑆 + 𝐴𝐵 ⊤)𝑥 ∥ via alternating minimization: 𝑆 is updated by thresholding the residual 𝑊 − 𝐴𝐵 ⊤, and 𝐴𝐵 ⊤ by solving a least-squares problem on 𝑊 − 𝑆 . The sparse component captures isolated high-magnitude entries that low-rank factors approximate poorly, while the low-rank component encodes the structured signal. 
+
+SoLA [19 ] leverages deeper matrix structure partition with a dense subset of top-𝑘 highest-activation-norm neurons, kept at full precision, and a compressed subset to which truncated SVD is applied. This avoids the dis-proportionately large errors that arise when high-norm neurons are low-rank approximated. Additionally, SoLA 
+
+allocates ranks across layers via integer programming, minimizing total reconstruction error subject to a global parameter budget, concentrating capacity where trunca-tion error is most sensitive. 
+
+FLAT-LLM [38 ] applies head-wise PCA to attention blocks and Nyström approximation to MLP blocks, computing truncation bases from calibration activations. Ranks are distributed across decoder layers via a greedy sensitivity-based redistribution strategy, allocating the global rank budget to layers where truncation causes the largest reconstruction error. 0 2 4 6 8 10 12 14 16       
+
+> Bits saved (%)
+> 12.5
+> 15.0
+> 17.5
+> 20.0
+> 22.5
+> 25.0
+> 27.5
+> C4 perplexity
+> baseline = 11.71
+> GPT-J 6B: MLP/FFN methods — C4
+> 0123456
+> 12
+> 13
+> 14
+> zoom: 0–6% saved
+> TT (FFN), rank 64
+> LASER (FFN), rank 512
+> LASER (FFN), rank 1024
+> FLAT-LLM (FFN)
+> SoLA (FFN)
+> Dobi-SVD (FFN)
+> HASSLE-free (FFN)
+
+Figure 2: FFN compression on GPT-J 6B. All methods compress the same middle-to-late block ranges. 
+
+Figure 2 reveals a clear trend: methods that employ some form of fine-tuning or leverage additional calibration data (such as Dobi-SVD , HASSLE-free , and SoLA ) exhibit substantially smaller performance degradation compared to methods relying solely on matrix decomposition, such as LASER and Flat-LLM .310                                     
+
+> 20
+> 30
+> 40
+> 50
+> C4 perplexity
+> GPT-J 6B
+> baseline = 11.71
+> Tucker+TT, LoRA
+> L= 7 ,23.9% saved
+> Tucker+TT, LoRA
+> L= 5 ,17.1% saved
+> Tucker+TT, LoRA
+> L= 4 ,13.7% saved
+> TT(all), LoRA
+> L= 2 ,6.8% saved
+> Tucker, plain
+> L= 1 ,1.1% saved
+> Bits saved (%)
+> 7.5
+> 10.0
+> 12.5
+> 15.0
+> 17.5
+> 20.0
+> 22.5
+> 25.0
+> C4 perplexity
+> Llama 2 7B
+> baseline = 6.63
+> TT(all), LoRA
+> L= 8 ,24.3% saved
+> TT(all), LoRA
+> L= 6 ,18.2% saved
+> Tucker+TT, LoRA
+> L= 4 ,12.1% saved
+> Tucker+TT, LoRA
+> L= 2 ,6.1% saved
+> Tucker, plain
+> L= 1 ,1.0% saved
+> Bits saved (%)
+> Tucker (MHA) TT (FFN) Tucker (MHA) + TT (FFN) TT (all) filled = plain hollow = + LoRA Pareto envelope
+
+Figure 3: C4 perplexity versus bits saved, excluding embeddings, for GPT-J 6B and LLaMA 2 7B. Each point is one compression run, and 𝐿 denotes the number of consecutive compressed transformer blocks. Arrows connect each decomposition to its LoRA-repaired variant, and the Pareto frontier marks the best observed trade-offs. 
+
+Nevertheless, the highest compression ratio is achieved by LASER ( ≈ 14% ), yet with +8 PPL increase. This raises the natural questions which we adress in the Section 3.3: 
+
+Q1 : Can we achieve a higher compression ratio without sacrificing model quality? 
+
+3.3 Tensor decompositions for Dense Architectures 
+
+It is well known that tensor decompositions allow exponential compression of a dense tensor with respect to its dimensionality. Methods such as TT-SVD [ 30 ] and HOSVD [ 5 ] achieve quasi-optimal approximation error in the Frobenius norm, representing a tensor in TT and Tucker formats respectively. By employing these representations in operator format [ 41 , 17 , 30 ], one can compress an FFN weight matrix by first reshaping it into a tensor. Figure 2 partially addresses Q1 by comparing FFN-layer TT decomposition against matrix-based methods on GPT-J 6B. The results clearly show that TT decomposition performs worser than LASER in terms of PPL, yet achieving greater compression. On the other hand, as demonstrated in TensorLLM [ 16 ], the MHA layer admits a natural four-dimensional tensor representation that makes its low- dimensional structure explicit, motivating Tucker decomposition as the most structurally appropriate format in this setting. For FFN blocks, which account for the majority of model parameters, no such natural tensor structure exists; thus we are forced to apply TT decomposition to match the compression ratio of matrix methods and fully address the Q1 . To maximize compression, in all experiments with TT decomposition we reshape the weight matrix into 12 cores, since the smallest dimension in both models is 4096 = 212 . The resulting decomposition, however, introduces non-negligible perplexity degradation; to partially recover quality, we apply a lightweight LoRA repair stage ( 𝑟 = 16 , trained on WikiText-2) as a parameter-efficient nanlogue for the calibration-aware weight decompositions used in matrix compression methods [ 44 , 45 ]. We evaluate GPT-J 6B [ 43 ]and LLaMA 2 7B [ 39 ] under four compression schemes: Tucker on attention only (reproducing TensorLLM -style factorisation), TT on FFN only, Tucker+TT jointly, and TT on all projections, with a maximum Tucker rank of 64 , following the protocol detailed in Appendix B.1. Additionally, we report further combinations of tensor decomposition methods in Appendix B.4. Figure 3 summarizes the results. Attention-only compression preserves perplexity but yields negligible size reduction; compressing FFN layers achieves higher compression at the cost of sharp quality degradation. LoRA repair partially recovers quality but does not resolve the fundamental trade-off. Despite structural alignment between tensor formats and LLM components, all methods exhibit poor compression-quality trade-offs at practical compression ratios, pointing to a deeper mismatch between standard tensor assumptions and learned LLM representations. We also provide trade-offs for WikiText-2 perplexity and macro LM-Eval accuracy drop in Appendix B.5. 43.4 Tensor decompositions for Mixture-of-Experts 0 4 8 12 16 20 24         
+
+> Compressed MoE layers
+> 11.5
+> 12.0
+> 12.5
+> 13.0
+> 13.5
+> 14.0
+> 14.5
+> C4 perplexity
+> TD-MoE ρ= 0 .2TD-MoE ρ= 0 .4MoBE b32 MoBE b64 uncompressed
+
+Figure 4: C4 perplexity of TD-MoE and MoBE on Qwen3-30B-A3B model. 
+
+MoE layers are an especially appealing target for tensorization. Since Switch Transformers [ 9], MoE models have been trained under a trade-off between expert specialization and load balancing, often leading to overlapping representations across experts. This effect becomes even more pronounced in grouped designs [ 37 , 28 ]. Consequently, the expert dimension provides a natural tensor mode through which Tucker decomposition can exploit cross-expert redundancy, as proposed in TD-MoE [ 46 ]. A complementary matrix-based approach is taken by MoBE [ 4], which exploits cross-expert redundancy by factorizing each expert’s up-/gate weight matrix as 𝑊 = 𝐴𝐵 , where 𝐴 is expert-specific and 𝐵 is reparameterized as a linear combination of basis matrices {𝐵 𝑖 } shared across all experts within a layer, with the decomposition learned by minimizing the layer-wise reconstruction error. We test whether the structural alignment of tensor formats translates into better post-training compression on Qwen3-30B-A3B [ 47 ] (128 experts, 8 active) benchmarking 
+
+TD-MoE against MoBE as a matrix-decomposition baseline. Additional experiments with GPT-OSS-20B [ 29 ] can be find in Appendix C.2. Following the protocol from Appendix C.1, Figure 4 summarizes the comparison between MoBE and TD-MoE .Surprisingly, TD-MoE performs substantially worse than MoBE , despite both methods employing gradient-based optimization during compression. MoBE remains close to the original model across all tested compression ratios, whereas TD-MoE degrades significantly, suggesting that the structural alignment between the tensor format and the expert index does not by itself confer a compression advantage over matrix-based factorization with shared bases. Thus, Tucker decomposition for MoE yields substantially better results than for MHA, yet remains considerably weaker than the matrix-based method MoBE. This observation leads to the following question. 
+
+Q2 : What are the underlying reasons for such behaviour of tensor decompositions across the two considered architectures? 
+
+Expert mode is the binding constraint. A controlled ablation on GPT-OSS-20B at 𝜌 = 0.4 compares two rank allocations at equal storage: preserve fixes the expert-mode rank to 𝑟 1 = 𝐾 (all experts remain distinct latent directions), while compress reduces it to 𝑟 1 < 𝐾 and re-spends the saved budget on the feature modes (Appendix C.2, Fig. 16). compress consistently underperforms preserve across all benchmarks, confirming that, at least for this model, expert directions are not interchangeable and that the natural Tucker assumption “experts live in a low-rank subspace” is the binding constraint. 
+
+3.5 Structural Mismatch of Tensor Decompositions in LLMs 
+
+To address Q2 , we conduct an experiment, where for each compression run – dense or MoE – we compare residual-stream activations of the original model and of the compressed one after the last decomposed block. The diagnostic captures the accumulated effect of all decomposed layers up to the target compression ratio rather than the local error of a single layer. We quantify the deviation by the mean angle between dense and compressed activation vectors and by their norm ratio, averaged over evaluation tokens. Figure 5 shows the same pattern for all models. Runs with low perplexity remain close to the dense-model trajectory in both direction and scale, whereas high-perplexity runs exhibit larger angular drift, norm shrinkage, or both. This 510 20 30 40     
+
+> Angle (deg)
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> Norm ratio
+> GPT-J 6B
+> 15
+> 20
+> 25
+> 30
+> 35
+> 40
+> C4 PPL
+> 20 30 40 50 60
+> Angle (deg)
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> Norm ratio
+> LLaMA 2 7B
+> 8
+> 10
+> 12
+> 14
+> 16
+> 18
+> 20
+> C4 PPL
+> Family
+> Tucker MHA
+> Tucker+TT
+> TT MLP
+> TT all
+> Bits saved
+> 6.1%
+> 12.2%
+> 24.5%
+
+(a) Activation geometry of dense-model versus compressed-model GPT-J 6B and LLaMA 2 7B. 10 20 30 40 50 60     
+
+> Angle (deg)
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> Norm ratio
+> Qwen3-30B-A3B
+> 11.5
+> 12.0
+> 12.5
+> 13.0
+> 13.5
+> 14.0
+> 14.5
+> C4 PPL
+> Family
+> TD-MoE ρ= 0 .2
+> TD-MoE ρ= 0 .4
+> MoBE b32
+> MoBE b64
+> Bits saved
+> 0.2%
+> 6.5%
+> 12.8%
+
+(b) Activation geometry of TD-MoE for 𝜌 ∈ { 0.2, 0.4}
+
+versus MoBE for Qwen3-30B-A3B. 
+
+Figure 5: Residual-stream activation geometry. (a) Under dense-model tensor compression. (b) Under MoE tensor versus matrix compression. Each point is one compression run across the tested layer ranges. Color indicates C4 perplexity, marker shape indicates the decomposition family, and marker size indicates bits saved excluding embeddings. 0 2000 4000 6000 8000 10000         
+
+> Column (input dimension)
+> 0
+> 500
+> 1000
+> 1500
+> 2000
+> 2500
+> 3000
+> 3500
+> 4000
+> Row (output dimension)
+> (a) position and magnitude
+> 01000 2000 3000 4000
+> SVD rank kept
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Tracked entries restored (%)
+> (b) recovery under truncated SVD
+> LLaMA 2 7B · layer 1 · mlp.down_proj
+> inliers superweights top magnitude activation-weighted importance top-k background sample
+
+Figure 6: (a) Positions of inliers, the known super-weight, top-magnitude entries, and activation-weighted top-𝑘 coordinates in the weight matrix. (b) Fraction of tracked entries recovered as a function of retained SVD rank. 
+
+suggests that tensorization degrades quality by progressively distorting the geometry of the residual stream, rather than merely increasing parameter reconstruction error. Thus, the main limitation is not the local expressivity of Tucker or TT decompositions, but their inability to preserve the heterogeneous representation geometry induced by LLMs without additional training. We explain this in the next section. 
+
+3.6 Important Weights for Activation Restoration 
+
+It is well-known that a small fraction of LLM parameters, termed super-weights and outliers [ 50 ], are dispro-portionately critical to model quality: removing as few as a single scalar can raise perplexity by several orders. These parameters are not essentially the largest in magnitude, but occupy specific coordinates that dominate particular activation directions while carrying negligible Frobenius mass. Standard low-rank projections, which minimize a global Frobenius objective, therefore systematically discard them, producing severe spectral distortions at precisely the coordinates that matter most. Super weights further induce persistent large activation outliers across layers [34, 35], amplifying this effect under compression. To empirically validate this claim, we first observe that LoRA fine-tuning restores the original super-weight scalar with an absolute error of 10 −4 on the LLaMA 2 7B model, whose super-weight resides at coordinates (2533 , 7890 )
+
+of the first MLP down-projection matrix [ 35 ]. For a more systematic investigation, we apply HASSLE-free to this matrix: its sparse/low-rank decomposition combined with Hessian-based importance scoring recovers 95% of the original uncompressed activation magnitude, providing a principled reference set of critical weight coordinates. We then apply truncated SVD at increasing ranks to the same matrix in order to determine the minimum rank required to individually restore the super-weight, the activation outliers, and the full set of HASSLE-free -selected coordinates. 6We also provide experiments demonstrating that pruninng of this layer collapses the model in Appendix B.2. The results are presented in Figure 6. As shown in the first panel, the column indices of the weights selected by 
+
+HASSLE-free closely coincide with those of the identified outliers and super-weight coordinates. Furthermore, the second panel of Figure 6 reveals that restoring the super-weight alone requires a rank of at least 1500 , while recovering the full set of critical weights identified by HASSLE-free demands a rank approaching that of the original matrix. This result has a direct implication: decomposition-based methods that retain only the leading singular components systematically fail to capture the fine-grained structure of LLM weights, since faithful reconstruction requires 𝑟 ≫ (min {𝑚,𝑛 } ) /2, far beyond the ranks used in practice. To isolate the role of super-weights, we repeat the same experiment on a layer that contains no super-weight and obtain qualitatively identical restoration results (Appendix B.3). This control experiment is particularly revealing: it demonstrates that super-weight restoration, while necessary, is not sufficient for activation recovery, and that the pathological sensitivity to rank truncation reflects a deeper structural property of LLM weight matrices rather than a localised outlier phenomenon. We therefore conclude that naïve rank truncation is an inherently inadequate strategy for compressing LLM weights. 
+
+4 Why Tensorization Fails: An Operator Analysis Perspective 
+
+The empirical patterns such as sharp degradation under FFN tensorization in Fig. 2), residual-stream geometric drift (Fig. 5), pathological sensitivity to rank truncation (Fig. 6), and the consistent gap between TD-MoE and the matrix-based MoBE (Fig. 4) point to a structural rather than a methodological cause. We formalize this through two chained obstructions: Frobenius-optimal tensor decompositions (HOSVD, TT-SVD, Tucker) (i) optimize a norm misaligned with operator-norm preservation, and (ii) on the heavy-tailed spectra that Transformer weights exhibit, incur a spectral error exceeding the matrix-optimal error by a factor growing polynomially with layer width. 
+
+Setup. Let 𝑊 ∈ R𝑚 ×𝑛 be a layer weight and 𝜑 : R𝑚 ×𝑛 → R𝐼 1 ×···× 𝐼 𝑑 a reshape with 𝑑 Î
+
+> ℓ=1
+
+𝐼 ℓ = 𝑚𝑛 and 𝑑 ≥ 2. Set 
+
+T = 𝜑 (𝑊 ), let bT ∈ M r, where Mr is a fixed rank manifold, be a Frobenius-optimal low-rank approximation (Tucker rank r = (𝑟 1, . . . , 𝑟 𝑑 ) via HOSVD or TT rank (𝑟 1, . . . , 𝑟 𝑑 −1) via TT-SVD), and b𝑊 = 𝜑 −1 ( bT ) . Singular values of the mode-ℓ unfolding T(ℓ ) are 𝜎 ℓ, 1 ≥ 𝜎 ℓ, 2 ≥ . . . ; we drop the mode subscript when clear. 
+
+Tensorization preserves Frobenius but not operator geometry. Since 𝜑 permutes entries, ∥𝜑 ( 𝐴 )∥ 𝐹 = ∥ 𝐴 ∥𝐹 for all 𝐴 . The tensor spectral (injective) norm, 
+
+∥T ∥ 𝜎 := sup  
+
+> ∥𝑢 (ℓ)∥2=1
+
+T , 𝑢 (1) ⊗ · · · ⊗ 𝑢 (𝑑 ) , (5) takes its supremum over rank-one unit tensors: a strict subset of the unit operator-norm ball when 𝑑 ≥ 3. Hence 
+
+∥𝜑 (𝑊 )∥ 𝜎 ≤ ∥ 𝑊 ∥2, with equality only when 𝜑 (𝑊 ) is rank-one. For 𝑑 ≥ 3 computing ∥T ∥ 𝜎 is computationally hard, and the two norms can be polynomially separated. 
+
+Proposition 1 (12) For 𝑊 ∈ R𝑚 ×𝑛 reshaped to order 𝑑 ≥ 3,
+
+∥𝑊 ∥2
+
+∥𝜑 (𝑊 )∥ 𝜎 
+
+∈
+
+h
+
+1,√︁ min (𝑚, 𝑛 )
+
+i
+
+, (6) and the upper bound is generically attained on matrices with delocalised singular vectors. Consequently, 𝜑 is a Frobenius isometry but not an isometry between (R𝑚 ×𝑛 , ∥ · ∥ 2) and (R𝐼 1 ×···× 𝐼 𝑑 , ∥ · ∥ 𝜎 ). There is no tensor analogue of Eckart–Young–Mirsky result: Frobenius and operator optima do not coincide. 7Table 1: Fitted power-law exponents 𝛼 𝑘 (𝜎 𝑖 ∝ 𝑖 − 𝛼 𝑘 ) for the three mode unfoldings of the expert tensors in Qwen3-30B-A3B. Layer / projection 𝛼 0 (expert) 𝛼 1 (output) 𝛼 2 (input) Layer 0 / gate 0.160 0.075 0.402 Layer 0 / up 0.187 0.062 0.358 Layer 12 / gate 0.047 0.050 0.197 Layer 12 / up 0.040 0.045 0.190 Layer 24 / gate 0.039 0.053 0.202 Layer 24 / up 0.025 0.046 0.195 Layer 47 / gate 0.052 0.051 0.142 Layer 47 / up 0.048 0.051 0.134 
+
+Spectral suboptimality on heavy-tailed spectra. Fix a target mode ℓ and matrix rank 𝑘 . Let 𝑊 ℓ := T(ℓ ) . We compare the Eckart–Young optimum b𝑊 EY of rank 𝑘 with the unfolding b𝑊 := ( bT ) (ℓ ) of the tensor truncation. HOSVD and TT-SVD do not solve the Frobenius problem over Mr exactly, but satisfy the quasi-optimality bound 
+
+∥T − bT ∥ 𝐹 ≤ ( 1 + 𝜀 ) min S ∈ M r ∥T − S∥ 𝐹 with 𝜀 ≤ √𝑑 − 1 − 1 [30 ]. Combined with the mode-wise tail estimate and the reshape isometry, this gives ∥𝑊 ℓ − b𝑊 ∥2 
+
+> 𝐹
+
+≤ 𝑑 Í𝑖>𝑘 𝜎 2 
+
+> 𝑖
+
+under the working assumption of comparable mode spectra. 
+
+Corollary 1 (Spectral-to-Frobenius gap) Combining ∥ · ∥ 2 ≤ ∥ · ∥ 𝐹 with the bound above, 
+
+∥𝑊 ℓ − b𝑊 ∥2
+
+𝜎 𝑘 +1
+
+≤ √𝑑 ·√︄ 1 +∑︁ 
+
+> 𝑖>𝑘 +1
+
+ 𝜎 𝑖 /𝜎 𝑘 +1
+
+2. (7) The manifold geometry contributes only √𝑑 ; the binding factor is the spectral profile of 𝑊 ℓ .
+
+Power-law specialisation. Weight matrix spectra are well modelled by 𝜎 𝑖 ∝ 𝑖 − 𝛼 over a broad index range [ 26 ]. Aggregating up to dimension 𝑁 ,
+
+> 𝑁
+
+∑︁ 
+
+> 𝑖 =𝑘 +1
+
+𝜎 2 
+
+> 𝑖
+
+≍
+
+
+
+𝑁 1−2𝛼 , 𝛼 < 1/2,
+
+log (𝑁 /𝑘 ), 𝛼 = 1/2,𝑘 1−2𝛼 , 𝛼 > 1/2.
+
+(8) Substituting into (7) , the spectral suboptimality grows as Θ(𝑁 1/2− 𝛼 ) for 𝛼 < 1/2, as Θ(√︁ log (𝑁 /𝑘 )) at the boundary, and is bounded by a constant for 𝛼 > 1/2. The tail is dominated by the ambient dimension 𝑁 , not the truncation cutoff 𝑘 , precisely in the heavy-tailed regime. The bound is consequential only when 𝛼 < 1/2. To verify that this is the operative regime, we fit 𝜎 𝑖 ∝ 𝑖 − 𝛼 𝑘 on the mode unfoldings of the stacked expert FFN tensors in Qwen3-30B-A3B (mode 0: expert; mode 1: output; mode 2: input). Table 1 reports the exponents across representative layers: all measured 𝛼 𝑘 lie well below 1/2, with the expert and output modes routinely below 0.1 and the input mode below 
+
+0.4. The bound (7) is therefore not asymptotic ornamentation, but a practical binding at the dimensions and ranks used in practice. 
+
+Reconciliation with the empirical findings. Proposition 1 and Corollary 1 together imply that any Frobenius-optimal tensorization controls ∥𝑊 − b𝑊 ∥𝐹 while admitting an operator residual ∥𝑊 − b𝑊 ∥2 up to √︁ min (𝑚, 𝑛 ) times larger than the matrix-optimal value. Since residual-stream propagation is governed by operator rather than Frobenius norms, Frobenius optimality is misaligned with the quantity that determines functional preservation. This account reconciles the findings of Section 3. The angular drift and norm shrinkage in Fig. 5 track operator error, whereas the recovery curves of Fig. 6 reflect that the critical singular directions sit deep in the spectrum that 8Frobenius truncation discards first. The TD-MoE vs MoBE gap in Fig. 4 is the same effect amplified: tensorizing over the expert axis introduces a mode whose unfolding is the most heavy-tailed of all (Table 1, 𝛼 0 ≈ 0.03 –0.05 at intermediate layers), multiplying an already strict bound. None of these failures can be mitigated by reweighting the Frobenius loss or reordering modes; they require either an operator-aware objective or post-decomposition repair substantially heavier than the lightweight LoRA used here. 
+
+5 Comparison with the Quantization Baseline 
+
+Sections 3 and 4 established that tensor decompositions face a structural barrier as standalone post-training compressors. To place these findings in the broader landscape of training-free compression, we benchmark all matrix- and tensor-based methods of Section 3 against a standard post-training quantization: round-to-nearest ( RTN )at 4 and 8 bits, applied to same Transformer layers and modules [ 14 ]. Figure 7 reports the resulting C4 perplexity versus bits saved on GPT-J 6B, including a new combination not considered earlier: Tucker on MHA paired with 
+
+LASER (at ranks 512 and 1024 ) on FFN, which probes the best hybrid achievable from the methods surveyed in Section 3. Additional experiments across different models and setups are presented in Appendix B.5 and C.2. 0 5 10 15 20 25       
+
+> Bits saved (%)
+> 10
+> 20
+> 30
+> 40
+> 50
+> C4 perplexity
+> baseline = 11.71
+> GPT-J 6B: all selected modules — C4
+> 0123456
+> 12
+> 13
+> 14
+> zoom: 0–6% saved
+> TT (All), rank 64
+> Tucker(MHA)+TT(FFN)
+> Tucker(MHA)+LASER(FFN), rank 512
+> Tucker(MHA)+LASER(FFN), rank 1024
+> FLAT-LLM (All)
+> SoLA (All)
+> Dobi-SVD (All)
+> HASSLE-free (All)
+> RTN 4-bit (All)
+> RTN 8-bit (All)
+
+Figure 7: C4 perplexity versus bits saved on GPT-J 6B for all selected modules and post-training quantization. 
+
+According to Figure 7 RTN dominates the compression-quality frontier. Both RTN -4-bit and RTN -8-bit track the dense baseline across the full tested range, with no percep-tible perplexity degradation up to ≈ 18% 
+
+bits saved. Among decomposition-based methods, only HASSLE-free remains gen-uinely competitive in the low-compression regime, where its structure absorbs the high-magnitude entries that pure low-rank trun-cation distorts; SoLA and Dobi-SVD follow at a slightly larger margin from the base-line. Beyond this regime, every matrix- and tensor-based method incurs perplexity penal-ties that RTN avoids by construction. This confirms that, at deployment-relevant com-pression ratios, training-free decompositions are not a substitute for quantization but at best a complementary tool. At matched compression ratios in the mid range (≈ 15 –20% bits saved), the hybrid Tucker(MHA)+ LASER (FFN) variants outperform both Tucker(MHA)+TT(FFN) and TT(All) by a substantial margin: at ≈ 17% bits saved, Tucker(MHA)+ LASER (FFN) at rank 1024 achieves PPL ≈ 19 , whereas the TT-based combinations exceed PPL ≈ 28 . Taken together, these results delineate the viable role of tensor decompositions in post-training LLM compression. They cannot compete with quantization as a standalone strategy, and within the family of decomposition methods they are dominated by matrix-level alternatives due to heavy-tailed spectra of FFN as Table 1 shows. 
+
+6 Conclusion 
+
+This study shows that tensor decompositions fail as a standalone post-training LLM compression method because they optimize the wrong geometry. Tucker and TT preserve Frobenius mass while distorting the spectral (head-, neuron-, and expert-specific) subspaces that carry model function. These perturbations accumulate across depth, and manifest as activation drift and downstream degradation. 97 Limitations 
+
+The evaluation covers two dense architectures (GPT-J 6B and LLaMA 2 7B) and two MoE architectures (Qwen3-30B-A3B and GPT-OSS-20B). While these span a range of scales and designs, the conclusions may not transfer without verification to architectures that differ substantially in attention structure, normalisation, or expert routing, such as models trained with Muon or other second-order optimisers, which are known to produce qualitatively different weight spectra. The theoretical analysis establishes operator-norm and spectral-suboptimality bounds that are sufficient conditions for the observed failure, but not tight characterisations. In particular, Proposition 1 and Corollary 1 describe worst-case separation between Frobenius- and operator-optimal truncation; the practical gap for a specific architecture may be smaller or larger depending on the singular-value profile of individual layers. The power-law exponents in Table 1 are fitted to MoE expert tensors and may not generalise to all dense layer types. The LoRA repair stage is intentionally lightweight (rank 16, 100 optimiser steps) and is intended as a lower bound on recoverability rather than a best-effort fine-tuning baseline. Stronger post-hoc adaptation could narrow the quality gap reported here; the paper makes no claims about the limits of recovery under full fine-tuning. All models and benchmarks used in this work are publicly available and employed solely for research evaluation of compression methods, in accordance with their stated intended use. We do not redistribute model weights or derive products outside research contexts. The compression techniques studied here do not introduce new capabilities that raise safety concerns beyond those already present in the evaluated models; in particular, we study only post-training weight compression and do not fine-tune models on sensitive data or produce outputs intended for deployment. 
+
+References 
+
+[1] Afia Anjum, Maksim E. Eren, Ismael Boureima, Boian Alexandrov, and Manish Bhattarai. Tensor train low-rank approximation (TT-LoRA): Democratizing AI with accelerated LLMs. arXiv preprint arXiv:2408.01008, 2024. URL https://arxiv.org/abs/2408.01008 .[2] Saleh Ashkboos, Maximilian L Croci, Marcelo Gennari do Nascimento, Torsten Hoefler, and James Hensman. Slicegpt: Compress large language models by deleting rows and columns. arXiv preprint , 2024. URL 
+
+https://arxiv.org/abs/2401.15024 .[3] Jerry Chee, Yaohui Cai, Volodymyr Kuleshov, and Christopher M De Sa. Quip: 2-bit quantization of large language models with guarantees. Advances in neural information processing systems , 36:4396–4429, 2023. [4] Xiaodong Chen, Mingming Ha, Zhenzhong Lan, Jing Zhang, and Jianguo Li. Mobe: Mixture-of-basis-experts for compressing moe-based llms. arXiv preprint arXiv:2508.05257 , 2025. [5] Lieven De Lathauwer, Bart De Moor, and Joos Vandewalle. A multilinear singular value decomposition. SIAM journal on Matrix Analysis and Applications , 21(4):1253–1278, 2000. [6] Carl Eckart and Gale Young. The approximation of one matrix by another of lower rank. Psychometrika , 1(3): 211–218, 1936. [7] Vage Egiazarian, Andrei Panferov, Denis Kuznedelev, Elias Frantar, Artem Babenko, and Dan Alistarh. Extreme compression of large language models via additive quantization. arXiv preprint arXiv:2401.06118 ,2024. [8] William Fedus, Barret Zoph, and Noam Shazeer. Switch transformers: Scaling to trillion parameter models with simple and efficient sparsity. Journal of Machine Learning Research , 23(120):1–39, 2022. [9] William Fedus, Barret Zoph, and Noam Shazeer. Switch transformers: Scaling to trillion parameter models with simple and efficient sparsity. Journal of Machine Learning Research , 23(120):1–39, 2022. 10 [10] Elias Frantar and Dan Alistarh. Optimal brain compression: A framework for accurate post-training quantization and pruning. Advances in Neural Information Processing Systems , 35:4475–4488, 2022. [11] Elias Frantar, Saleh Ashkboos, Torsten Hoefler, and Dan Alistarh. Gptq: Accurate post-training quantization for generative pre-trained transformers. arXiv preprint arXiv:2210.17323 , 2022. [12] Shmuel Friedland and Lek-Heng Lim. Nuclear norm of higher-order tensors. Mathematics of Computation , 87 (311):1255–1281, 2018. [13] Mor Geva, Roei Schuster, Jonathan Berant, and Omer Levy. Transformer feed-forward layers are key-value memories. In Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing ,pages 5484–5495, 2021. [14] Amir Gholami, Sehoon Kim, Zhen Dong, Zhewei Yao, Michael W Mahoney, and Kurt Keutzer. A survey of quantization methods for efficient neural network inference. In Low-power computer vision , pages 291–326. Chapman and Hall/CRC, 2022. [15] Andrey Gromov, Kushal Tirumala, Hassan Shapourian, Paolo Glorioso, and Dan Roberts. The unreasonable ineffectiveness of the deeper layers. In The Thirteenth International Conference on Learning Representations ,2024. [16] Yuxuan Gu, Wuyang Zhou, Giorgos Iacovides, and Danilo Mandic. Tensorllm: Tensorising multi-head attention for enhanced reasoning and compression in llms. In International Joint Conference on Neural Networks (IJCNN) , 2025. URL https://arxiv.org/abs/2501.15674 .[17] Wolfgang Hackbusch and Boris N Khoromskij. Low-rank kronecker-product approximation to multi-dimensional nonlocal operators. part ii. hkt representation of certain operators. Computing , 76(3):203–225, 2006. [18] Geoffrey Hinton, Oriol Vinyals, and Jeff Dean. Distilling the knowledge in a neural network. arXiv preprint arXiv:1503.02531 , 2015. [19] Xinhao Huang, You-Liang Huang, and Zeyi Wen. SoLA: Leveraging soft activation sparsity and low-rank decomposition for large language model compression. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 39, pages 17494–17502, 2025. doi: 10.1609/aaai.v39i16.33923. [20] Tamara G. Kolda and Brett W. Bader. Tensor Decompositions and Applications. SIAM Review , 51(3):455–500, 2009. [21] Yi Li, Zhichun Guo, and Bingzhe Li Miao Yin. LeSTD: Learning sparse Tucker decomposition for efficient large language models. arXiv preprint arXiv:2601.01123, 2026. [22] Ji Lin, Jiaming Tang, Haotian Tang, Shang Yang, Wei-Ming Chen, Wei-Chen Wang, Guangxuan Xiao, Xingyu Dang, Chuang Gan, and Song Han. Awq: Activation-aware weight quantization for on-device llm compression and acceleration. Proceedings of machine learning and systems , 6:87–100, 2024. [23] Yiran Luo, Het Patel, Yu Fu, Dawon Ahn, Jia Chen, Yue Dong, and Evangelos E. Papalexakis. TRAWL: Tensor reduced and approximated weights for large language models. arXiv preprint arXiv:2406.17261, 2024. [24] Xinyin Ma, Gongfan Fang, and Xinchao Wang. Llm-pruner: On the structural pruning of large language models. Advances in neural information processing systems , 36:21702–21720, 2023. [25] Mehdi Makni, Kayhan Behdin, Zheng Xu, Natalia Ponomareva, and Rahul Mazumder. Hassle-free: A unified framework for sparse plus low-rank matrix decomposition for llms. arXiv preprint arXiv:2502.00899 , 2025. URL https://arxiv.org/abs/2502.00899 .11 [26] Charles H Martin and Michael W Mahoney. Implicit self-regularization in deep neural networks: Evidence from random matrix theory and implications for learning. Journal of Machine Learning Research , 22(165): 1–73, 2021. [27] Leon Mirsky. Symmetric gauge functions and unitarily invariant norms. The quarterly journal of mathematics ,11(1):50–59, 1960. [28] Gleb Molodtsov, Alexander Miasnikov, and Aleksandr Beznosikov. Hierarchical mixture-of-experts with two-stage optimization. In ICML 2026 Workshop on Weight-Space Symmetries: from Foundations to Practical Applications , 2026. [29] OpenAI. Introducing gpt-oss. https://openai.com/index/introducing-gpt-oss/ , 2025. Accessed: 2026-05-08. [30] Ivan V. Oseledets. Tensor-train decomposition. SIAM Journal on Scientific Computing , 33(5):2295–2317, 2011. [31] Uliana Parkina and Maxim Rakhuba. Coala: Numerically stable and efficient framework for context-aware low-rank approximation. Advances in Neural Information Processing Systems , 38:71014–71041, 2026. [32] Pratyusha Sharma, Jordan Ash, and Dipendra Kumar Misra. The truth is in there: Improving reasoning in language models with layer-selective rank reduction. In International Conference on Learning Representations ,volume 2024, pages 17632–17651, 2024. [33] Zunhai Su, Qingyuan Li, Hao Zhang, YuLei Qian, Yuchen Xie, and Kehong Yuan. Unveiling super experts in Mixture-of-Experts large language models. arXiv preprint arXiv:2507.23279 , 2025. URL 
+
+https://arxiv.org/abs/2507.23279 .[34] Mingjie Sun, Xinlei Chen, J. Zico Kolter, and Zhuang Liu. Massive activations in large language models. 
+
+arXiv preprint arXiv:2402.17762 , 2024. [35] Shangwen Sun, Alfredo Canziani, Yann LeCun, and Jiachen Zhu. The spike, the sparse and the sink: Anatomy of massive activations and attention sinks. arXiv preprint arXiv:2603.05498 , 2026. [36] Shicheng Tan, Weng Lam Tam, Yuanchun Wang, Wenwen Gong, Shu Zhao, Peng Zhang, and Jie Tang. Gkd: A general knowledge distillation framework for large-scale pre-trained language model. In Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 5: Industry Track) , pages 134–148, 2023. [37] Yehui Tang, Xiaosong Li, Fangcheng Liu, Wei Guo, Hang Zhou, Yaoyuan Wang, Kai Han, Xianzhi Yu, Jinpeng Li, Hui Zang, et al. Pangu pro moe: Mixture of grouped experts for efficient sparsity. arXiv preprint arXiv:2505.21411 , 2025. [38] Jiayi Tian et al. FLAT-LLM: Fine-grained low-rank activation space transformation for large language model compression. In Findings of the Association for Computational Linguistics: EACL 2026 , 2026. [39] Hugo Touvron, Louis Martin, Pierre Stone, Benjamin Albert, Amjad Almahairi, Yasmine Babaei, Nikolay Bashlykov, Soumya Batra, Prajwal Bhargava, Shruti Bhosale, et al. Llama 2: Open foundation and fine-tuned chat models. arXiv preprint arXiv:2307.09288 , 2023. [40] Ledyard R. Tucker. Some mathematical notes on three-mode factor analysis. Psychometrika , 31(3):279–311, 1966. [41] Eugene Evgen’evich Tyrtyshnikov. Tensor approximations of matrices generated by asymptotically smooth functions. Sbornik: Mathematics , 194(6):941–954, 2003. 12 [42] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. Attention is all you need. Advances in neural information processing systems , 30, 2017. [43] Ben Wang and Aran Komatsuzaki. GPT-J-6B: A 6 Billion Parameter Autoregressive Language Model. 
+
+https://github.com/kingoflolz/mesh-transformer-jax , May 2021. [44] Qinsi Wang, Jinghan Ke, Masayoshi Tomizuka, Yiran Chen, Kurt Keutzer, and Chenfeng Xu. Dobi-svd: Differentiable svd for llm compression and some new perspectives. arXiv preprint arXiv:2502.02723 , 2025. URL https://arxiv.org/abs/2502.02723 .[45] Xinyi Wang, Zhihang Yuan, Yuang Wang, Qiang Yuan, Guangyu Sun, and Weiyang Zhou. Svd-llm: Truncation-aware singular value decomposition for large language model compression. In International Conference on Learning Representations (ICLR) , 2025. URL https://arxiv.org/abs/2403.07378 .[46] Yuebin Xu, Yanhong Wang, Xuemei Peng, Hui Zang, Minghao Chen, Pengfei Xia, and Zeyi Wen. Td-moe: Tensor decomposition for moe models. In International Conference on Learning Representations (ICLR) ,2026. URL https://openreview.net/forum?id=D9cnZNZfxX . ICLR 2026. [47] An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, et al. Qwen3 technical report. arXiv preprint arXiv:2505.09388 , 2025. [48] Yifan Yang, Kai Zhen, Ershad Banijamal, Athanasios Mouchtaris, and Zheng Zhang. AdaZeta: Adaptive zeroth-order tensor-train adaption for memory-efficient large language models fine-tuning. arXiv preprint arXiv:2406.18060, 2024. URL https://arxiv.org/abs/2406.18060 . Accepted to EMNLP 2024. [49] Yifan Yang, Jiajun Zhou, Ngai Wong, and Zheng Zhang. LoRETTA: Low-rank economic tensor-train adaptation for ultra-low-parameter fine-tuning of large language models. arXiv preprint arXiv:2402.11417, 2024. URL 
+
+https://arxiv.org/abs/2402.11417 .[50] Mengxia Yu, De Wang, Qi Shan, Colorado J Reed, and Alvin Wan. The super weight in large language models. 
+
+arXiv preprint arXiv:2411.07191 , 2024. [51] Artur Zagitov, Gleb Molodtsov, and Aleksandr Beznosikov. Harp: Hadamard-preconditioned adaptive rotation processor for extreme llm quantization. 2026. URL https://arxiv.org/abs/2605.29843 .13 Appendix 
+
+Rethinking the Role of Tensor Decompositions in Post-Training LLM Compression 
+
+Contents 
+
+1 Introduction 12 Related Work 23 Compression Strategies 3
+
+3.1 Pruning . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 33.2 Matrix Decompositions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 33.3 Tensor decompositions for Dense Architectures . . . . . . . . . . . . . . . . . . . . . . . . . . . 43.4 Tensor decompositions for Mixture-of-Experts . . . . . . . . . . . . . . . . . . . . . . . . . . . . 53.5 Structural Mismatch of Tensor Decompositions in LLMs . . . . . . . . . . . . . . . . . . . . . . 53.6 Important Weights for Activation Restoration . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+
+4 Why Tensorization Fails: An Operator Analysis Perspective 75 Comparison with the Quantization Baseline 96 Conclusion 97 Limitations 10 A Notation 15 B Additional information and experiments for Dense models 15 
+
+B.1 GPT-J and LLaMA 2 Tensor-Decomposition Protocol . . . . . . . . . . . . . . . . . . . . . . . . 15 B.2 Single-Layer Decomposition on LLaMA 2 7B . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16 B.3 Outlier Restoration Without Known Super-Weights . . . . . . . . . . . . . . . . . . . . . . . . . 16 B.4 Detailed GPT-J and LLaMA 2 Results . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17 B.5 Quality–Compression Trade-offs . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17 B.6 Dense-Sparse TT with Outlier Preservation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17 
+
+C TD-MoE Experiments 19 
+
+C.1 Qwen3-30B-A3B and GPT-OSS-20B Tensor-Decomposition Protocol . . . . . . . . . . . . . . . 19 C.2 Additional Experiments on GPT-OSS-20B . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 21 C.2.1 Expert-Mode Comparison . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 21 C.2.2 Comparison Against MoBE . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 21 
+
+D Computational Costs 23 
+
+14 A Notation 
+
+General objects and conventions. Scalars are denoted by lowercase letters such as 𝑟 , 𝑝 , 𝑞 , 𝜌 , and 𝐿 . Matrices are denoted by uppercase letters such as 𝑋 , b𝑋 , 𝐴 , 𝑊 , b𝑊 , 𝑈 , 𝑉 , and Σ. Tensors are denoted by calligraphic letters such as X, G, and T . The notation b· denotes an approximation of the corresponding dense object. The symbol ≈ denotes an approximate factorization or reconstruction. 
+
+Compression and evaluation variables. 𝐿 denotes the number of consecutive compressed Transformer blocks in the quality–compression trade-off experiments. The LoRA repair rank is denoted 𝑟 = 16 . The TD-MoE per-layer compression ratio is denoted by 𝜌 , with experiments using 𝜌 ∈ { 0.2, 0.4}. In the GPT-OSS-20B expert-mode comparison, preserve fixes 𝑟 1 = 𝐾 , while compress uses 𝑟 1 < 𝐾 . Example selected TD-MoE ranks are 
+
+(32 , 1720 , 2664 ) for preserve and (20 , 2496 , 2880 ) for compress .
+
+Method abbreviations. Table 2 lists the method-specific abbreviations used throughout the paper.        
+
+> Table 2: Method abbreviations.
+> Abbreviation and meaning / role in the paper HOSVD — Higher-order singular value decomposition
+> TT-SVD — SVD-based algorithm for constructing Tensor Train decompositions
+> TD-MoE — Tensor-decomposition compression of Mixture-of-Experts layers
+> LASER — Truncated-SVD-based post-training compression baseline for FFN compression
+> LeSTD — Prior Tucker-style tensor-compression method for Transformer attention projections
+> TensorLLM — Prior Tucker-style tensor-compression method for Transformer attention projections
+
+B Additional information and experiments for Dense models B.1 GPT-J and LLaMA 2 Tensor-Decomposition Protocol 
+
+This section describes the post-training tensor-decomposition experiments on GPT-J 6B [ 43 ] and LLaMA 2 7B [ 39 ]reported in Figure 3. We use the progressive block schedule: GPT-J 6B is compressed from block 14 to block 20, and LLaMA 2 7B from block 16 to block 23, adding one consecutive block at a time. All runs are evaluated relative to a fixed dense baseline for the same model. For attention compression, we use a TensorLLM-style Tucker factorization of the query, key, value, and output projections. Since these projections have matching shapes in both models, we stack them into a tensor with input-feature, head, head-dimension, and projection-type modes. We apply partial Tucker factorization to the input-feature, head-dimension, and projection-type modes, leaving the head mode explicit. The maximum input-feature rank is 64, the head-dimension rank is 4, and the projection-type rank is 2. For TT compression of FFN projections, and for the TT-all setting, each linear weight matrix is tensorized into twelve paired input-output modes. The input and output dimensions are split into twelve approximately balanced factors, interleaved into input-output pairs, and compressed with TT ranks capped at 64. Bias terms, when present, are kept dense. LoRA repair is applied after decomposition with the decomposed modules frozen. We train rank-16 LoRA adapters with scaling factor 32 on WikiText-2 using AdamW, learning rate 2 × 10 −4, 100 optimizer steps, and gradient accumulation over 8 micro-batches. This stage tests whether limited data-dependent adaptation can recover quality lost by factorization, rather than performing full fine-tuning. Perplexity is evaluated on WikiText-2 and C4, using sequence length 2048 for GPT-J 6B and 4096 for LLaMA 2 7B. For activation geometry diagnostics, we collect WikiText-2 sequences from the dense and compressed models and 15 10 1
+
+> 10 2
+> WikiText-2 perplexity
+> 5.1
+> 5.2
+> 5.3
+> 5.4
+> 5.5
+> 5.6
+> baseline = 5.12
+> 10 1
+> 10 2
+> C4 perplexity
+> 6.6
+> 6.7
+> 6.8
+> 6.9
+> 7.0
+> 7.1
+> 7.2
+> baseline = 6.63
+> WikiText-2
+> Layer index
+> C4
+> Layer index
+> LASER (FFN) (r=1024)
+> TT (FFN) (r=64)
+> LASER (MHA) (r=1024)
+> Tucker (MHA) (r=64)
+> TT/head (MHA) (r=64)
+
+Figure 8: Single-layer decomposition sensitivity on LLaMA 2 7B. Each point compresses only one transformer layer. The left and right panels report WikiText-2 and C4 perplexity, respectively; early layers are shown separately because of large perplexity spikes. 
+
+compare activations at the last compressed block. We report the mean angular deviation from the dense activations and the compressed-to-dense activation norm ratio. Storage is always computed from the compressed representation, excluding embeddings; for benchmarking, compressed modules are reconstructed to dense linear layers so that the reported quality reflects the compressed weights rather than implementation-specific runtime kernels. 
+
+B.2 Single-Layer Decomposition on LLaMA 2 7B 
+
+To separate local layer sensitivity from error accumulation across depth, we also evaluate a single-layer protocol on LLaMA 2 7B. In each run, only one transformer layer is modified, and all other layers remain dense. We repeat this for all 32 layers and evaluate WikiText-2 and C4 perplexity. For attention layers, we compare LASER-style matrix factorization, TensorLLM-style Tucker factorization, and a per-head TT variant. For FFN layers, we compare LASER-style matrix factorization with TT factorization. Tucker always refers to the TensorLLM-style decomposition of the attention projections. Figure 8 shows that sensitivity is highly non-uniform across depth. The earliest layers are especially fragile: decomposing the first attention layer causes very large perplexity spikes for Tucker and per-head TT, while TT on FFN is most unstable in the first two FFN layers. Away from these early layers, attention decompositions usually stay much closer to the dense baseline, although they save little of the total model size. FFN decompositions save more parameters, but their effect grows toward the final layers, especially for TT. This supports the progressive middle-to-late compression schedule used in the main experiments: middle layers are less sensitive locally, but quality still degrades once errors are accumulated over multiple compressed blocks. It is also worth noting separately that the PPL of early layers, particularly those close to the layer containing the super-weight (Layer 1), degrades far more severely than even under the pruning strategy(see Figure 1). This further confirms that retaining only the dominant singular components is insufficient to recover the structure of the original weight matrix. 
+
+B.3 Outlier Restoration Without Known Super-Weights 
+
+The main restoration experiment in Section 3.6 focuses on the layer-1 MLP output projection of LLaMA 2 7B, where a known super-weight is present. To test whether the observed rank-restoration barrier is specific to that single coordinate, we repeat the same diagnostic on the corresponding MLP output projection in layer 17. We track random inliers, top-magnitude entries, and activation-weighted top-𝑘 entries selected by |𝑊 𝑖 𝑗 |√︁ diag (𝑋 ⊤ 𝑋 ) 𝑗 .Figure 9 shows that the qualitative pattern from Figure 6 persists even without a super-weight. Top-magnitude entries are recovered more smoothly as the rank increases, but activation-weighted entries remain substantially below full recovery until the retained rank approaches the full matrix rank. 16 Table 3: Storage accounting for the LLaMA 2 7B single-layer decomposition study. Each run compresses one layer at a time. Bits saved are measured over non-embedding model parameters. 
+
+Method Target Rank Local CR Saved (%) 
+
+LASER MHA 1024 2.00 0.51 Tucker MHA 64 240.49 1.01 TT/head MHA 64 1.98 0.50 LASER FFN 1024 2.92 1.34 TT FFN 64 398.63 2.04 0 2000 4000 6000 8000 10000        
+
+> Column (input dimension)
+> 0
+> 500
+> 1000
+> 1500
+> 2000
+> 2500
+> 3000
+> 3500
+> 4000
+> Row (output dimension)
+> (a) position and magnitude
+> 01000 2000 3000 4000
+> SVD rank kept
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Tracked entries restored (%)
+> (b) recovery under truncated SVD
+> LLaMA 2 7B · layer 17 · mlp.down_proj
+> inliers top magnitude activation-weighted importance top-k background sample
+
+Figure 9: (a) Positions of random inliers, top-magnitude entries, and activation-weighted top-𝑘 entries in the weight matrix. Marker size encodes absolute weight magnitude. (b) Fraction of tracked entries restored as a function of retained SVD rank. 
+
+B.4 Detailed GPT-J and LLaMA 2 Results 
+
+Table 4 reports the GPT-J 6B and LLaMA 2 7B tensor-decomposition experiments. Each cell is shown as direct / +LoRA , where +LoRA denotes the lightweight rank-16 LoRA trained on WikiText-2. The maximum-𝐿 table gives the most compressed setting for each model, while the full table reports all middle-to-late block ranges. For activation geometry, Angle is the mean angle between dense and compressed residual-stream activations after the last compressed block, and Norm is the compressed-to-dense activation norm ratio. Lower Angle and Norm closer to 1 are better. 
+
+B.5 Quality–Compression Trade-offs 
+
+In addition to C4 perplexity, we evaluate WikiText-2 perplexity (Figure 10) and zero-shot LM-Eval accuracy. The LM-Eval score is computed on ARC-Challenge, HellaSwag, OpenBookQA, PIQA, and WinoGrande (Figure 11). For each task, we measure the accuracy drop relative to the dense model in percentage points, and report the unweighted average across tasks as the macro LM-Eval accuracy drop. Lower values are better for all metrics shown in this section. 
+
+B.6 Dense-Sparse TT with Outlier Preservation 
+
+We also test whether explicitly preserving a small number of large or activation-important entries can mitigate TT degradation. For a target weight matrix 𝑊 , Dense-Sparse TT first selects a sparse set S of entries, stores those entries exactly, and applies TT factorization only to the remaining inlier matrix: 
+
+𝑊 = 𝑊 S + 𝑊 in , 𝑊 in ≈ b𝑊 TT .
+
+The final compressed layer is therefore implemented as a TT layer plus a sparse correction. We evaluate two sparse-entry selectors. The magnitude-selected version chooses the top fraction 𝑓 of entries by |𝑊 𝑖 𝑗 |. The 17 10 
+
+20 
+
+30 
+
+40 
+
+50 
+
+> WikiText-2 perplexity
+
+GPT-J 6B                
+
+> baseline = 8.86
+> TT(all), LoRA
+> L= 7 ,23.9% saved
+> Tucker+TT, LoRA
+> L= 5 ,17.1% saved
+> TT(FFN), LoRA
+> L= 5 ,11.4% saved
+> Tucker+TT, LoRA
+> L= 2 ,6.8% saved
+> Tucker, LoRA
+> L= 1 ,1.1% saved
+
+Bits saved (%) 
+
+5
+
+10 
+
+15 
+
+20 
+
+25 
+
+> WikiText-2 perplexity
+
+Llama 2 7B                
+
+> baseline = 5.12
+> TT(all), LoRA
+> L= 8 ,24.3% saved
+> TT(all), LoRA
+> L= 6 ,18.2% saved
+> TT(all), LoRA
+> L= 4 ,12.1% saved
+> Tucker+TT, LoRA
+> L= 2 ,6.1% saved
+> Tucker, LoRA
+> L= 1 ,1.0% saved
+
+Bits saved (%)       
+
+> Tucker (MHA) TT (FFN) Tucker (MHA) + TT (FFN) TT (all) filled = plain hollow = + LoRA Pareto envelope
+
+Figure 10: WikiText-2 perplexity versus bits saved for GPT-J 6B and LLaMA 2 7B. Each point is one compression run, and 𝐿 
+
+denotes the number of consecutive compressed transformer blocks. Arrows connect each decomposition to its LoRA-repaired variant; the Pareto frontier marks the best observed trade-offs. 0
+
+2
+
+4
+
+6
+
+8
+
+10 
+
+12 
+
+> Macro LM-Eval accuracy drop (pp)
+
+GPT-J 6B                
+
+> baseline = 0 (dense)
+> Tucker+TT, LoRA
+> L= 7 ,23.9% saved
+> TT(all), LoRA
+> L= 5 ,17.1% saved
+> TT(FFN), LoRA
+> L= 5 ,11.4% saved
+> TT(FFN), LoRA
+> L= 3 ,6.8% saved
+> Tucker, plain
+> L= 1 ,1.1% saved
+
+Bits saved (%) 
+
+0
+
+2
+
+4
+
+6
+
+8
+
+10 
+
+12 
+
+14 
+
+> Macro LM-Eval accuracy drop (pp)
+
+Llama 2 7B                
+
+> baseline = 0 (dense)
+> TT(all), LoRA
+> L= 8 ,24.3% saved
+> Tucker+TT, LoRA
+> L= 6 ,18.2% saved
+> Tucker+TT, plain
+> L= 4 ,12.2% saved
+> TT(FFN), LoRA
+> L= 3 ,6.1% saved
+> TT(FFN), LoRA
+> L= 1 ,2.0% saved
+
+Bits saved (%)       
+
+> Tucker (MHA) TT (FFN) Tucker (MHA) + TT (FFN) TT (all) filled = plain hollow = + LoRA Pareto envelope
+
+Figure 11: Macro LM-Eval accuracy drop versus bits saved for GPT-J 6B and LLaMA 2 7B. Macro drop is the unweighted average accuracy drop, in percentage points, across ARC-Challenge, HellaSwag, OpenBookQA, PIQA, and WinoGrande. Lower is better. 
+
+activation-weighted version instead ranks entries by 
+
+score 𝑖 𝑗 = |𝑊 𝑖 𝑗 |√︃ diag (𝑋 ⊤ 𝑋 ) 𝑗 ,
+
+where 𝑋 contains calibration inputs to the corresponding linear layer. This score is inspired by the activation-aware sparse selection used in HASSLE-free, but we use it only to choose the sparse correction entries; the remaining matrix is still compressed with the same TT procedure. We collect the activation statistics using 64 calibration sequences of length 256. Figure 12 shows that preserving a tiny sparse correction substantially improves GPT-J 6B relative to plain TT when all selected modules are compressed. At the largest compressed range, plain TT reaches much higher C4 perplexity, whereas both Dense-Sparse variants remain close to each other and substantially lower. On LLaMA 2 7B, however, the Dense-Sparse variants are almost indistinguishable from TT. Overall, sparse outlier preservation helps in some cases, especially GPT-J, but it does not remove the model-dependent compression–quality trade-off. 18 Table 4: Detailed GPT-J 6B and LLaMA 2 7B tensor-decomposition results. Compressed rows are grouped by the number of consecutive decomposed blocks 𝐿 and report direct/+LoRA . Bits saved are measured over all non-embedding model parameters. Bold values are best among compressed runs within each model-𝐿 group. 
+
+Compression ↑ Perplexity ↓ LM-Eval accuracy (%) ↑ Activation geometry 
+
+𝐿 Blocks Method Bits saved (%) WT2 C4 Macro ARC-C HSwag OBQA PIQA WinoG Angle 
+
+↓
+
+Norm 
+
+→ 1
+
+GPT-J 6B 
+
+Dense baseline 0.0 8.86 11.71 50.5 33.9 49.5 29.0 75.5 64.4 – –1 14 Tucker MHA 1.1/1.1 9.19/ 8.65 12.01 /12.30 49.5 /49.4 32.6/ 34.1 47.8/ 49.2 28.0/25.8 74.6/ 74.9 64.6 /63.1 9.3 /18.3 0.99 /1.04 TT FFN 2.3/2.3 9.32/8.83 12.35/17.33 49.4/49.2 32.5/33.4 47.7/49.1 27.8/27.2 74.5/73.6 64.2/62.6 14.9/23.5 0.99/1.05 Tucker+TT 3.4 /3.4 9.60/8.89 12.57/13.41 48.2/49.5 29.8/33.0 46.2/48.4 26.6/ 29.4 74.3/73.9 64.1/62.6 16.9/24.6 0.98/1.03 TT all 3.4/3.4 9.62/8.93 12.59/13.74 48.0/48.7 29.7/31.7 46.2/48.8 26.4/26.2 74.4/73.9 63.5/62.7 16.9/24.7 0.98/1.02 2 14–15 Tucker MHA 2.3/2.3 9.93/ 8.93 12.57 /12.71 47.9/48.8 30.2/32.8 46.5/ 48.1 25.6/25.0 73.7/ 74.1 63.5/ 63.9 11.9 /20.3 0.98/1.04 TT FFN 4.6/4.6 10.31/9.20 13.59/14.39 48.0/ 49.0 31.1/ 33.5 45.5/48.0 27.8 /27.6 73.2/73.5 62.3/62.3 18.5/23.3 0.97/1.01 Tucker+TT 6.9 /6.8 12.13/9.50 15.20/13.91 44.4/48.1 26.3/31.7 41.7/47.0 23.0/26.0 71.3/73.8 59.8/62.0 20.5/26.2 0.97/ 0.99 
+
+TT all 6.9/6.8 12.41/9.50 15.50/13.82 44.1/48.0 25.6/32.6 41.5/46.7 23.0/24.2 70.8/73.7 59.4/63.0 20.5/25.9 0.97/0.99 3 14–16 Tucker MHA 3.4/3.4 10.53/ 9.26 13.28 /13.30 46.4/48.1 28.5/31.8 44.9/ 47.2 24.4/25.4 72.6/ 73.3 61.4/ 62.6 13.7 /19.9 0.98/ 1.01 
+
+TT FFN 6.9/6.8 12.06/9.77 15.54/16.12 46.1/ 48.5 28.4/ 32.7 43.2/46.9 25.4/ 28.4 72.9/73.2 60.7/61.4 21.5/24.7 0.94/0.97 Tucker+TT 10.3 /10.2 15.30/10.27 18.41/15.01 42.1/46.7 23.3/30.4 39.3/45.5 20.0/25.0 69.4/72.1 58.6/60.5 23.4/27.0 0.94/0.95 TT all 10.3/10.2 15.93/10.25 19.01/15.04 41.8/47.0 23.0/30.8 38.9/45.4 19.2/25.6 69.3/72.9 58.7/60.2 23.4/27.1 0.95/0.95 4 14–17 Tucker MHA 4.6/4.5 12.01/ 9.57 13.79/ 13.61 46.5/ 47.9 28.8/31.5 44.4/ 47.0 24.8/25.2 72.9/ 73.4 61.5/ 62.5 15.2 /20.3 0.97/ 1.00 
+
+TT FFN 9.2/9.1 14.49/10.38 18.28/16.99 44.6/47.5 26.7/ 32.3 41.4/46.0 22.6/ 26.4 71.5/72.8 61.0/59.9 24.1/26.1 0.92/0.94 Tucker+TT 13.7 /13.7 20.46/11.06 22.77/17.78 41.1/45.9 22.9/29.4 37.4/44.3 17.8/23.8 68.7/71.3 58.6/60.6 26.0/28.6 0.92/0.91 TT all 13.7/13.7 21.80/11.12 24.01/18.05 40.8/45.7 23.0/29.4 37.1/44.1 17.6/23.2 68.3/71.9 58.1/60.1 26.0/29.2 0.93/0.92 5 14–18 Tucker MHA 5.7/5.7 13.12/ 9.91 14.92/ 14.20 45.8/ 47.3 27.6/30.1 43.1/ 46.2 24.6/ 25.6 72.1/ 73.1 61.5 /61.5 16.6 /21.6 0.98/ 1.00 
+
+TT FFN 11.5/11.4 17.73/11.03 21.46/18.36 43.5/46.6 27.0/ 32.1 40.2/45.3 20.8/24.8 70.2/71.7 59.1/59.3 26.4/27.4 0.89/0.91 Tucker+TT 17.2 /17.1 27.10/11.97 28.26/19.00 39.9/45.0 22.3/29.7 35.9/43.2 17.8/22.6 65.8/70.9 57.9/58.6 28.1/30.2 0.90/0.89 TT all 17.2/17.1 29.39/12.16 30.22/20.33 39.7/45.2 22.1/29.4 35.6/43.1 17.4/23.4 65.7/71.0 57.6/59.0 28.2/31.2 0.91/0.89 6 14–19 Tucker MHA 6.9/6.8 14.90/ 10.48 16.04/ 15.11 44.8/ 46.7 26.8/ 30.1 42.4/ 45.9 22.4/23.2 71.2/ 73.1 61.4 /61.3 17.9 /23.8 0.98/ 0.99 
+
+TT FFN 13.8/13.7 21.05/11.89 24.54/20.10 42.0/45.7 24.7/28.8 38.6/43.9 20.2/ 24.6 68.3/71.4 58.0/60.0 28.5/28.9 0.86/0.88 Tucker+TT 20.6 /20.5 34.27/13.62 34.16/22.35 39.3/43.7 21.6/26.8 34.6/41.3 18.0/21.0 64.4/69.9 58.0/59.4 30.1/33.3 0.87/0.86 TT all 20.6/20.5 37.25/13.50 36.73/21.31 39.3/43.9 22.0/26.2 34.5/41.4 17.6/22.6 64.3/70.8 58.1/58.8 30.1/33.0 0.88/0.86 7 14–20 Tucker MHA 8.0/7.9 17.33/ 10.98 17.56/ 15.99 44.1/ 46.7 26.5/ 30.3 41.3/ 45.4 21.0/ 24.2 70.0/ 71.7 61.9 /61.9 19.4 /24.2 0.98 /0.98 TT FFN 16.0/16.0 26.31/12.86 28.28/20.00 40.7/45.4 24.1/29.2 37.3/43.4 17.8/23.8 66.2/71.1 57.9/59.3 30.5/30.3 0.83/0.87 Tucker+TT 24.1 /23.9 51.26/15.34 48.09/21.51 38.5/42.6 21.8/24.5 33.3/40.6 16.8/20.4 62.8/68.8 57.5/58.8 31.8/35.1 0.85/0.85 TT all 24.0/23.9 54.84/15.30 51.42/21.99 38.5/42.1 21.9/24.8 33.0/40.3 17.8/19.8 62.8/68.4 57.1/57.3 31.8/35.1 0.86/0.85 
+
+LLaMA 2 7B 
+
+Dense baseline 0.0 5.12 6.63 56.2 43.0 57.1 33.4 78.1 69.4 – –1 16 Tucker MHA 1.0/1.0 5.28/ 5.06 6.87 /6.91 54.9/55.5 41.0/ 42.7 55.3/ 56.0 32.4/33.2 76.8/76.9 69.0/68.5 17.1 /22.5 0.91/0.99 TT FFN 2.0/2.0 5.52/5.15 7.01/7.05 55.3/ 55.5 41.9/42.2 55.9/55.9 31.4/32.4 77.6/ 78.0 69.9 /69.0 22.3/26.3 0.93/ 1.00 
+
+Tucker+TT 3.1 /3.0 5.61/5.24 7.23/7.25 53.8/54.5 38.9/40.2 54.3/54.8 30.4/32.6 76.4/77.0 69.1/68.1 26.5/31.1 0.85/0.92 TT all 3.1/3.0 5.61/5.23 7.23/7.26 53.9/54.8 39.1/40.7 54.4/54.8 30.4/ 33.6 76.4/77.1 69.1/68.0 26.5/31.5 0.85/0.92 2 16–17 Tucker MHA 2.0/2.0 5.52/ 5.20 7.15 /7.18 54.0/ 54.7 38.8/ 40.1 54.1/ 55.2 31.6/ 32.8 76.6/ 77.0 69.0 /68.6 19.7 /23.9 0.89/ 0.96 
+
+TT FFN 4.1/4.1 5.88/5.41 7.56/7.56 54.1/54.1 39.9/39.1 54.4/54.6 31.2/31.4 76.6/76.6 68.3/68.7 26.2/28.7 0.90/0.94 Tucker+TT 6.1 /6.1 6.24/5.56 7.97/7.88 52.7/53.2 37.8/38.0 52.2/53.1 29.8/30.4 75.2/76.3 68.7/68.4 30.5/34.1 0.80/0.86 TT all 6.1/6.1 6.24/5.56 7.97/7.90 52.8/53.5 38.0/38.7 52.2/53.2 29.8/31.4 75.2/76.3 69.0 /68.0 30.5/34.5 0.80/0.87 3 16–18 Tucker MHA 3.0/3.0 5.76/ 5.34 7.50/ 7.45 53.3/ 53.9 37.7/38.8 53.3/ 54.6 30.8/ 31.4 76.3/ 76.6 68.4/68.0 21.7 /25.8 0.87/ 0.96 
+
+TT FFN 6.1/6.1 6.44/5.73 8.33/8.17 53.3/53.5 39.4 /38.9 52.8/53.3 29.6/ 31.4 76.0/75.7 68.7 /68.3 29.1/31.8 0.87/0.90 Tucker+TT 9.2 /9.1 6.98/6.03 8.95/8.66 51.9/52.3 35.5/36.5 50.5/51.4 30.8/30.0 74.7/76.0 67.9/67.5 33.5/36.7 0.76/0.81 TT all 9.2/9.1 6.98/6.01 8.95/8.65 51.9/51.9 35.5/36.1 50.5/51.3 30.8/30.0 74.8/75.0 68.1/67.2 33.6/36.8 0.76/0.82 4 16–19 Tucker MHA 4.0/4.0 6.03/ 5.46 7.91/ 7.68 52.7/ 53.6 36.9/ 38.1 52.6/ 54.0 30.2/ 32.0 76.0/ 76.2 68.0 /67.6 23.5 /25.8 0.86/ 0.94 
+
+TT FFN 8.2/8.1 7.61/6.20 9.59/8.90 51.9/51.3 37.0/35.9 51.1/51.7 29.0/26.8 74.9/74.1 67.3/67.8 31.5/35.0 0.84/0.89 Tucker+TT 12.2 /12.1 7.85/6.63 10.06/9.62 50.0/49.6 35.0/34.4 49.0/49.4 25.6/24.6 73.6/73.8 66.9/66.0 36.0/39.3 0.72/0.77 TT all 12.2/12.1 7.86/6.63 10.06/9.65 50.0/49.8 34.9/34.1 49.0/49.5 25.2/25.6 73.6/73.6 67.0/66.4 36.0/38.9 0.72/0.78 5 16–20 Tucker MHA 5.1/5.0 6.65/ 5.77 8.64/ 8.25 50.9/ 51.9 34.5/36.4 51.0/ 53.0 26.0/ 27.6 74.1/ 74.6 68.8 /68.0 25.3 /27.2 0.84/ 0.92 
+
+TT FFN 10.2/10.2 8.71/6.80 10.99/9.73 50.7/50.1 36.5 /33.9 49.2/50.4 27.6 /26.2 73.6/73.0 66.8/66.9 33.5/36.1 0.81/0.84 Tucker+TT 15.3 /15.2 9.94/7.74 12.34/11.09 47.1/47.4 30.6/30.8 45.2/46.8 23.2/23.2 70.0/71.0 66.3/65.4 38.3/42.3 0.68/0.74 TT all 15.3/15.2 9.94/7.72 12.35/11.11 46.9/48.0 30.5/31.1 45.2/46.8 22.8/24.0 70.0/70.9 66.2/67.1 38.4/41.5 0.68/0.74 6 16–21 Tucker MHA 6.1/6.0 6.93/ 5.94 9.07/ 8.50 50.4/ 51.9 34.4/ 36.3 50.3/ 52.2 25.8/ 28.2 73.2/ 74.1 68.5/ 68.6 26.7 /28.1 0.83/ 0.91 
+
+TT FFN 12.3/12.2 10.26/7.52 12.51/10.98 49.4/49.1 35.6/32.3 47.2/48.8 26.2/25.6 71.3/72.0 66.9/66.9 35.2/38.3 0.79/0.81 Tucker+TT 18.3 /18.2 12.45/8.81 14.96/12.77 45.7/46.4 29.8/28.7 43.0/45.2 23.0/24.4 67.6/68.6 65.3/65.2 40.4/44.5 0.64/0.71 TT all 18.3/18.2 12.46/8.79 14.97/12.76 45.7/46.1 29.5/29.4 43.0/45.0 23.0/23.0 67.6/68.9 65.3/64.5 40.4/43.8 0.64/0.71 7 16–22 Tucker MHA 7.1/7.0 7.45/ 6.15 9.74/ 8.97 49.3/ 51.3 32.8/ 35.6 49.8/ 51.9 23.4/ 27.2 72.0/ 74.1 68.7 /67.8 28.1 /29.3 0.81/ 0.91 
+
+TT FFN 14.3/14.2 11.52/8.19 14.14/12.24 46.9/47.7 32.0/31.1 45.1/47.5 23.0/23.8 69.3/70.3 65.0/65.9 36.7/40.7 0.76/0.80 Tucker+TT 21.4 /21.2 17.60/10.39 19.45/15.22 42.7/44.2 27.2/27.5 39.5/42.4 19.2/21.2 64.3/66.2 63.5/63.8 42.2/46.8 0.61/0.68 TT all 21.4/21.2 17.60/10.23 19.44/14.90 42.9/44.6 27.6/28.1 39.5/42.3 19.2/22.0 64.4/66.3 63.6/64.2 42.2/45.4 0.61/0.70 8 16–23 Tucker MHA 8.1/8.0 7.78/ 6.30 10.14/ 9.36 49.4/ 51.2 33.0/ 35.8 49.5/ 52.0 24.8/ 26.8 71.6/ 73.7 68.0 /68.0 29.4 /29.9 0.80/ 0.90 
+
+TT FFN 16.3/16.2 12.98/9.02 15.77/13.40 46.0/47.2 31.6/30.7 43.4/45.9 22.8/23.6 67.4/68.9 64.7/66.7 38.0/41.7 0.74/0.78 Tucker+TT 24.4 /24.3 25.44/11.64 23.53/17.15 42.1/43.3 27.8/27.7 37.7/40.9 18.8/18.8 62.6/64.6 63.5/64.3 43.8/48.7 0.58/0.65 TT all 24.4/24.3 25.61/11.35 23.59/16.61 42.0/43.8 27.7/27.8 37.7/41.1 18.4/20.6 62.6/64.5 63.5/65.2 43.9/47.1 0.58/0.68 
+
+C TD-MoE Experiments C.1 Qwen3-30B-A3B and GPT-OSS-20B Tensor-Decomposition Protocol 
+
+This section describes the post-training tensor-decomposition experiments on Qwen3-30B-A3B [ 47 ] and GPT-OSS-20B [ 29 ] reported in Figure 4. We use the progressive block schedule. Qwen3-30B-A3B is compressed from the 19 5 10 15 20 25                 
+
+> Bits saved (%)
+> 10
+> 20
+> 30
+> 40
+> 50
+> C4 perplexity
+> baseline = 11.71
+> GPT-J 6B
+> 510 15 20 25
+> Bits saved (%)
+> 7.5
+> 10.0
+> 12.5
+> 15.0
+> 17.5
+> 20.0
+> 22.5
+> 25.0
+> C4 perplexity
+> baseline = 6.63
+> Llama 2 7B
+> TT (rank 64) Magnitude-selected, f= 5 × 10 −7 Magnitude-selected, f= 10 −6 Activation-weighted, f= 5 × 10 −7 Activation-weighted, f= 10 −6
+
+Figure 12: C4 perplexity versus bits saved for all selected modules under TT and Dense-Sparse TT. Dense-Sparse TT stores a small sparse correction exactly and applies TT to the inlier matrix. We compare magnitude-selected sparse entries with activation-weighted sparse entries for 𝑓 ∈ { 5×10 −7, 10 −6 }.
+
+middle, the 24th layer. We first extend the compressed set toward later layers for 12 MoE layers, reaching roughly the 75% depth point of the model, and then extend toward earlier layers for another 12 MoE layers, reaching roughly the 25% depth point. The final setting therefore covers 24 MoE layers in total. GPT-OSS-20B is compressed from the middle, the 12th layer. We first extend the compressed set toward later layers for 6 MoE layers, reaching roughly the 75% depth point of the model, and then extend toward earlier layers for another 6 MoE layers, reaching roughly the 25% depth point. The final setting therefore covers 12 MoE layers in total. We use two per-layer compression ratios 
+
+𝜌 ∈ { 0.2, 0.4}, where 𝜌 controls how aggressively each expert is compressed via Tucker decomposition (Figure 13). All runs are evaluated relative to a fixed dense baseline for the same model. TD-MoE is a post-training compression method designed for Mixture-of-Experts layers. Instead of decomposing each expert weight matrix independently, it stacks all experts in a layer into a three-dimensional tensor over expert, input, and output modes, then applies a joint Tucker factorization: 
+
+X ≈ G × 1 𝑈 (1) ×2 𝑈 (2) ×3 𝑈 (3) .
+
+Here 𝑈 (1) ∈ R𝐾 ×𝑟 1 acts on the expert mode and represents 𝑟 1 latent meta-experts, 𝑈 (2) ∈ R𝑑 in ×𝑟 2 spans the compressed input-feature subspace, and 𝑈 (3) ∈ R𝑑 out ×𝑟 3 spans the compressed output-feature subspace. The core tensor G couples these three latent modes. Figure 14 reports the corresponding downstream accuracy curves. A plausible explanation for the model-dependent behavior is that Qwen3-30B-A3B is a fine-grained MoE with 128 experts and 8 active experts per token. Recent work identifies three shallow super experts in layers 1–3 whose pruning raises WikiText-2 perplexity from 8.70 to 59.86 and collapses reasoning, while randomly pruning non-super experts has negligible effect [ 33 ]. Our schedule starts at mid-depth and does not touch those shallow super experts, so moderate TD-MoE may act mainly as denoising in less critical expert subspaces, consistent with prior observations that selective rank reduction can sometimes improve LLM accuracy by removing harmful higher-order components [ 32 ]. GPT-OSS-20B has a smaller MoE structure, with 24 layers, 32 experts, and 4 active experts per token [ 29 ], so the same intervention has less expert-mode redundancy to exploit before it removes functional diversity (Figure 15). 
+
+Perplexity on GPT-OSS-20B. Unlike Qwen3-30B-A3B, GPT-OSS-20B reports anomalously high perplexity on raw text: the uncompressed model scores 503 .9 on WikiText-2 and 269 .9 on C4. This is a known artifact—GPT-OSS is built around the harmony chat format and is not intended for direct causal-language-model perplexity evaluation on raw corpora, so its absolute perplexity is not a reliable quality signal. Consistent with this, TD-MoE compression 
+
+lowers perplexity monotonically as more layers are compressed (Figure 17) rather than raising it, as the intervention 20 0 4 8 12 16 20 24 
+
+Compressed MoE layers         
+
+> 8.0
+> 8.5
+> 9.0
+> 9.5
+> 10.0
+> 10.5
+> WikiText-2 perplexity
+> TD-MoE ρ= 0 .2TD-MoE ρ= 0 .4MoBE b32 MoBE b64 uncompressed
+
+Figure 13: WikiText-2 perplexity as the number of TD-MoE-compressed MoE layers increases on Qwen3-30B-A3B, for 
+
+𝜌 ∈ { 0.2, 0.4}. C4 perplexity is shown in the main text (Figure 4). 0 6 12 18 24                   
+
+> Compressed layers
+> 48
+> 50
+> 52
+> 54
+> 56
+> Accuracy (%)
+> ARC-C
+> 0612 18 24
+> Compressed layers
+> 65.0
+> 67.5
+> 70.0
+> 72.5
+> 75.0
+> 77.5
+> Accuracy (%)
+> HellaSwag
+> 0612 18 24
+> Compressed layers
+> 77
+> 78
+> 79
+> 80
+> Accuracy (%)
+> PIQA
+> 0612 18 24
+> Compressed layers
+> 69
+> 70
+> 71
+> 72
+> Accuracy (%)
+> WinoGrande
+> 0612 18 24
+> Compressed layers
+> 42
+> 44
+> 46
+> Accuracy (%)
+> OBQA
+> = 0.2 = 0.4 uncompressed baseline
+
+Figure 14: Downstream task accuracy (%) as the number of TD-MoE-compressed MoE layers increases on Qwen3-30B-A3B. 
+
+nudges the miscalibrated baseline toward more generic next-token statistics. We therefore treat downstream accuracy (Figure 15) as the reliable signal for GPT-OSS-20B and report perplexity only for completeness. 
+
+C.2 Additional Experiments on GPT-OSS-20B 
+
+C.2.1 Expert-Mode Comparison 
+
+We evaluate TD-MoE on OpenAI GPT-OSS-20B at per-layer compression ratio 𝜌 =0.4, varying the expert mode :
+
+preserve fixes the expert-dimension Tucker rank to 𝑟 1=𝐾 (all experts are kept as distinct latent directions), whereas 
+
+compress also compresses the expert dimension ( 𝑟 1 < 𝐾 ). At the same target compression ratio, this reallocates the saved expert-mode budget to the feature modes: in our GPT-OSS-20B runs, preserve selects ranks (32 , 1720 , 2664 ),while compress selects (20 , 2496 , 2880 ). Thus compress trades expert-mode capacity for higher-rank input and output factors, allowing the decomposition to exploit cross-expert redundancy at the cost of reduced expert diversity. Figure 16 reports the corresponding downstream accuracy curves for preserve and compress as the number of TD-MoE-compressed GPT-OSS-20B layers increases. 
+
+C.2.2 Comparison Against MoBE 
+
+We extend the MoBE baseline introduced in Section C to GPT-OSS-20B. GPT-OSS-20B has only 32 experts per layer (against Qwen3-30B-A3B’s 128), so MoBE’s number of basis matrices must satisfy 𝑛 𝐵 < 32 to yield any compression. We evaluate 𝑛 𝐵 ∈ { 8, 16 }, with the truncation 𝑇 fixed at the lowest per-expert dimension following 21 3 6 9 12               
+
+> Compressed layers
+> 37.5
+> 40.0
+> 42.5
+> 45.0
+> 47.5
+> Accuracy (%)
+> ARC-C
+> 36912
+> Compressed layers
+> 50
+> 52
+> 54
+> 56
+> 58
+> 60
+> Accuracy (%)
+> HellaSwag
+> 36912
+> Compressed layers
+> 72
+> 74
+> 76
+> Accuracy (%)
+> PIQA
+> 36912
+> Compressed layers
+> 61
+> 62
+> 63
+> 64
+> 65
+> 66
+> Accuracy (%)
+> WinoGrande
+> 36912
+> Compressed layers
+> 36
+> 38
+> 40
+> Accuracy (%)
+> OBQA
+> = 0.2 = 0.4 uncompressed baseline
+
+Figure 15: Downstream task accuracy (%) as the number of TD-MoE-compressed MoE layers increases on GPT-OSS-20B for 
+
+𝜌 ∈ { 0.2, 0.4}.3 6 9 12                 
+
+> Compressed layers
+> 30
+> 35
+> 40
+> 45
+> Accuracy (%)
+> ARC-C
+> 36912
+> Compressed layers
+> 45
+> 50
+> 55
+> Accuracy (%)
+> HellaSwag
+> 36912
+> Compressed layers
+> 70
+> 72
+> 74
+> 76
+> Accuracy (%)
+> PIQA
+> 36912
+> Compressed layers
+> 56
+> 58
+> 60
+> 62
+> 64
+> 66
+> Accuracy (%)
+> WinoGrande
+> 36912
+> Compressed layers
+> 30
+> 32
+> 34
+> 36
+> 38
+> 40
+> Accuracy (%)
+> OBQA
+> preserve ( = 0.4 )compress ( = 0.4 )uncompressed baseline
+
+Figure 16: Downstream accuracy (%) versus number of TD-MoE-compressed layers on GPT-OSS-20B at 𝜌 =0.4. preserve 
+
+keeps the expert Tucker rank equal to 𝐾 ; compress additionally reduces the expert dimension. 
+
+MoBE’s published convention. The two settings are matched in bits-saved to TD-MoE 𝜌 =0.4 and 𝜌 =0.2 respectively, while all other protocol details (progressive middle-out block schedule, evaluation datasets, activation-geometry probe) follow Appendix C.1. Figure 18 reports C4 perplexity as more MoE layers are compressed. As in the TD-MoE-only experiments (Figure 17), absolute perplexity values on GPT-OSS-20B are not interpretable in isolation because the uncompressed baseline is miscalibrated for raw-text causal-language-model evaluation. The relative ordering is nonetheless informative: MoBE perturbs the model less than TD-MoE at matched bits-saved. We rely on the activation-geometry diagnostic in Figure 19 and downstream accuracy (Figure 15) as the reliable quality signals. Figure 19 compares the methods at the residual-stream level. Each marker is one block-schedule setting; marker shape encodes the decomposition family, marker area is the fraction of bits saved relative to the dense model, and colour encodes C4 perplexity. 2 4 6 8 10 12 
+
+Compressed MoE layers 
+
+100 
+
+200 
+
+300 
+
+400 
+
+500 
+
+> Perplexity
+
+WikiText-2 
+
+2 4 6 8 10 12 
+
+Compressed MoE layers 
+
+50 
+
+100 
+
+150 
+
+200 
+
+250 
+
+> Perplexity
+
+C4 
+
+= 0.2 = 0.4 uncompressed baseline 
+
+Figure 17: WikiText-2 (left) and C4 (right) perplexity as the number of TD-MoE-compressed MoE layers increases on GPT-OSS-20B, for 𝜌 ∈ { 0.2, 0.4}. The uncompressed baseline (dotted) is anomalously high because GPT-OSS targets the harmony chat format rather than raw-text language modeling; perplexity is therefore not a reliable quality metric for this model. 
+
+22 D Computational Costs 
+
+All model experiments were run on NVIDIA H100 GPUs. The GPT-J 6B and LLaMA 2 7B tensor-decomposition experiments described in Appendix B.1, including the progressive middle-layer compression grid, perplexity evaluation, activation-geometry diagnostics, and the lightweight LoRA repair runs, required approximately 100 
+
+H100 GPU-hours in total. The Qwen3-30B-A3B and GPT-OSS-20B tensor-decomposition experiments described in Appendix C.1, including the progressive middle-layer compression grid, perplexity evaluation, activation-geometry diagnostics, and the MoBE comparison, required approximately 60 H100 GPU-hours in total. We report GPU-hours as wall-clock runtime multiplied by the number of GPUs used. All models (GPT-J 6B, LLaMA 2 7B, Qwen3-30B-A3B, GPT-OSS-20B) and benchmarks (WikiText-2, C4, ARC-Challenge, HellaSwag, OpenBookQA, PIQA, WinoGrande) are used strictly for research evaluation of compression methods, consistent with their publicly stated intended research use. We do not redistribute model weights and do not derive products outside research contexts 2 4 6 8 10 12         
+
+> Compressed MoE layers
+> 50
+> 100
+> 150
+> 200
+> 250
+> C4 perplexity
+> TD-MoE ρ= 0 .2TD-MoE ρ= 0 .4MoBE b8 MoBE b16 uncompressed
+
+Figure 18: C4 perplexity as the number of compressed MoE layers increases on GPT-OSS-20B, for TD-MoE 𝜌 ∈{0.2, 0.4} and MoBE 𝑛 𝐵 ∈ { 8, 16 }. The uncompressed C4 baseline (dotted) is anomalously high because GPT-OSS targets the harmony chat format rather than raw-text language modelling (cf. Figure 17); absolute perplexity is not a reliable quality metric for this model, but the relative ordering—MoBE perturbing the model less than TD-MoE at matched bits-saved—is consistent with the activation-geometry diagnostic in Figure 19. 20 25 30 35 40 45 50     
+
+> Angle (deg)
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> Norm ratio
+> GPT-OSS-20B
+> 50
+> 100
+> 150
+> 200
+> 250
+> C4 PPL
+> Family
+> TD-MoE ρ= 0 .2
+> TD-MoE ρ= 0 .4
+> MoBE b8
+> MoBE b16
+> Bits saved
+> 0.5%
+> 6.5%
+> 12.5%
+
+Figure 19: Residual-stream activation geometry of TD-MoE ver-sus MoBE on GPT-OSS-20B. Each marker is one block-schedule setting; marker shape indicates the decomposition family, marker area is the fraction of bits saved relative to the dense model, and colour encodes C4 perplexity. The dashed line marks the no-perturbation reference (norm ratio = 1). At matched bits-saved, MoBE produces smaller MoE-output angles and norm ratios closer to one than TD-MoE, mirroring the Qwen3-30B-A3B finding (Fig-ure 4). 
+
+23

@@ -1,0 +1,370 @@
+Title: Spatial-Temporal Decoupled Reference Conditioning for Identity-Preserving Text-to-Video Generation
+
+URL Source: https://arxiv.org/pdf/2606.02441v1
+
+Published Time: Tue, 02 Jun 2026 02:54:33 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# Spatial-Temporal Decoupled Reference Conditioning for Identity-Preserving Text-to-Video Generation 
+
+# Yuheng Chen ∗
+
+Shanghai Jiao Tong University Shanghai, Shanghai, China cyh627@sjtu.edu.cn 
+
+# Teng Hu ∗
+
+Shanghai Jiao Tong University Shanghai, Shanghai, China hu-teng@sjtu.edu.cn 
+
+# Yuji Wang 
+
+Shanghai Jiao Tong University Shanghai, Shanghai, China yujiwang@sjtu.edu.cn 
+
+# Qingdong He 
+
+University of Electronic Science and Technology of China Chengdu, Sichuan, China heqingdong@alu.uestc.edu.cn 
+
+# Lizhuang Ma †
+
+Shanghai Jiao Tong University Shanghai, Shanghai, China ma-lz@cs.sjtu.edu.cn 
+
+# Jiangning Zhang ‡
+
+Zhejiang University Hangzhou, Zhejiang, China 186368@zju.edu.cn A middle -aged Caucasian woman with dark hair pulled back in a ponytail stands in a sun -drenched, vintage classroom …
+
+initially casting her eyes downward to lock onto a butterfly … before her head jerks upward and rotates right to track the …
+
+A poised, forty -year -old Caucasian woman with dark, wavy hair stands in a post office queue … she glances down at her 
+
+smartphone before turning her head forward … her expression shifting from a faint, polite smile to a look of determined …
+
+A 30 -year -old Caucasian man with messy dark brown hair, light stubble and a mole on his right cheek is focused on tuning 
+
+an acoustic guitar, his head tilting down to inspect the strings before lifting his gaze forward to survey the surroundings …
+
+Figure 1: Examples of identity-preserving text-to-video generation by our ST-DRC. Given a reference face, our method generates high-fidelity videos with consistent identity. Blue text and boxes indicate the reference identity. 
+
+> ∗
+
+Both authors contributed equally to this research. 
+
+> †
+
+Corresponding authors. 
+
+> ‡
+
+Project lead. Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components of this work owned by others than the author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from permissions@acm.org. 
+
+MM ’26, Rio de Janeiro, Brazil 
+
+© 2026 Copyright held by the owner/author(s). Publication rights licensed to ACM. ACM ISBN 978-x-xxxx-xxxx-x/YYYY/MM https://doi.org/10.1145/nnnnnnn.nnnnnnn 
+
+## Abstract 
+
+Identity-preserving video generation (IPVG) aims to synthesize high-fidelity videos that follow text prompts while faithfully pre-serving a reference identity. Despite recent progress, existing IPVG methods still struggle to balance high-level semantic control and low-level identity fidelity. To bridge this gap, we propose ST-DRC ,an effective Spatial-Temporal Decoupled Reference Conditioning framework for identity-preserving text-to-video generation. At the framework level, ST-DRC performs latent in-context feature in-jection by encoding the reference image with the video VAE and concatenating it with noisy video latents, enabling rich low-level identity details to be accessed without additional adapters. To sepa-rate identity-aware reference retrieval from appearance copying, we introduce TASS-RoPE , a Temporal-Adjacent Spatial-Shifted  
+
+> arXiv:2606.02441v1 [cs.CV] 1 Jun 2026 MM ’26, November 10–14, 2026, Rio de Janeiro, Brazil Chen et al.
+
+RoPE scheme that places reference tokens near the video sequence in time but shifts them in space, allowing reference information to flow through spatio-temporal attention while suppressing pixel-level copy-paste shortcuts. To further prevent shortcut learning and strengthen the otherwise diluted identity supervision in the diffusion objective, we combine appearance-invariant reference augmentation with face-guided identity objectives, encouraging the model to preserve identity under variations in color, pose, and layout. At inference time, we introduce a three-stream reference classifier-free guidance strategy that independently controls text adherence and reference fidelity. Experiments demonstrate that ST-DRC achieves strong identity preservation, prompt alignment, temporal consistency, and video quality with a lightweight design built on LTX-2.3. Our method ranks among the top submissions in the facial identity-preserving video generation track, validating the effectiveness of spatial-temporal decoupled reference conditioning. Code is available at https://github.com/AliothChen/ST-DRC. 
+
+## CCS Concepts 
+
+• Computing methodologies → Image and video acquisition .
+
+## Keywords 
+
+Video Generation, Identity Preservation, Diffusion Transformers, Positional Encoding   
+
+> ACM Reference Format:
+> Yuheng Chen, Teng Hu, Yuji Wang, Qingdong He, Lizhuang Ma, and Jiangn-ing Zhang. 2026. Spatial-Temporal Decoupled Reference Conditioning for Identity-Preserving Text-to-Video Generation. In Proceedings of the 34th ACM International Conference on Multimedia (MM ’26), November 10–14, 2026, Rio de Janeiro, Brazil. ACM, New York, NY, USA, 8 pages. https: //doi.org/10.1145/nnnnnnn.nnnnnnn
+
+## 1 Introduction 
+
+Text-to-video generation has advanced rapidly with large-scale dif-fusion transformers [ 44 ], enabling visually compelling videos from open-ended text prompts [ 3, 14 , 19 – 22 , 31 , 41 , 49 , 52 , 57 , 61 , 65 ]. However, text alone is insufficient when the generated video is expected to depict a specific identity. Identity-preserving video generation (IPVG) [ 13 , 53 , 59 , 64 ] addresses this limitation by con-ditioning video synthesis on both a reference image and a text prompt, requiring the generated video to follow the prompt while maintaining the reference identity across time. IPVG involves two tightly coupled challenges: high-level prompt controllability , where the generated video should follow the text-specified action, scene, style, and temporal dynamics, and low-level identity fidelity , where identity-bearing facial details from the reference image should be preserved without carrying over nui-sance appearance factors such as lighting, head pose, background, or camera layout. Existing IPVG methods can be roughly grouped into two paradigms. 1) Semantic reference injection. Adapter-or embedding-based methods [ 15 , 16 , 47 , 53 , 62 , 64 , 66 ] inject the reference through compact semantic features, face embeddings, or additional cross-attention branches. This paradigm is compat-ible with text-conditioned generation and provides robust global guidance, but the compressed reference representation may dis-card fine-grained spatial details that are crucial for facial identity preservation. 2) Latent reference injection. Another line of meth-ods [ 37 , 68 ] encodes the reference image into the same latent space as video frames and concatenates it with video tokens, allowing the model to access richer spatial details through spatio-temporal attention. While more promising for identity fidelity, this para-digm also exposes the model to nuisance appearance factors in the reference image, such as pose, illumination, background, and layout. This leads to an appearance copy-paste [ 9, 55 ] problem, where details irrelevant to identity are mistakenly transferred to the generated video, causing appearance leakage, ghosting artifacts, reduced motion diversity, and weaker prompt following. To address this issue, we propose ST-DRC , a spatial-temporal decoupled reference conditioning framework built on LTX-2.3 [ 14 ]. Our method first encodes the reference image with the video VAE and concatenates it with noisy video latents as a non-decoded iden-tity memory, allowing the model to access rich spatial identity cues through its native spatio-temporal attention. To prevent this memory from being treated as a physical frame or a pixel-aligned template, we introduce TASS-RoPE , which places reference tokens temporally adjacent to the video sequence while shifting them away in the spatial dimensions. This design keeps reference information close enough for attention-based identity retrieval, but breaks di-rect spatial alignment that would otherwise encourage low-level copying. During training, we further perturb the reference image in geometry, color, and layout, making non-identity appearance factors unreliable. Since such decoupling mainly removes short-cuts, we complement it with a face-guided identity objective that directly supervises the generated faces in an identity-discriminative embedding space, alleviating the dilution of sparse facial identity signals under the global diffusion objective. At inference time, a three-stream reference classifier-free guidance strategy [ 17 ] inde-pendently adjusts prompt adherence and reference fidelity. Our contributions are summarized as follows: 
+
+1) We propose ST-DRC , a unified latent reference conditioning framework that encodes the reference image with the video VAE and concatenates it with noisy video latents as a non-decoded iden-tity memory, enabling rich low-level identity details to be accessed without additional adapters. 
+
+2) We introduce TASS-RoPE, a temporal-adjacent and spatial-shifted positional design that enables effective reference attention while suppressing pixel-level spatial copying. 
+
+3) We combine appearance-invariant reference perturbation with face-guided identity supervision, jointly removing nuisance appear-ance shortcuts and strengthening identity learning. 
+
+4) We introduce three-stream reference guidance for inference-time control over prompt adherence and reference fidelity, achiev-ing strong identity preservation and temporal consistency. 
+
+## 2 Related Works 
+
+Identity-preserving video generation. Identity-preserving video generation (IPVG) aims to synthesize videos that follow textual instructions while maintaining the identity of a reference subject. Existing methods typically rely on specialized identity-conditioning mechanisms. Adapter- or embedding-based methods inject com-pact reference features through face encoders, identity embeddings, cross-attention branches, or multimodal fusion modules [ 6, 16 , 47 ,Spatial-Temporal Decoupled Reference Conditioning for Identity-Preserving Text-to-Video Generation MM ’26, November 10–14, 2026, Rio de Janeiro, Brazil A middle -aged woman is typing on a          
+
+> smartphone while standing in a
+> peaceful traditional samurai courtyard,
+> initially staring down at her screen …
+> Textual Prompt
+> Gemma3 Text Encoder
+> Reference Image Video
+> Video VAE Encoder
+> Video DiT Block
+
+# …
+
+×N
+
+# … …⨁           
+
+> H
+> T
+> W
+> TASS -RoPE
+> (0,0,0)
+> (t, 3,4)
+> (0,0,1) (0,0,2) (0,0,3)
+> (0,1,0) (0,1,1) (0,1,2) (0,1,3)
+> (0,2,0) (0,2,1) (0,2,2) (0,2,3)
+> (1,2,0) (1,2,1) (1,2,2) (1,2,3)
+> (1,1,3)
+> (1,0,3)
+> (2,2,0) (2,2,1) (2,2,2) (2,2,3)
+> (2,1,3)
+> (2,0,3)
+> (t, 4,4)
+> (t, 5,4)
+> (t, 3,5)(t, 3,6)(t, 3,7)
+> (t, 4,7)
+> (t, 5,7)
+> (t, 4,5)(t, 4,6)
+> (t, 5,5)(t, 5,6)
+> (a) Latent Reference Conditioning (b)TASS -RoPE Positioning
+> tlatent frames →
+> 0-indexed temporal
+> range [0, t-1]
+> spatial shift
+> [0,h) ×[0,w) →
+> [h,2h) ×[w,2w)
+> w=4
+> h=3
+> add noise
+> t-1
+> t
+> 0
+
+Figure 2: Overview of ST-DRC. (a) The reference image is encoded into the video latent space and concatenated with noisy video latents as a non-decoded identity memory. (b) TASS-RoPE places reference tokens near the video sequence in time but shifts them in space, enabling identity retrieval while reducing pixel-level copy-paste. 
+
+55 , 62 , 64 , 66 ]. They improve identity control and integrate well with text-conditioned generation, but often introduce additional identity-specific modules and may discard fine-grained spatial de-tails through feature compression. Another line of methods encodes reference images into the video latent space and injects them as visual tokens, preserving richer spatial details for spatio-temporal attention [ 28 , 29 , 37 , 68 ]. However, the reference latent also carries pose, illumination, background, and layout, which can cause an ap-pearance copy-paste problem where identity-irrelevant details are mistakenly transferred to the generated video. Multi-stage, training-free, and post-hoc optimization methods further improve iden-tity preservation through staged customization, prompt/reference enhancement, guidance design, reward optimization, or multiple fine-tuned experts [ 2 , 4, 13 , 43 , 54 , 56 , 58 , 59 ]. These methods are effective but usually require per-subject adaptation, extra inference-time processing, or additional optimization stages. In contrast, our method represents the reference face directly in the video latent space as a non-decoded identity condition, avoiding additional identity encoders and per-identity tuning while addressing appear-ance entanglement through spatial-temporal decoupling, reference augmentation, and reference-conditioned guidance. 
+
+Subject-to-video generation. Subject-to-video (S2V) generation conditions a video generation model on one or more reference im-ages of target subjects, covering broader categories such as persons, objects, animals, and backgrounds. Early personalization methods such as DreamBooth [ 46 ] and DreamVideo [ 56 ] achieve subject fi-delity through subject-specific or few-shot customization, but their per-subject optimization limits scalability. Recent open-set or zero-shot methods improve subject consistency through adapter-based conditioning [ 7], cross-attention injection [ 21 , 25 , 58 ], anchored prompts [ 35 ], LoRA-based customization [ 5 , 23 ], latent reference concatenation [ 8, 20 , 42 ], or multimodal conditioning [ 1 , 12 , 18 , 33 ,60 ]. Large-scale datasets and benchmarks such as OpenS2V [ 63 ], Phantom-Data [ 9], and OpenSubject [ 39 ] further support evaluation and training for subject-consistent generation. Notably, recent S2V studies highlight persistent challenges such as multi-subject incon-sistency, background entanglement, reduced reference fidelity, se-mantic drift, and copy-paste artifacts under reference-image condi-tioning [ 9, 68 ]. Although these works provide important designs for reference-conditioned video generation, their objective is broader than facial IPVG, where identity preservation depends on fine-grained facial cues while pose, expression, lighting, and scene con-text should remain flexible. Our method follows latent concate-nation, but tailors it to facial IPVG with TASS-RoPE, appearance-invariant augmentation, and reference-conditioned guidance. 
+
+## 3 Methods 
+
+ST-DRC generates identity-preserving videos conditioned on a ref-erence image 𝐼 ref and a text prompt 𝑦 . Given a noisy video latent 𝑧 𝑡 ,our method injects the reference identity into the denoising pro-cess while preserving prompt-driven motion and scene dynamics. We implement ST-DRC on the video branch of LTX-2.3 [ 14 ], and exclude its audio branch since our setting does not involve audio input or output. As shown in Fig. 2, we first encode 𝐼 ref into the video VAE latent space and append it to the video latent sequence as a non-decoded identity memory. The reference tokens are then assigned Temporal-Adjacent Spatial-Shifted RoPE (TASS-RoPE) co-ordinates, enabling identity information to be retrieved through spatio-temporal attention while discouraging spatial copy-paste. During training, reference augmentation and face-guided identity supervision further suppress nuisance appearance shortcuts and strengthen identity learning. At inference time, three-stream ref-erence CFG provides independent control over prompt adherence and reference fidelity. 
+
+## 3.1 Latent In-Context Reference Injection 
+
+Our first design is to represent the reference image as an in-context latent memory rather than an additional semantic embedding or a decoded video frame. Since the video branch of LTX-2.3 operates MM ’26, November 10–14, 2026, Rio de Janeiro, Brazil Chen et al. 
+
+in a VAE latent space with spatio-temporal attention, the reference image can be encoded into the same latent space as the video frames and jointly processed with noisy video tokens. Before encoding, we resize the reference image to the target video resolution by scaling it with the largest factor that preserves its aspect ratio, followed by symmetric padding on the shorter side to match the spatial size of the video frames. Let 𝐸 vae denote the video VAE encoder. We encode the reference image as: 
+
+𝑧 ref = 𝐸 vae (𝐼 ref ), (1) where 𝑧 ref ∈ R1×𝐻 ×𝑊 ×𝐶 denotes the reference latent. As shown in Fig. 2(a), given the noisy video latent 𝑧 𝑡 ∈ R𝑇 ×𝐻 ×𝑊 ×𝐶 , we append the reference latent along the temporal dimension: 
+
+˜𝑧 𝑡 = [𝑧 𝑡 , 𝑧 ref ], (2) where ˜𝑧 𝑡 ∈ R(𝑇 +1) × 𝐻 ×𝑊 ×𝐶 . After concatenation, both video and reference latents are forwarded through the Video DiT block, al-lowing the reference latent to provide low-level visual details via spatio-temporal attention. The output corresponding to 𝑧 ref is dis-carded, meaning that it is neither decoded into video frames nor included in the training loss. 
+
+## 3.2 Temporal-Adjacent Spatial-Shifted RoPE 
+
+Latent concatenation alone is insufficient for effective reference conditioning, because the Video DiT models video latents with 3D RoPE [ 48 ] in self-attention [ 51 ]. If no dedicated RoPE coordinates are assigned to the reference latent, its tokens collapse to identical or default positions and may overlap with the first video frame, leading to suboptimal position modeling and undesired interference with temporal attention. Therefore, after appending the reference latent, we further specify its temporal and spatial coordinates in the 3D RoPE space. Assume the video latent contains 𝑇 frames with temporal indices 
+
+0, . . . ,𝑇 −1 and spatial indices (𝑖, 𝑗 ), where 0 ≤ 𝑖 < 𝐻 and 0 ≤ 𝑗 < 𝑊 .For video tokens, we keep the standard 3D coordinates: 
+
+𝑝 𝑣 (𝑡, 𝑖, 𝑗 ) = (𝑡, 𝑖, 𝑗 ), 𝑡 = 0, . . . ,𝑇 − 1. (3) For reference tokens, we propose Temporal-Adjacent Spatial-Shifted RoPE (TASS-RoPE) as shown in Fig. 2(b), which assigns: 
+
+𝑝 𝑟 (𝑖, 𝑗 ) = TASS (𝑖, 𝑗 ) = (𝑇 , 𝐻 + 𝑖,𝑊 + 𝑗 ). (4) Thus, the reference latent occupies the first out-of-frame temporal slot and a non-overlapping spatial region [𝐻, 2𝐻 ) × [ 𝑊 , 2𝑊 ).The temporal coordinate is chosen as 𝑇 for two reasons. First , it lies outside the video frame range [0,𝑇 − 1], so the reference tokens do not collide with any real video frame or disturb the original tem-poral ordering among video tokens. Second , it is length-adaptive. A fixed absolute temporal index, such as 100 , is undesirable because the same reference position induces inconsistent relative-position patterns across videos of different lengths, making training less stable. We also avoid placing the reference at a remote index such as 𝑇 + 100 , since RoPE induces distance-decaying inter-token de-pendency, and an excessively large temporal gap may weaken the transfer of fine-grained visual details from the reference tokens to the video tokens. Instead, we use 𝑇 , the nearest out-of-frame temporal position, which avoids collision with video frames while keeping the reference temporally close to the entire video sequence. For the spatial coordinates, we shift the reference latent from the original video region [0, 𝐻 ) × [ 0,𝑊 ) to [𝐻, 2𝐻 ) × [ 𝑊 , 2𝑊 ).This keeps the internal spatial geometry of the reference image unchanged, so neighboring facial regions in the reference latent still preserve their relative spatial relationships. Meanwhile, no reference token shares the same spatial coordinate with any video token. This spatial non-overlap discourages the model from learning a coordinate-aligned copy-paste shortcut , where local appearance details such as pose, lighting, background, or layout are directly transferred from the reference image to the generated video. 
+
+## 3.3 Reference-Robust Identity Enhancement 
+
+To further improve model capability and training efficiency , we respectively introduce the following two complementary training strategies: 
+
+1) Image-level reference augmentation. During training, we randomly apply identity-preserving augmentations to the reference image before VAE encoding: 
+
+𝑧 ref = 𝐸 vae (A ( 𝐼 ref )) , (5) where A is a stochastic augmentation operator sampled with pre-defined probabilities from i) geometric transformations, such as horizontal flipping, slight rotation, and mild spatial cropping, and ii) 
+
+photometric transformations, such as color jittering. At inference time, no augmentation is applied and the original reference image is used. This strategy further mitigates the copy-paste problem and encourages the model to learn more robust high-level identity features instead of relying on low-level appearance shortcuts. 
+
+2) Face-guided auxiliary identity loss. The standard flow-matching objective [ 11 , 36 , 38 ] supervises the model by regressing the velocity field over the entire video latent. While effective for overall video generation, this global objective provides limited di-rect supervision for learning reference identity. Since the loss is averaged over all video tokens, the effective identity-related loss is relatively small and can be easily diluted by numerous non-face tokens, resulting in less efficient identity training. To provide a direct identity signal, we introduce a face-guided auxiliary loss computed from a clean-latent estimate. Given the noisy video latent 𝑧 𝑡 and the predicted velocity ˆ𝑣 𝜃 , we estimate the clean video latent as: 
+
+ˆ𝑧 0 = 𝑧 𝑡 − 𝑡 ˆ𝑣 𝜃 ( ˜𝑧 𝑡 , 𝑡, 𝑦 ). (6) We then decode the estimated clean latent using the frozen VAE decoder: 
+
+ˆ𝑥 (𝑓 ) = 𝐷 vae ( ˆ𝑧 (𝑓 ) 
+
+> 0
+
+), 𝑓 ∈ F , (7) where F denotes the frame indices. InsightFace [ 27 ] is employed to detect face boxes, and the aligned face crops are passed to a frozen ArcFace encoder Φ:
+
+𝑒 𝑓 = Φ(Align ( ˆ𝑥 (𝑓 ) )) , 𝑒 ref = Φ(Align (𝐼 ref )) . (8) The reference embedding 𝑒 ref is computed from the original, unaug-mented reference image and detached during training. The identity loss is defined as the cosine distance in the Arc-Face [10] embedding space: 
+
+Lid =
+
+Í𝑓 ∈ F 𝑚 𝑓 
+
+ 1 − cos (𝑒 𝑓 , 𝑒 ref )Í𝑓 ∈ F 𝑚 𝑓 + 𝜖 , (9) Spatial-Temporal Decoupled Reference Conditioning for Identity-Preserving Text-to-Video Generation MM ’26, November 10–14, 2026, Rio de Janeiro, Brazil A middle -aged woman with a blonde bob sits on a   
+
+> creaking porch swing weeping quietly, starting with
+> her head bowed and gaze fixed on trembling hands
+> before slowly tilting up to shift her eyes from
+> fingertips to look ahead while wiping a tear …
+> A middle -aged man with wavy dark brown hair and
+> light stubble, wearing a navy blazer , is sitting on
+> sunlit courthouse steps strumming an acoustic
+> guitar, keeping his gaze fixed downward on his
+> fingertips navigating the fretboard before slowly …
+> Phantom
+> ConsisID
+> VACE
+> IPVG -STD
+> ST -DRC
+> (Ours)
+
+Figure 3: Qualitative comparison on VIP-200K [ 67 ]. Given the same reference image and text prompt, ST-DRC preserves the target identity more faithfully while producing prompt-consistent and visually coherent videos compared with baselines. 
+
+where 𝑚 𝑓 indicates whether a valid face is detected in frame 𝑓 . To reduce cross-frame identity drift, we further add a temporal identity consistency loss: 
+
+¯𝑒 =
+
+Í𝑓 ∈ F 𝑚 𝑓 𝑒 𝑓 
+
+Í𝑓 ∈ F 𝑚 𝑓 + 𝜖 , Ltic =
+
+Í𝑓 ∈ F 𝑚 𝑓 
+
+ 1 − cos (𝑒 𝑓 , ¯𝑒 )Í𝑓 ∈ F 𝑚 𝑓 + 𝜖 . (10) Since the clean-latent estimate is more reliable at lower noise levels, we weight the auxiliary identity losses with an SNR-inspired coefficient: 
+
+L = Lflow + 𝑤 aux (𝑡 ) ( 𝜆 id Lid + 𝜆 tic Ltic ) . (11) For rectified-flow interpolation 𝑧 𝑡 = (1 − 𝑡 )𝑧 0 + 𝑡𝜖 , we define: 
+
+SNR (𝑡 ) =
+
+ 1 − 𝑡 𝑡 + 𝜖 
+
+2
+
+, 𝑤 aux (𝑡 ) =
+
+ SNR (𝑡 )
+
+SNR (𝑡 ) + 1
+
+𝛾 
+
+, (12) where 𝛾 controls the emphasis on low-noise timesteps. The co-efficients 𝜆 id and 𝜆 tic balance identity preservation and temporal identity consistency. 
+
+## 3.4 Decoupled Text-Reference Guidance 
+
+To independently control prompt adherence and reference fidelity at inference time, we adopt a decoupled text-reference classifier-free guidance strategy [ 17 ]. Specifically, we compute three velocity predictions at each denoising step: 1) an unconditional prediction 
+
+ˆ𝑣 ∅ , 2) a text-only prediction ˆ𝑣 𝑦 , and 3) a text-reference prediction 
+
+ˆ𝑣 𝑦,𝑟 . The final guided velocity is defined as: 
+
+ˆ𝑣 cfg = ˆ𝑣 ∅ + 𝑠 𝑦 
+
+  ˆ𝑣 𝑦 − ˆ𝑣 ∅
+
+ + 𝑠 𝑟 
+
+  ˆ𝑣 𝑦,𝑟 − ˆ𝑣 𝑦 
+
+ , (13) where 𝑠 𝑦 controls text guidance strength and 𝑠 𝑟 controls reference guidance strength. Unless otherwise specified, we set 𝑠 𝑦 = 5.0 and 
+
+𝑠 𝑟 = 7.5 in all experiments. This formulation decomposes the guid-ance direction into a text direction ˆ𝑣 𝑦 − ˆ𝑣 ∅ and a reference direction 
+
+ˆ𝑣 𝑦,𝑟 − ˆ𝑣 𝑦 , allowing prompt following and identity preservation to be adjusted separately. To enable these three prediction streams, we apply independent condition dropout during training. The text condition is dropped with probability 𝑝 𝑦 = 0.05 , and the reference condition is dropped with probability 𝑝 𝑟 = 0.20 .
+
+## 4 Experiments 4.1 Implementation Details 
+
+Training. We build ST-DRC on LTX-2.3 [ 14 ], and only activate its video branch. The model is fully fine-tuned on VIP-200K [ 67 ] for 
+
+20 K optimization steps with a batch size of 32 on H20 GPUs. We use AdamW [ 40 ] with a learning rate of 5 × 10 −5. For the auxiliary identity losses in Sec. 3.3, we set 𝜆 id = 0.1 and 𝜆 tic = 0.05 , and use 
+
+𝑤 aux (𝑡 ) =
+
+ SNR (𝑡 ) 
+
+> SNR (𝑡 )+ 1
+
+𝛾 
+
+with 𝛾 = 1.0.
+
+Metrics. We evaluate generated videos from three aspects: 1) iden-tity preservation, 2) prompt alignment, and 3) video quality. For MM ’26, November 10–14, 2026, Rio de Janeiro, Brazil Chen et al. 
+
+Table 1: Quantitative comparison on the VIP-200K test set [ 67 ]. We compare ST-DRC with representative IPVG and S2V baselines, and report cumulative ablations from the LTX-2.3 base model to the full ST-DRC. Best results are marked in bold. 
+
+Method Components Identity Preservation Prompt Alignment Video Quality Ref. TASS Aug. ID CFG FaceSim-Arc ↑ FaceSim-Cur ↑ CLIP-Score ↑ AQ ↑ IQ ↑ MS ↑ DD ↑
+
+External baselines 
+
+ConsisID [64] 0.566 0.593 31.47 0.526 0.670 0.982 0.51 Phantom [37] 0.537 0.627 31.55 0.532 0.668 0.982 0.87 VACE [29] 0.423 0.444 32.61 0.564 0.688 0.986 0.71 IPVG-STD [53] 0.492 0.519 31.82 0.561 0.683 0.986 0.88 
+
+ST-DRC (Ours) 0.631 0.671 33.04 0.576 0.682 0.992 0.93 
+
+Cumulative ablations 
+
+LTX-2.3-Base [14] 0.284 0.317 32.18 0.558 0.681 0.985 0.87 + Ref. Concat. (Sec. 3.1) ✓ 0.541 0.579 31.76 0.548 0.674 0.961 0.83 + TASS-RoPE (Sec. 3.2) ✓ ✓ 0.573 0.612 31.94 0.555 0.677 0.972 0.86 + Ref. Aug. (Sec. 3.3) ✓ ✓ ✓ 0.592 0.631 32.12 0.563 0.679 0.979 0.89 + Aux. ID Loss (Sec. 3.3) ✓ ✓ ✓ ✓ 0.618 0.658 32.28 0.568 0.680 0.986 0.88 + Decoupled CFG (Sec. 3.4) ✓ ✓ ✓ ✓ ✓ 0.631 0.671 33.04 0.576 0.682 0.992 0.93 
+
+identity preservation, following ConsisID [ 64 ], we report FaceSim-Arc [ 10 ] and FaceSim-Cur [ 24 ], which compute the facial feature similarity between generated frames and the reference image. For text relevance, we use CLIP-Score [ 45 ] to measure the alignment between generated videos and input prompts. For video quality, following VBench [ 26 ], we report Aesthetic Quality (AQ; LAION aesthetic predictor [ 32 ]), Imaging Quality (IQ; MUSIQ [ 30 ]), Motion Smoothness (MS; AMT [ 34 ]), and Dynamic Degree (DD; RAFT [ 50 ]). 
+
+## 4.2 Quantitative and Qualitative Analysis 
+
+Baselines. We compare ST-DRC with representative IPVG and S2V methods, including Phantom [ 37 ], VACE [ 29 ], ConsisID [ 64 ], and IPVG-STD [ 53 ], covering different reference-conditioning paradigms. 
+
+Quantitative Comparison. Tab. 1 reports quantitative results on the VIP-200K test set. ST-DRC achieves the best identity preser-vation, improving FaceSim-Arc/Cur from 0.566 /0.593 of ConsisID and 0.537 /0.627 of Phantom to 0.631 /0.671 . This shows that our latent reference conditioning and face-guided supervision preserve fine-grained facial identity more effectively. ST-DRC also obtains the highest CLIP-Score, indicating stronger prompt alignment. For video quality, our method achieves the best AQ, MS and DD , while maintaining competitive IQ. Although VACE obtains slightly higher IQ, its identity similarity is much weaker, suggesting that frame-level quality alone is insufficient for facial IPVG. Overall, ST-DRC provides the best balance among identity preservation, prompt alignment, temporal smoothness, and visual quality. 
+
+Qualitative Comparison. Qualitative comparisons are shown in Fig. 3. ConsisID suffers from severe copy-paste artifacts and produces noticeable visual artifacts. Phantom shows lower visual quality, such as over-exposed or washed-out appearance, and lim-ited temporal identity consistency across frames. VACE generates visually plausible videos but exhibits weaker identity similarity to the reference subject. IPVG-STD also suffers from noticeable copy-paste behavior, where non-face environmental details from the reference image are often transferred to the generated video. In contrast, ST-DRC preserves the target identity more faithfully while maintaining better temporal consistency and video quality. 
+
+## 4.3 Ablation Study 
+
+We conduct cumulative ablations in Tab. 1 to analyze five compo-nents of ST-DRC: 1) reference concatenation, 2) TASS-RoPE, 3) 
+
+reference image augmentation, 4) auxiliary identity loss, and 5) 
+
+decoupled text-reference guidance. Starting from the LTX-2.3 video branch, reference concatenation introduces low-level identity cues, but also brings appearance entanglement and copy-paste artifacts. TASS-RoPE improves identity retrieval by making reference tokens temporally accessible yet spatially non-overlapping, thereby reduc-ing direct appearance copying. Reference augmentation further suppresses pose, color, and background shortcuts, while the auxil-iary identity loss provides explicit face-level supervision to improve identity similarity and reduce cross-frame identity drift. Finally, decoupled text-reference guidance balances prompt adherence and reference fidelity at inference time. Overall, these cumulative gains show that the components are complementary, and the full model achieves the best balance among identity preservation, temporal consistency, text alignment, and video quality. 
+
+## 5 Conclusion 
+
+We introduced ST-DRC, a spatial-temporal decoupled reference con-ditioning framework for identity-preserving text-to-video genera-tion. ST-DRC represents the reference image as a latent in-context condition and uses TASS-RoPE to keep reference tokens temporally accessible but spatially non-overlapping, enabling identity retrieval while suppressing copy-paste shortcuts. With reference-robust identity enhancement and decoupled text-reference guidance, our method improves identity preservation, prompt adherence, and video quality without additional identity encoders or per-identity tuning. Overall, ST-DRC achieves strong identity preservation and high overall video quality with a lightweight design, demonstrating its effectiveness for identity-preserving text-to-video generation. Spatial-Temporal Decoupled Reference Conditioning for Identity-Preserving Text-to-Video Generation MM ’26, November 10–14, 2026, Rio de Janeiro, Brazil 
+
+## References 
+
+[1] Hila Chefer, Uriel Singer, Amit Zohar, Yuval Kirstain, Adam Polyak, Yaniv Taig-man, Lior Wolf, and Shelly Sheynin. 2025. Videojam: Joint appearance-motion representations for enhanced motion generation in video models. arXiv preprint arXiv:2502.02492 (2025). [2] Hila Chefer, Shiran Zada, Roni Paiss, Ariel Ephrat, Omer Tov, Michael Rubinstein, Lior Wolf, Tali Dekel, Tomer Michaeli, and Inbar Mosseri. 2024. Still-moving: Customized video generation without customized video data. ACM Transactions on Graphics (TOG) 43, 6 (2024), 1–11. [3] Guibin Chen, Dixuan Lin, Jiangping Yang, Chunze Lin, Junchen Zhu, Mingyuan Fan, Hao Zhang, Sheng Chen, Zheng Chen, Chengcheng Ma, et al . 2025. Skyreels-v2: Infinite-length film generative model. arXiv preprint arXiv:2504.13074 (2025). [4] Hong Chen, Xin Wang, Guanning Zeng, Yipeng Zhang, Yuwei Zhou, Feilin Han, Yaofei Wu, and Wenwu Zhu. 2025. Videodreamer: Customized multi-subject text-to-video generation with disen-mix finetuning on language-video foundation models. IEEE Transactions on Multimedia (2025). [5] Jingxi Chen, Zongxia Li, Zhichao Liu, Guangyao Shi, Xiyang Wu, Fuxiao Liu, Cornelia Fermuller, Brandon Y Feng, and Yiannis Aloimonos. 2025. First Frame Is the Place to Go for Video Content Customization. arXiv preprint arXiv:2511.15700 
+
+(2025). [6] Liyang Chen, Tianxiang Ma, Jiawei Liu, Bingchuan Li, Zhuowei Chen, Lijie Liu, Xu He, Gen Li, Qian He, and Zhiyong Wu. 2025. Humo: Human-centric video generation via collaborative multi-modal conditioning. arXiv preprint arXiv:2509.08519 (2025). [7] Tsai-Shien Chen, Aliaksandr Siarohin, Willi Menapace, Yuwei Fang, Kwot Sin Lee, Ivan Skorokhodov, Kfir Aberman, Jun-Yan Zhu, Ming-Hsuan Yang, and Sergey Tulyakov. 2025. Multi-subject open-set personalization in video generation. In 
+
+Proceedings of the Computer Vision and Pattern Recognition Conference . 6099–6110. [8] Yuheng Chen, Qingdong He, Teng Hu, Yuji Wang, Yabiao Wang, Lizhuang Ma, and Jiangning Zhang. 2026. Omni-Customizer: End-to-End MultiModal Cus-tomization for Joint Audio-Video Generation. arXiv preprint arXiv:2605.17488 
+
+(2026). [9] Zhuowei Chen, Bingchuan Li, Tianxiang Ma, Lijie Liu, Mingcong Liu, Yi Zhang, Gen Li, Xinghui Li, Siyu Zhou, Qian He, et al . 2025. Phantom-data: Towards a gen-eral subject-consistent video generation dataset. arXiv preprint arXiv:2506.18851 
+
+(2025). [10] Jiankang Deng, Jia Guo, Niannan Xue, and Stefanos Zafeiriou. 2019. Arcface: Additive angular margin loss for deep face recognition. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition . 4690–4699. [11] Patrick Esser, Sumith Kulal, Andreas Blattmann, Rahim Entezari, Jonas Müller, Harry Saini, Yam Levi, Dominik Lorenz, Axel Sauer, Frederic Boesel, et al . 2024. Scaling rectified flow transformers for high-resolution image synthesis. In Forty-first international conference on machine learning .[12] Zhengcong Fei, Debang Li, Di Qiu, Jiahua Wang, Yikun Dou, Rui Wang, Jingtao Xu, Mingyuan Fan, Guibin Chen, Yang Li, et al . 2025. Skyreels-a2: Compose anything in video diffusion transformers. arXiv preprint arXiv:2504.02436 (2025). [13] Jiayi Gao, Changcheng Hua, Qingchao Chen, Yuxin Peng, and Yang Liu. 2025. Identity-Preserving Text-to-Video Generation via Training-Free Prompt, Image, and Guidance Enhancement. In Proceedings of the 33rd ACM International Confer-ence on Multimedia . 13751–13757. [14] Yoav HaCohen, Benny Brazowski, Nisan Chiprut, Yaki Bitterman, Andrew Kvochko, Avishai Berkowitz, Daniel Shalem, Daphna Lifschitz, Dudu Moshe, Eitan Porat, et al . 2026. LTX-2: Efficient Joint Audio-Visual Foundation Model. 
+
+arXiv preprint arXiv:2601.03233 (2026). [15] Junjie He, Yifeng Geng, and Liefeng Bo. 2025. Uniportrait: A unified frame-work for identity-preserving single-and multi-human image personalization. In 
+
+Proceedings of the IEEE/CVF International Conference on Computer Vision . 14399– 14408. [16] Xuanhua He, Quande Liu, Shengju Qian, Xin Wang, Tao Hu, Ke Cao, Keyu Yan, and Jie Zhang. 2024. Id-animator: Zero-shot identity-preserving human video generation. arXiv preprint arXiv:2404.15275 (2024). [17] Jonathan Ho and Tim Salimans. 2022. Classifier-free diffusion guidance. arXiv preprint arXiv:2207.12598 (2022). [18] Li Hu, Guangyuan Wang, Zhen Shen, Xin Gao, Dechao Meng, Lian Zhuo, Peng Zhang, Bang Zhang, and Liefeng Bo. 2025. Animate anyone 2: High-fidelity character image animation with environment affordance. In Proceedings of the IEEE/CVF International Conference on Computer Vision . 10207–10217. [19] Teng Hu, Zhentao Yu, Guozhen Zhang, Zihan Su, Zhengguang Zhou, You-liang Zhang, Yuan Zhou, Qinglin Lu, and Ran Yi. 2025. Harmony: Harmoniz-ing Audio and Video Generation through Cross-Task Synergy. arXiv preprint arXiv:2511.21579 (2025). [20] Teng Hu, Zhentao Yu, Zhengguang Zhou, Sen Liang, Yuan Zhou, Qin Lin, and Qinglin Lu. 2025. Hunyuancustom: A multimodal-driven architecture for cus-tomized video generation. arXiv preprint arXiv:2505.04512 (2025). [21] Teng Hu, Zhentao Yu, Zhengguang Zhou, Jiangning Zhang, Yuan Zhou, Qinglin Lu, and Ran Yi. 2026. PolyVivid: Vivid Multi-Subject Video Generation with Cross-Modal Interaction and Enhancement. Advances in Neural Information Processing Systems 38 (2026), 49394–49420. [22] Teng Hu, Jiangning Zhang, Zihan Su, and Ran Yi. 2026. UltraGen: High-Resolution Video Generation with Hierarchical Attention. In Proceedings of the AAAI Con-ference on Artificial Intelligence , Vol. 40. 4923–4931. [23] Chi-Pin Huang, Yen-Siang Wu, Hung-Kai Chung, Kai-Po Chang, Fu-En Yang, and Yu-Chiang Frank Wang. 2025. Videomage: Multi-subject and motion customiza-tion of text-to-video diffusion models. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition . 17603–17612. [24] Yuge Huang, Yuhan Wang, Ying Tai, Xiaoming Liu, Pengcheng Shen, Shaoxin Li, Jilin Li, and Feiyue Huang. 2020. Curricularface: adaptive curriculum learning loss for deep face recognition. In proceedings of the IEEE/CVF conference on computer vision and pattern recognition . 5901–5910. [25] Yuzhou Huang, Ziyang Yuan, Quande Liu, Qiulin Wang, Xintao Wang, Ruimao Zhang, Pengfei Wan, Di Zhang, and Kun Gai. 2025. Conceptmaster: Multi-concept video customization on diffusion transformer models without test-time tuning. 
+
+arXiv preprint arXiv:2501.04698 (2025). [26] Ziqi Huang, Yinan He, Jiashuo Yu, Fan Zhang, Chenyang Si, Yuming Jiang, Yuan-han Zhang, Tianxing Wu, Qingyang Jin, Nattapol Chanpaisit, et al . 2024. Vbench: Comprehensive benchmark suite for video generative models. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition . 21807– 21818. [27] InsightFace Contributors. 2023. InsightFace: 2D and 3D Face Analysis Project. https://github.com/deepinsight/insightface. [28] Yuming Jiang, Tianxing Wu, Shuai Yang, Chenyang Si, Dahua Lin, Yu Qiao, Chen Change Loy, and Ziwei Liu. 2024. Videobooth: Diffusion-based video generation with image prompts. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition . 6689–6700. [29] Zeyinzi Jiang, Zhen Han, Chaojie Mao, Jingfeng Zhang, Yulin Pan, and Yu Liu. 2025. Vace: All-in-one video creation and editing. In Proceedings of the IEEE/CVF International Conference on Computer Vision . 17191–17202. [30] Junjie Ke, Qifei Wang, Yilin Wang, Peyman Milanfar, and Feng Yang. 2021. Musiq: Multi-scale image quality transformer. In Proceedings of the IEEE/CVF international conference on computer vision . 5148–5157. [31] Weijie Kong, Qi Tian, Zijian Zhang, Rox Min, Zuozhuo Dai, Jin Zhou, Jiangfeng Xiong, Xin Li, Bo Wu, Jianwei Zhang, et al . 2024. Hunyuanvideo: A systematic framework for large video generative models. arXiv preprint arXiv:2412.03603 
+
+(2024). [32] LAION-AI. 2022. LAION-Aesthetics Predictor. https://github.com/LAION-AI/ aesthetic-predictor. A linear estimator on top of CLIP for predicting image aesthetic quality. [33] Zhaoyang Li, Dongjun Qian, Kai Su, Qishuai Diao, Xiangyang Xia, Chang Liu, Wenfei Yang, Tianzhu Zhang, and Zehuan Yuan. 2025. Bindweave: Subject-consistent video generation via cross-modal integration. arXiv preprint arXiv:2510.00438 (2025). [34] Zhen Li, Zuo-Liang Zhu, Ling-Hao Han, Qibin Hou, Chun-Le Guo, and Ming-Ming Cheng. 2023. Amt: All-pairs multi-field transforms for efficient frame interpolation. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition . 9801–9810. [35] Feng Liang, Haoyu Ma, Zecheng He, Tingbo Hou, Ji Hou, Kunpeng Li, Xiaoliang Dai, Felix Juefei-Xu, Samaneh Azadi, Animesh Sinha, et al . 2025. Movie weaver: Tuning-free multi-concept video personalization with anchored prompts. In 
+
+Proceedings of the Computer Vision and Pattern Recognition Conference . 13146– 13156. [36] Yaron Lipman, Ricky TQ Chen, Heli Ben-Hamu, Maximilian Nickel, and Matt Le. 2022. Flow matching for generative modeling. arXiv preprint arXiv:2210.02747 
+
+(2022). [37] Lijie Liu, Tianxiang Ma, Bingchuan Li, Zhuowei Chen, Jiawei Liu, Gen Li, Siyu Zhou, Qian He, and Xinglong Wu. 2025. Phantom: Subject-consistent video generation via cross-modal alignment. In Proceedings of the IEEE/CVF International Conference on Computer Vision . 14951–14961. [38] Xingchao Liu, Chengyue Gong, and Qiang Liu. 2022. Flow straight and fast: Learning to generate and transfer data with rectified flow. arXiv preprint arXiv:2209.03003 (2022). [39] Yexin Liu, Manyuan Zhang, Yueze Wang, Hongyu Li, Dian Zheng, Weiming Zhang, Changsheng Lu, Xunliang Cai, Yan Feng, Peng Pei, et al . 2025. OpenSub-ject: Leveraging Video-Derived Identity and Diversity Priors for Subject-driven Image Generation and Manipulation. arXiv preprint arXiv:2512.08294 (2025). [40] Ilya Loshchilov and Frank Hutter. 2017. Decoupled weight decay regularization. 
+
+arXiv preprint arXiv:1711.05101 (2017). [41] Chetwin Low, Weimin Wang, and Calder Katyal. 2025. Ovi: Twin backbone cross-modal fusion for audio-video generation. arXiv preprint arXiv:2510.01284 
+
+(2025). [42] Ziyang Mai and Yu-Wing Tai. 2025. ContextAnyone: Context-Aware Diffusion for Character-Consistent Text-to-Video Generation. arXiv preprint arXiv:2512.07328 
+
+(2025). [43] Xiangyu Meng, Zixian Zhang, Zhenghao Zhang, Junchao Liao, Long Qin, and Weizhi Wang. 2025. Identity-grpo: Optimizing multi-human identity-preserving video generation via reinforcement learning. arXiv preprint arXiv:2510.14256 MM ’26, November 10–14, 2026, Rio de Janeiro, Brazil Chen et al. 
+
+(2025). [44] William Peebles and Saining Xie. 2023. Scalable diffusion models with transform-ers. In Proceedings of the IEEE/CVF international conference on computer vision .4195–4205. [45] Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, et al . 2021. Learning transferable visual models from natural language supervision. In International conference on machine learning . PmLR, 8748–8763. [46] Nataniel Ruiz, Yuanzhen Li, Varun Jampani, Yael Pritch, Michael Rubinstein, and Kfir Aberman. 2023. Dreambooth: Fine tuning text-to-image diffusion models for subject-driven generation. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition . 22500–22510. [47] Shen Sang, Tiancheng Zhi, Tianpei Gu, Jing Liu, and Linjie Luo. 2025. Lynx: To-wards high-fidelity personalized video generation. arXiv preprint arXiv:2509.15496 
+
+(2025). [48] Jianlin Su, Murtadha Ahmed, Yu Lu, Shengfeng Pan, Wen Bo, and Yunfeng Liu. 2024. Roformer: Enhanced transformer with rotary position embedding. 
+
+Neurocomputing 568 (2024), 127063. [49] OpenMOSS Team, Donghua Yu, Mingshu Chen, Qi Chen, Qi Luo, Qianyi Wu, Qinyuan Cheng, Ruixiao Li, Tianyi Liang, Wenbo Zhang, et al . 2026. Mova: Towards scalable and synchronized video-audio generation. arXiv preprint arXiv:2602.08794 (2026). [50] Zachary Teed and Jia Deng. 2020. Raft: Recurrent all-pairs field transforms for optical flow. In European conference on computer vision . Springer, 402–419. [51] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. 2017. Attention is all you need. Advances in neural information processing systems 30 (2017). [52] Team Wan, Ang Wang, Baole Ai, Bin Wen, Chaojie Mao, Chen-Wei Xie, Di Chen, Feiwu Yu, Haiming Zhao, Jianxiao Yang, et al . 2025. Wan: Open and advanced large-scale video generative models. arXiv preprint arXiv:2503.20314 (2025). [53] Yuji Wang, Moran Li, Xiaobin Hu, Ran Yi, Jiangning Zhang, Han Feng, Weijian Cao, Yabiao Wang, Chengjie Wang, and Lizhuang Ma. 2025. Identity-preserving text-to-video generation guided by simple yet effective spatial-temporal decou-pled representations. In Proceedings of the 33rd ACM International Conference on Multimedia . 13743–13750. [54] Zhao Wang, Aoxue Li, Lingting Zhu, Yong Guo, Qi Dou, and Zhenguo Li. 2026. Customvideo: Customizing text-to-video generation with multiple subjects. IEEE Transactions on Multimedia (2026). [55] Jiangchuan Wei, Shiyue Yan, Wenfeng Lin, Boyuan Liu, Renjie Chen, and Mingyu Guo. 2025. Echovideo: Identity-preserving human video generation by multi-modal feature fusion. arXiv preprint arXiv:2501.13452 (2025). [56] Yujie Wei, Shiwei Zhang, Zhiwu Qing, Hangjie Yuan, Zhiheng Liu, Yu Liu, Yingya Zhang, Jingren Zhou, and Hongming Shan. 2024. Dreamvideo: Composing your dream videos with customized subject and motion. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition . 6537–6549. [57] Bing Wu, Chang Zou, Changlin Li, Duojun Huang, Fang Yang, Hao Tan, Jack Peng, Jianbing Wu, Jiangfeng Xiong, Jie Jiang, et al . 2025. Hunyuanvideo 1.5 technical report. arXiv preprint arXiv:2511.18870 (2025). [58] Tao Wu, Yong Zhang, Xintao Wang, Xianpan Zhou, Guangcong Zheng, Zhongang Qi, Ying Shan, and Xi Li. 2025. Customcrafter: Customized video generation with preserving motion and concept composition abilities. In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 39. 8469–8477. [59] Jiahao Xu, Jianjie Luo, and Zhenguo Yang. 2025. Improving Identity Preservation in Video Generation with Multi-Branch Models. In Proceedings of the 33rd ACM International Conference on Multimedia . 13758–13765. [60] Xuancheng Xu, Yaning Li, Sisi You, and Bing-Kun Bao. 2025. SMRABooth: Subject and Motion Representation Alignment for Customized Video Generation. arXiv preprint arXiv:2512.12193 (2025). [61] Zhuoyi Yang, Jiayan Teng, Wendi Zheng, Ming Ding, Shiyu Huang, Jiazheng Xu, Yuanming Yang, Wenyi Hong, Xiaohan Zhang, Guanyu Feng, et al . 2025. CogVideoX: Text-to-Video Diffusion Models with An Expert Transformer. In The Thirteenth International Conference on Learning Representations .[62] Hu Ye, Jun Zhang, Sibo Liu, Xiao Han, and Wei Yang. 2023. Ip-adapter: Text compatible image prompt adapter for text-to-image diffusion models. arXiv preprint arXiv:2308.06721 (2023). [63] Shenghai Yuan, Xianyi He, Yufan Deng, Yang Ye, Jinfa Huang, Bin Lin, Chongyang Ma, Jiebo Luo, and Li Yuan. 2025. OpenS2V-Nexus: A Detailed Benchmark and Million-Scale Dataset for Subject-to-Video Generation. In The Thirty-ninth Annual Conference on Neural Information Processing Systems Datasets and Benchmarks Track .[64] Shenghai Yuan, Jinfa Huang, Xianyi He, Yunyang Ge, Yujun Shi, Liuhan Chen, Jiebo Luo, and Li Yuan. 2025. Identity-preserving text-to-video generation by frequency decomposition. In Proceedings of the Computer Vision and Pattern Recognition Conference . 12978–12988. [65] Jiangning Zhang, Junwei Zhu, Teng Hu, Yabiao Wang, Donghao Luo, Weijian Cao, Zhenye Gan, Xiaobin Hu, Zhucun Xue, and Chengjie Wang. 2025. Transform Trained Transformer: Accelerating Naive 4K Video Generation Over 10 ×. arXiv preprint arXiv:2512.13492 (2025). [66] Yuechen Zhang, Yaoyang Liu, Bin Xia, Bohao Peng, Zexin Yan, Eric Lo, and Jiaya Jia. 2025. Magicmirror: Id-preserved video generation in video diffusion transformers. In Proceedings of the IEEE/CVF International Conference on Computer Vision . 14464–14474. [67] Yiheng Zhang, Zhaofan Qiu, Qi Cai, Yehao Li, Fuchen Long, Yingwei Pan, Ting Yao, and Tao Mei. 2025. Identity-Preserving Video Generation Challenge. In 
+
+Proceedings of the 33rd ACM International Conference on Multimedia . 13737–13742. [68] Zhenxing Zhang, Jiayan Teng, Zhuoyi Yang, Tiankun Cao, Cheng Wang, Xiaotao Gu, Jie Tang, Dan Guo, and Meng Wang. 2025. Kaleido: Open-Sourced Multi-Subject Reference Video Generation Model. arXiv preprint arXiv:2510.18573 
+
+(2025).
