@@ -1,12 +1,311 @@
 {
-  "generated_at": "2026-06-09T13:48:09.991484+00:00",
-  "updated_date": "20260511-20260609",
+  "generated_at": "2026-06-10T03:00:59.081808+00:00",
+  "updated_date": "20260512-20260610",
   "carryover_days": 9,
   "tag_states": {
     "eli": {
-      "updated_date": "20260511-20260609",
+      "updated_date": "20260512-20260610",
       "carryover_days": 9,
-      "items": []
+      "items": [
+        {
+          "id": "2605.27435v1",
+          "source": "arxiv",
+          "title": "When NPUs Are Not Always Faster: A Stage-Level Analysis of Mobile LLM Inference",
+          "abstract": "Deploying large language models (LLMs) on mobile devices increasingly relies on heterogeneous execution, yet no prior study has systematically characterized NPU effectiveness at the operator and pipeline level. We present the first stage-aware, multi-level benchmarking study of mobile LLM inference on a CPU-NPU heterogeneous SoC. We introduce an OPMASK-based controlled pipeline decomposition methodology that isolates communication, quantization, and computation overheads within the NPU execution path. Our results reveal a counter-intuitive stage-level performance reversal: CPUs outperform NPUs in the compute-intensive Prefill stage (up to 1.6x), while NPUs provide only limited acceleration in the memory-bound Decode stage (1.05-1.2x). We further show that scheduling overhead and cross-backend fallback reduce the practical benefits of NPU offloading. For the energy trend, increasing NPU offloading leads to higher energy consumption (up to 51%). Based on these findings, we derive design guidelines for NPU architects targeting on-device LLM inference.",
+          "authors": [
+            "Pu Li",
+            "Jiawen Qi",
+            "Qinyu Chen"
+          ],
+          "primary_category": "cs.AR",
+          "categories": [
+            "cs.AR",
+            "cs.AI"
+          ],
+          "published": "2026-05-22T10:39:35+00:00",
+          "link": "https://arxiv.org/pdf/2605.27435v1",
+          "tags": [
+            "keyword:eli",
+            "query:Compression",
+            "query:eli"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "Provides the first systematic stage-level analysis of mobile LLM inference on heterogeneous SoCs, revealing performance reversal and guiding low-latency deployment.",
+          "llm_evidence_cn": "首次对异构SoC上的移动LLM推理进行系统性阶段级分析，揭示性能反转，指导低延迟部署。",
+          "llm_evidence": "首次对异构SoC上的移动LLM推理进行系统性阶段级分析，揭示性能反转，指导低延迟部署。",
+          "canonical_evidence": "首次对异构SoC上的移动LLM推理进行系统性阶段级分析，揭示性能反转，指导低延迟部署。",
+          "llm_tldr_en": "This paper presents a stage-aware benchmarking study of mobile LLM inference, showing that CPUs can outperform NPUs in prefill and NPUs offer limited decode acceleration, providing insights for low-latency deployment strategies.",
+          "llm_tldr_cn": "移动端部署LLM常依赖异构执行，但NPU在各阶段的效果未明确。本文首次进行阶段感知的多级基准测试，通过OPMASK方法隔离开销。发现Prefill阶段CPU比NPU快1.6倍，Decode阶段NPU仅提速1.05-1.2倍。结论表明异构执行需要阶段感知调度，为低延迟推理提供指导。",
+          "llm_tldr": "移动端部署LLM常依赖异构执行，但NPU在各阶段的效果未明确。本文首次进行阶段感知的多级基准测试，通过OPMASK方法隔离开销。发现Prefill阶段CPU比NPU快1.6倍，Decode阶段NPU仅提速1.05-1.2倍。结论表明异构执行需要阶段感知调度，为低延迟推理提供指导。",
+          "llm_tags": [
+            "query:eli"
+          ],
+          "matched_query_tag": "query:eli",
+          "matched_query_text": "Low Latency Inference",
+          "matched_requirement_id": "req-1",
+          "selection_source": "carryover_cache",
+          "paper_id": "2605.27435v1",
+          "carry_days": 1
+        },
+        {
+          "id": "2606.08891v1",
+          "source": "arxiv",
+          "title": "PALUTE: Processing-In-Memory Acceleration via Lookup Table for Edge LLM Inference",
+          "abstract": "Large language models are increasingly deployed on edge devices with tight power and area budgets. While mixed-precision GEMM reduces arithmetic complexity, quantized inference is often dominated by dequantization and nonlinear operators. Lookup Table (LUT)-based method mitigates these costs by precomputing outputs and replacing repeated arithmetic with table lookups, but existing designs incur significant capacity and lookup-latency overheads. This paper presents PALUTE, a LUT-based Processing-In-Memory accelerator built on Monolithic 3D DRAM for efficient edge LLM inference. PALUTE enables in-DRAM LUT queries that exploit the vertical organization of M3D DRAM memory array tiles to achieve high parallelism with low area overhead. A near-memory LUT generator supports low-latency LUT generation for both GEMM and element-wise unary nonlinear operators, while a system-level tiering and scheduling strategy minimizes data movement across memory tiers. Evaluation using cycle-accurate simulation and RTL synthesis shows that PALUTE achieves 1,264 TPS end-to-end throughput at 0.16 W, improving energy efficiency by 12.8$\\times$ over CHIME and 1.6$\\times$ over FIGLUT, improving area efficiency by 2.0$\\times$ over PIMPAL under W4A4 across Qwen3-4B models.",
+          "authors": [
+            "Runyang Tian",
+            "Yanru Chen",
+            "Weihong Xu",
+            "Tajana Šimunić Rosing"
+          ],
+          "primary_category": "cs.AR",
+          "categories": [
+            "cs.AR",
+            "cs.ET"
+          ],
+          "published": "2026-06-08T00:33:44+00:00",
+          "link": "https://arxiv.org/pdf/2606.08891v1",
+          "tags": [
+            "keyword:Compression",
+            "keyword:eli",
+            "query:Compression",
+            "query:eli"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "LUT-based PIM accelerator for low latency edge LLM inference",
+          "llm_evidence_cn": "基于查找表的存内处理加速器实现低延迟边缘LLM推理",
+          "llm_evidence": "基于查找表的存内处理加速器实现低延迟边缘LLM推理",
+          "canonical_evidence": "基于查找表的存内处理加速器实现低延迟边缘LLM推理",
+          "llm_tldr_en": "PALUTE is a LUT-based Processing-In-Memory accelerator on M3D DRAM that reduces dequantization and nonlinear operator latency for edge LLM inference.",
+          "llm_tldr_cn": "本文针对边缘设备上LLM推理中反量化和非线性算子成为瓶颈的问题，提出了PALUTE——一种基于查找表的存内处理加速器。它利用单片3D DRAM的垂直结构实现高并行度、低开销的存内查找表查询。实验表明，PALUTE显著降低了推理延迟和功耗，适用于资源受限的边缘场景。",
+          "llm_tldr": "本文针对边缘设备上LLM推理中反量化和非线性算子成为瓶颈的问题，提出了PALUTE——一种基于查找表的存内处理加速器。它利用单片3D DRAM的垂直结构实现高并行度、低开销的存内查找表查询。实验表明，PALUTE显著降低了推理延迟和功耗，适用于资源受限的边缘场景。",
+          "llm_tags": [
+            "query:eli"
+          ],
+          "matched_query_tag": "query:eli",
+          "matched_query_text": "Low Latency Inference",
+          "matched_requirement_id": "req-1",
+          "selection_source": "carryover_cache",
+          "paper_id": "2606.08891v1",
+          "carry_days": 1
+        },
+        {
+          "id": "2606.05933v1",
+          "source": "arxiv",
+          "title": "Beyond Greedy Chunking: SLO-Aware Sliding-Window Scheduling for LLM Inference",
+          "abstract": "With the rapid growth of interactive applications in large language model (LLM) online services, maintaining high system throughput while ensuring user-perceived latency has become a key issue in inference scheduling. Existing LLM service systems rely on coarse-grained output constraints, making it difficult to effectively handle resource contention among multiple requests, resulting in low resource utilization efficiency and limited support for fine-grained quality of service (QoS) differentiation. We present SlidingServe, a sliding-window-driven SLO-Aware scheduling system for online LLM inference. SlidingServe designed a lightweight batch latency predictor to estimate the execution time of a batch. Based on this, SlidingServe uses SlidingChunker to combine information from the current iteration and the next iteration to achieve dynamic chunking and improve the overall system throughput while maintaining strict QoS guarantees. SlidingServe introduces Multi-Level Priority Sorter to sort candidate requests in order to balance fairness and efficiency. Additionally, when multiple requests within the same batch are at risk of SLO violating,SlidingServe introduces BatchConstructor, which uses dynamic programming to select the set of requests to execute in the current round, mitigating the SLO violation risk of critical requests.Our evaluation demonstrates that SlidingServe can improve service capacity by up to 30% compared to advanced scheduling systems under various load conditions, and further reduces the rate of SLO violation by 16%-53% under heavy-load inference mode.",
+          "authors": [
+            "Yuansheng Chen",
+            "Yue Zhang",
+            "Xuan Mo",
+            "Weigang Wu",
+            "Jialun Li"
+          ],
+          "primary_category": "cs.DC",
+          "categories": [
+            "cs.DC"
+          ],
+          "published": "2026-06-04T09:36:40+00:00",
+          "link": "https://arxiv.org/pdf/2606.05933v1",
+          "tags": [
+            "keyword:Compression",
+            "keyword:eli",
+            "query:Compression",
+            "query:eli"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "SLO-aware sliding-window scheduling for low latency LLM inference",
+          "llm_evidence_cn": "基于SLO感知的滑动窗口调度实现低延迟LLM推理",
+          "llm_evidence": "基于SLO感知的滑动窗口调度实现低延迟LLM推理",
+          "canonical_evidence": "基于SLO感知的滑动窗口调度实现低延迟LLM推理",
+          "llm_tldr_en": "SlidingServe uses a lightweight batch latency predictor and sliding-window chunking to meet SLOs while improving throughput for online LLM inference.",
+          "llm_tldr_cn": "本文针对在线LLM服务中难以同时保证吞吐量和用户感知延迟的问题，提出SlidingServe调度系统。它设计轻量级批延迟预测器，并采用滑动窗口分块策略，在满足服务等级目标的同时提高资源利用率。实验表明，该方法显著提升了吞吐量并降低了尾部延迟，支持细粒度QoS差异化。",
+          "llm_tldr": "本文针对在线LLM服务中难以同时保证吞吐量和用户感知延迟的问题，提出SlidingServe调度系统。它设计轻量级批延迟预测器，并采用滑动窗口分块策略，在满足服务等级目标的同时提高资源利用率。实验表明，该方法显著提升了吞吐量并降低了尾部延迟，支持细粒度QoS差异化。",
+          "llm_tags": [
+            "query:eli"
+          ],
+          "matched_query_tag": "query:eli",
+          "matched_query_text": "Low Latency Inference",
+          "matched_requirement_id": "req-1",
+          "selection_source": "carryover_cache",
+          "paper_id": "2606.05933v1",
+          "carry_days": 1
+        },
+        {
+          "id": "2606.05781v2",
+          "source": "arxiv",
+          "title": "Domain-Adapted Small Language Models with Hybrid Post-Processing: Achieving Cost-Efficient, Low-Latency Multi-Label Structured Prediction via LoRA Fine-Tuning on Scarce Data",
+          "abstract": "Deploying frontier large language models (LLMs) for domain-specific structured evaluation tasks incurs prohibitive latency, cost, and data-privacy overhead. We present a hybrid framework that fine-tunes a small language model (LLaMA 3.1 8B, 2.05% trainable parameters via LoRA) on only 219 curated examples and couples it with a deterministic rule-based postprocessing layer. Applied to multi-label compliance evaluation of conversational transcripts (18 heterogeneous output fields), our system achieves 100% JSON structural validity, 83.0% human-validated overall accuracy, and 100% accuracy on the most critical classification field in blind evaluation on 53 unseen production transcripts. On a single NVIDIA A100 GPU, inference completes in $\\sim$2 seconds -- 2--5x faster than frontier APIs -- at USD 0.013 per evaluation versus USD 0.025--0.055 for proprietary alternatives, yielding 46--76% cost savings.   We introduce targeted hard-negative augmentation for critical decision boundaries and formalize the hybrid neural-symbolic decomposition, demonstrating that domain-adapted small language models with postprocessing can match frontier model accuracy while dramatically reducing operational cost, latency, and privacy risk.",
+          "authors": [
+            "Srinivasan Manoharan",
+            "Dilipkumar Nallusamy",
+            "Sachin Kumar",
+            "Haifeng Wu"
+          ],
+          "primary_category": "cs.LG",
+          "categories": [
+            "cs.LG"
+          ],
+          "published": "2026-06-04T07:09:37+00:00",
+          "link": "https://arxiv.org/pdf/2606.05781v2",
+          "tags": [
+            "keyword:Compression",
+            "keyword:eli",
+            "query:Compression",
+            "query:eli"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "Low-latency structured prediction using small LM with LoRA and post-processing",
+          "llm_evidence_cn": "使用小语言模型+LoRA+后处理实现低延迟结构预测",
+          "llm_evidence": "使用小语言模型+LoRA+后处理实现低延迟结构预测",
+          "canonical_evidence": "使用小语言模型+LoRA+后处理实现低延迟结构预测",
+          "llm_tldr_en": "A hybrid system fine-tunes LLaMA 3.1 8B with LoRA on 219 examples and adds rule-based post-processing for low-latency, high-accuracy multi-label compliance evaluation.",
+          "llm_tldr_cn": "针对部署大模型进行领域特定评估任务时延迟高、成本高、数据隐私差的问题，提出混合框架：用LoRA微调LLaMA 3.1 8B小模型（仅219样本），结合确定性规则后处理层。在多标签合规评估任务中，实现100% JSON结构正确性、83.0%整体准确率，关键分类字段准确率100%，且延迟显著低于大模型方案。",
+          "llm_tldr": "针对部署大模型进行领域特定评估任务时延迟高、成本高、数据隐私差的问题，提出混合框架：用LoRA微调LLaMA 3.1 8B小模型（仅219样本），结合确定性规则后处理层。在多标签合规评估任务中，实现100% JSON结构正确性、83.0%整体准确率，关键分类字段准确率100%，且延迟显著低于大模型方案。",
+          "llm_tags": [
+            "query:eli"
+          ],
+          "matched_query_tag": "query:eli",
+          "matched_query_text": "Low Latency Inference",
+          "matched_requirement_id": "req-1",
+          "selection_source": "carryover_cache",
+          "paper_id": "2606.05781v2",
+          "carry_days": 1
+        },
+        {
+          "id": "2606.05875v1",
+          "source": "arxiv",
+          "title": "QCFuse: Query-Aware Cache Fusion via Compressed View for Efficient RAG Serving",
+          "abstract": "Retrieval-augmented generation (RAG) improves large language model (LLM) answer quality by grounding generation in external evidence, but processing retrieved contexts makes the prefill stage a dominant serving cost. RAG cache fusion reduces this cost by reusing precomputed key-value (KV) caches for retrieved chunks and selectively recomputing tokens under the current prompt. Existing selectors, however, face a dilemma between quality and efficiency: fast query-agnostic or final-layer query-to-context selectors can miss request-relevant evidence, whereas full-view query-aware selectors require broad context and layer visibility before recomputation and therefore stall the layer-wise cache-fusion pipeline. We present QCFuse, a compressed-view query-aware selector for RAG cache fusion. QCFuse uses chunk-anchor query probing to condition user-query states on compact per-chunk anchors and critical-layer profiling to identify recomputation tokens without all-layer inspection. We implement QCFuse in SGLang and evaluate it on four open-weight LLMs across six datasets. QCFuse reaches full-prefill-level quality. At matched quality, QCFuse achieves an average prefill-time speedup of 1.7x over full prefill and 1.5x over ProphetKV, the strongest quality-preserving baseline.",
+          "authors": [
+            "Jianxin Yan",
+            "Wangze Ni",
+            "Zhenxin Li",
+            "Jiabao Jin",
+            "Zhitao Shen",
+            "Haoyang Li",
+            "Jia Zhu",
+            "Peng Cheng",
+            "Xuemin Lin",
+            "Lei Chen",
+            "Kui Ren"
+          ],
+          "primary_category": "cs.AI",
+          "categories": [
+            "cs.AI",
+            "cs.DB"
+          ],
+          "published": "2026-06-04T08:47:46+00:00",
+          "link": "https://arxiv.org/pdf/2606.05875v1",
+          "tags": [
+            "keyword:Compression",
+            "keyword:eli",
+            "query:Compression",
+            "query:eli"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "Query-aware KV cache fusion for efficient RAG serving",
+          "llm_evidence_cn": "面向高效RAG服务的查询感知KV缓存融合",
+          "llm_evidence": "面向高效RAG服务的查询感知KV缓存融合",
+          "canonical_evidence": "面向高效RAG服务的查询感知KV缓存融合",
+          "llm_tldr_en": "QCFuse proposes a compressed-view query-aware selector for KV cache fusion in RAG, reducing prefill cost while maintaining relevance.",
+          "llm_tldr_cn": "针对RAG服务中预填充阶段因检索上下文处理成为主要成本的问题，QCFuse提出压缩视图查询感知的缓存融合方法。通过维护压缩上下文表示，在选择器中同时考虑查询相关性与层间可见性，避免全视图选择导致的流水线停滞。实验证明该方法在保持检索质量的同时，大幅降低预填充延迟，提升RAG系统吞吐量。",
+          "llm_tldr": "针对RAG服务中预填充阶段因检索上下文处理成为主要成本的问题，QCFuse提出压缩视图查询感知的缓存融合方法。通过维护压缩上下文表示，在选择器中同时考虑查询相关性与层间可见性，避免全视图选择导致的流水线停滞。实验证明该方法在保持检索质量的同时，大幅降低预填充延迟，提升RAG系统吞吐量。",
+          "llm_tags": [
+            "query:eli"
+          ],
+          "matched_query_tag": "query:eli",
+          "matched_query_text": "KV cache optimization methods for LLM inference",
+          "matched_requirement_id": "req-8",
+          "selection_source": "carryover_cache",
+          "paper_id": "2606.05875v1",
+          "carry_days": 1
+        },
+        {
+          "id": "2606.00516v1",
+          "source": "arxiv",
+          "title": "Threshold-Based Exclusive Batching for LLM Inference",
+          "abstract": "Mixed batching (MB)--interleaving prefill and decode in a single batch--has become the standard scheduling strategy for large language model (LLM) inference due to its efficiency in maximizing compute and memory utilization. However, through controlled experiments, we find that prefill-decode interference inflates MB's per-step marginal cost above that of pure decode. On the high-bandwidth H200 (4.8 TB/s), this occurs only when decode tokens exceed 80% of the batch; however, on the bandwidth-constrained RTX PRO 6000 (1.792 TB/s), this threshold plummets to just 20%. Consequently, the optimal choice between MB and exclusive batching (EB) fundamentally depends on GPU memory bandwidth, model size, and workload composition. We derive a closed-form condition for this EB-MB performance crossover, along with asymptotically optimal phase-switching thresholds and memory-safe batch sizing for EB. Optimized EB achieves up to 41.9% higher throughput on bandwidth-constrained GPUs, while MB retains its advantage on high-bandwidth hardware with larger models. Our hybrid scheduler EB+ applies this condition online to dynamically switch between EB and MB without manual intervention. Under non-stationary traffic with distribution or concurrency shifts, EB+ attains the highest or near-highest throughput in every setting, outperforming MB by up to 36.4%.",
+          "authors": [
+            "Weifang Zhang",
+            "Yuzhou Nie",
+            "Bowen Pang",
+            "Guangrui Ma",
+            "Shining Wu"
+          ],
+          "primary_category": "cs.AI",
+          "categories": [
+            "cs.AI"
+          ],
+          "published": "2026-05-30T04:11:08+00:00",
+          "link": "https://arxiv.org/pdf/2606.00516v1",
+          "tags": [
+            "keyword:Compression",
+            "keyword:eli",
+            "query:Compression",
+            "query:eli"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "analyzes prefill-decode interference in batching, proposes threshold-based exclusive batching for high throughput",
+          "llm_evidence_cn": "分析批处理中预填充-解码干扰，提出基于阈值独占批处理以提升吞吐量",
+          "llm_evidence": "分析批处理中预填充-解码干扰，提出基于阈值独占批处理以提升吞吐量",
+          "canonical_evidence": "分析批处理中预填充-解码干扰，提出基于阈值独占批处理以提升吞吐量",
+          "llm_tldr_en": "Identifies prefill-decode interference in mixed batching; derives closed-form condition for switching to exclusive batching, improving throughput across GPU bandwidths.",
+          "llm_tldr_cn": "混合批处理中预填充与解码阶段相互干扰，导致边际成本上升。论文通过实验发现该干扰阈值随GPU带宽变化显著，并推导出独占批处理优于混合批处理的闭合条件，据此提出的调度策略在不同带宽GPU上均能提升吞吐量。",
+          "llm_tldr": "混合批处理中预填充与解码阶段相互干扰，导致边际成本上升。论文通过实验发现该干扰阈值随GPU带宽变化显著，并推导出独占批处理优于混合批处理的闭合条件，据此提出的调度策略在不同带宽GPU上均能提升吞吐量。",
+          "llm_tags": [
+            "query:eli"
+          ],
+          "matched_query_tag": "query:eli",
+          "matched_query_text": "high throughput and low latency techniques for LLM serving",
+          "matched_requirement_id": "req-7",
+          "selection_source": "carryover_cache",
+          "paper_id": "2606.00516v1",
+          "carry_days": 1
+        },
+        {
+          "id": "2606.05698v1",
+          "source": "arxiv",
+          "title": "Rethinking LoRA Memory Through the Lens of KV Cache Compression",
+          "abstract": "Parametric retrieval augmentation encodes document information into lightweight, document-specific modules such as LoRA adapters, reducing the need to include all evidence as input context. However, it remains unclear how this parameter-side memory interacts with context-side memory stored in the KV cache. We study this interaction in document-level question answering by progressively evicting document key-value states and measuring when a document LoRA contributes beyond the retained context. We find that document LoRA adds little when the KV cache is largely intact, but becomes increasingly useful under aggressive compression, recovering 13-21 ROUGE-L points when no document context remains. The gain is largest when the base model encodes the document, and the adapter is applied only during answer generation, suggesting that document LoRA is better understood as decoding-time parametric memory than as a document encoder. Finally, QA-style supervision produces substantially stronger adapters than raw-context next-token-prediction. These results position document LoRA as a complementary memory channel whose value emerges precisely when context-side evidence is scarce.",
+          "authors": [
+            "Chunsheng Zuo",
+            "Liaoyaqi Wang",
+            "William Jurayj",
+            "William Fleshman",
+            "Benjamin Van Durme"
+          ],
+          "primary_category": "cs.CL",
+          "categories": [
+            "cs.CL"
+          ],
+          "published": "2026-06-04T04:35:45+00:00",
+          "link": "https://arxiv.org/pdf/2606.05698v1",
+          "tags": [
+            "keyword:Compression",
+            "keyword:eli",
+            "query:Compression",
+            "query:eli"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "studies interaction between LoRA memory and KV cache compression, relevant to KV cache optimization",
+          "llm_evidence_cn": "研究LoRA内存与KV缓存压缩的交互，与KV缓存优化相关",
+          "llm_evidence": "研究LoRA内存与KV缓存压缩的交互，与KV缓存优化相关",
+          "canonical_evidence": "研究LoRA内存与KV缓存压缩的交互，与KV缓存优化相关",
+          "llm_tldr_en": "Investigates how document LoRA adapters interact with KV cache compression, finding they compensate when cache is aggressively evicted.",
+          "llm_tldr_cn": "参数化检索增强使用LoRA适配器编码文档，但其与KV缓存的交互未知。本文通过逐步清空文档KV状态发现，LoRA在保留大部分缓存时贡献微弱，但在激进压缩时可恢复13-21 ROUGE-L分，揭示了缓存压缩与参数记忆的互补关系。",
+          "llm_tldr": "参数化检索增强使用LoRA适配器编码文档，但其与KV缓存的交互未知。本文通过逐步清空文档KV状态发现，LoRA在保留大部分缓存时贡献微弱，但在激进压缩时可恢复13-21 ROUGE-L分，揭示了缓存压缩与参数记忆的互补关系。",
+          "llm_tags": [
+            "query:eli"
+          ],
+          "matched_query_tag": "query:eli",
+          "matched_query_text": "KV cache optimization strategies for transformer inference",
+          "matched_requirement_id": "req-2",
+          "selection_source": "carryover_cache",
+          "paper_id": "2606.05698v1",
+          "carry_days": 1
+        }
+      ]
     },
     "mg": {
       "updated_date": "20260511-20260609",
@@ -19,7 +318,7 @@
       "items": []
     },
     "Compression": {
-      "updated_date": "20260511-20260609",
+      "updated_date": "20260512-20260610",
       "carryover_days": 9,
       "items": []
     }
