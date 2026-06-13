@@ -6,110 +6,152 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-05-12 ~ 2026-06-10
-- 运行时间：2026-06-10 03:19:07 UTC
+- 最新运行日期：2026-06-13
+- 运行时间：2026-06-13 21:49:24 UTC
 - 运行状态：成功
-- 本次总论文数：30
-- 精读区：18
-- 速读区：12
+- 本次总论文数：44
+- 精读区：30
+- 速读区：14
 
 ### 今日简报（AI）
-今日推荐30篇论文，精读18篇、速读12篇。最值得关注的是精读10分的自适应窗口投机解码策略优化与9分的KV缓存压缩通信效率研究。建议优先精读这两篇高分论文，并关注速读中投机解码攻击与量化技术的实用方向。
-- 详情：[/20260512-20260610/README](/20260512-20260610/README)
+今日聚焦LLM推理效率，解析两项高分研究：推理感知的KV缓存共享与自信早期退出、稀疏门控微型线性专家。最值得关注的方向是KV缓存优化与模型稀疏化，前者通过共享和早退减少多步推理延迟，后者以极简线性层实现高效门控。建议普通读者优先研读《RKSC》与《Sparsely gated tiny linear experts》，并留意速读中关于NPU性能分级与LoRA缓存压缩的实用分析。
+- 详情：[/202606/13/README](/202606/13/README)
 
 ### 精读区论文标签
-1. [Performance-Driven Policy Optimization for Speculative Decoding with Adaptive Windowing](/20260512-20260610/2605.14978v2-performance-driven-policy-optimization-for-speculative-decoding-with-adaptive-windowing)  
+1. [RKSC: Reasoning-Aware KV Cache Sharing and Confident Early Exit for Multi-Step LLM Inference](/202606/13/2606.09937v1-rksc-reasoning-aware-kv-cache-sharing-and-confident-early-exit-for-multi-step-llm-inference)  
    标签：评分：10.0/10、query:eli
-   evidence：使用强化学习优化投机解码的草稿模型
-2. [KVServe: Service-Aware KV Cache Compression for Communication-Efficient Disaggregated LLM Serving](/20260512-20260610/2605.13734v1-kvserve-service-aware-kv-cache-compression-for-communication-efficient-disaggregated-llm-serving)  
+   evidence：多步推理中的KV缓存共享与早停
+2. [Sparsely gated tiny linear experts](/202606/13/2606.07414v1-sparsely-gated-tiny-linear-experts)  
    标签：评分：9.0/10、query:eli
-   evidence：面向分离式推理的服务感知自适应KV缓存压缩
-3. [A Hardware-Aware, Per-Layer Methodology for Post-Training Quantization of Large Language Models](/20260512-20260610/2605.14929v1-a-hardware-aware-per-layer-methodology-for-post-training-quantization-of-large-language-models)  
+   evidence：用稀疏门控线性神经元替换Transformer前馈层以提升计算效率
+3. [Attention at the Theoretical Minimum: A Mathematics of Arrays Framework for Memory-Optimal Transformer Kernels](/202606/13/2606.07713v1-attention-at-the-theoretical-minimum-a-mathematics-of-arrays-framework-for-memory-optimal-transformer-kernels)  
+   标签：评分：9.0/10、query:llm-kernel
+   evidence：高效Transformer的FlashAttention机制
+4. [Seeing is Believing: Aligning Prompt Rewriting with Visual Anchors for Text-to-Image Generation](/202606/13/2606.08492v1-seeing-is-believing-aligning-prompt-rewriting-with-visual-anchors-for-text-to-image-generation)  
+   标签：评分：9.0/10、query:mg
+   evidence：利用视觉锚点增强文本到图像生成的提示
+5. [Look Less, Reason More: Block-wise Attention Skipping for Efficient Multimodal LLMs](/202606/13/2606.08511v1-look-less-reason-more-block-wise-attention-skipping-for-efficient-multimodal-llms)  
+   标签：评分：9.0/10、query:eli
+   evidence：LLM加速；块级注意力跳跃实现高效多模态LLM推理
+6. [APEX4: Efficient Pure W4A4 LLM Inference via Intra-SM Compute Rebalancing](/202606/13/2606.08761v1-apex4-efficient-pure-w4a4-llm-inference-via-intra-sm-compute-rebalancing)  
    标签：评分：9.0/10、query:compression
-   evidence：面向硬件的LLM权重后训练量化方法
-4. [Performance-Driven Policy Optimization for Speculative Decoding with Adaptive Windowing](/20260512-20260610/2605.14978v1-performance-driven-policy-optimization-for-speculative-decoding-with-adaptive-windowing)  
+   evidence：系统研究SM内计算平衡以实现W4A4 LLM推理
+7. [PALUTE: Processing-In-Memory Acceleration via Lookup Table for Edge LLM Inference](/202606/13/2606.08891v1-palute-processing-in-memory-acceleration-via-lookup-table-for-edge-llm-inference)  
    标签：评分：9.0/10、query:eli
-   evidence：基于强化学习的投机解码草案模型优化
-5. [PSD: Pushing the Pareto Frontier of Diffusion LLMs via Parallel Speculative Decoding](/20260512-20260610/2605.15609v1-psd-pushing-the-pareto-frontier-of-diffusion-llms-via-parallel-speculative-decoding)  
+   evidence：面向边缘LLM推理的存内查找表加速器
+8. [Fairness-Aware and Latency-Controllable Scheduling for Chunked-Prefill LLM Serving](/202606/13/2606.09061v1-fairness-aware-and-latency-controllable-scheduling-for-chunked-prefill-llm-serving)  
    标签：评分：9.0/10、query:eli
-   evidence：面向扩散LLM的并行投机解码
-6. [VeriCache: Turning Lossy KV Cache into Lossless LLM Inference](/20260512-20260610/2605.17613v1-vericache-turning-lossy-kv-cache-into-lossless-llm-inference)  
+   evidence：面向LLM服务的延迟可控调度
+9. [FlashMemory-DeepSeek-V4: Lightning Index Ultra-Long Context via Lookahead Sparse Attention](/202606/13/2606.09079v1-flashmemory-deepseek-v4-lightning-index-ultra-long-context-via-lookahead-sparse-attention)  
    标签：评分：9.0/10、query:eli
-   evidence：通过使用压缩的KV缓存进行草稿标记和验证，确保无损LLM推理，结合KV缓存压缩和投机解码
-7. [FlexDraft: Flexible Speculative Decoding via Attention Tuning and Bonus-Guided Calibration](/20260512-20260610/2605.20022v1-flexdraft-flexible-speculative-decoding-via-attention-tuning-and-bonus-guided-calibration)  
+   evidence：通过前瞻稀疏注意力进行KV缓存优化
+10. [FlashMemory-DeepSeek-V4: Lightning Index Ultra-Long Context via Lookahead Sparse Attention](/202606/13/2606.09079v2-flashmemory-deepseek-v4-lightning-index-ultra-long-context-via-lookahead-sparse-attention)  
    标签：评分：9.0/10、query:eli
-   evidence：投机解码加速LLM推理
-8. [Draft Less, Retrieve More: Hybrid Tree Construction for Speculative Decoding](/20260512-20260610/2605.20104v1-draft-less-retrieve-more-hybrid-tree-construction-for-speculative-decoding)  
+   evidence：基于前瞻稀疏注意力的KV缓存优化，支持超长上下文
+11. [From Rigid to Dynamic: Entropy-Guided Adaptive Inference for Long-Context LLMs](/202606/13/2606.09508v1-from-rigid-to-dynamic-entropy-guided-adaptive-inference-for-long-context-llms)  
    标签：评分：9.0/10、query:eli
-   evidence：投机解码的混合树构建方法
-9. [Quant.npu: Enabling Efficient Mobile NPU Inference for on-device LLMs via Fully Static Quantization](/20260512-20260610/2605.20295v1-quantnpu-enabling-efficient-mobile-npu-inference-for-on-device-llms-via-fully-static-quantization)  
+   evidence：基于熵引导的长上下文LLM自适应推理与KV缓存压缩
+12. [TUDSR: Twice Upsampling-Diffusion for Higher Super-Resolution](/202606/13/2606.09608v1-tudsr-twice-upsampling-diffusion-for-higher-super-resolution)  
+   标签：评分：9.0/10、query:mg
+   evidence：基于扩散的两次上采样实现超越原生分辨率的图像超分辨率
+13. [Trainable Smooth-Rotation Transforms with Learned Channel Scales for LLM Quantization](/202606/13/2606.09927v1-trainable-smooth-rotation-transforms-with-learned-channel-scales-for-llm-quantization)  
    标签：评分：9.0/10、query:compression
-   evidence：用于移动NPU推理的全静态量化框架
-10. [Meta-Soft: Leveraging Composable Meta-Tokens for Context-Preserving KV Cache Compression](/20260512-20260610/2605.22337v1-meta-soft-leveraging-composable-meta-tokens-for-context-preserving-kv-cache-compression)  
-   标签：评分：9.0/10、query:eli
-   evidence：通过探针驱动的元令牌动态KV缓存压缩
-11. [Meta-Soft: Leveraging Composable Meta-Tokens for Context-Preserving KV Cache Compression](/20260512-20260610/2605.22337v2-meta-soft-leveraging-composable-meta-tokens-for-context-preserving-kv-cache-compression)  
-   标签：评分：9.0/10、query:eli
-   evidence：通过探针驱动的元令牌动态KV缓存压缩
-12. [A general tensor-structured compression scheme for efficient large language models](/20260512-20260610/2605.25344v1-a-general-tensor-structured-compression-scheme-for-efficient-large-language-models)  
+   evidence：后训练量化结合平滑旋转变换用于大语言模型
+14. [UniSVQ: 2-bit Unified Scalar-Vector Quantization](/202606/13/2606.10520v1-unisvq-2-bit-unified-scalar-vector-quantization)  
    标签：评分：9.0/10、query:compression
-   evidence：针对大语言模型的张量结构压缩方案
-13. [Cassandra: Enabling Reasoning LLMs at Edge via Self-Speculative Decoding](/20260512-20260610/2605.26558v1-cassandra-enabling-reasoning-llms-at-edge-via-self-speculative-decoding)  
+   evidence：大语言模型2位统一标量-向量量化
+15. [Prefilling-dLLM: Predictive Prefilling for Long-Context Inference in Diffusion Language Models](/202606/13/2606.10537v1-prefilling-dllm-predictive-prefilling-for-long-context-inference-in-diffusion-language-models)  
    标签：评分：9.0/10、query:eli
-   evidence：用于边缘LLM加速的自推测解码
-14. [WINDQuant: Weight-Informed Neural Decision-Making for Global Mixed-Precision LLM Quantization](/20260512-20260610/2605.26660v1-windquant-weight-informed-neural-decision-making-for-global-mixed-precision-llm-quantization)  
-   标签：评分：9.0/10、query:compression
-   evidence：基于强化学习的混合精度LLM量化
-15. [How Far Can Disaggregation Go? A Design-Space Exploration of Attention-FFN Disaggregation for Efficient MoE LLM Serving](/20260512-20260610/2605.28302v1-how-far-can-disaggregation-go-a-design-space-exploration-of-attention-ffn-disaggregation-for-efficient-moe-llm-serving)  
+   evidence：提出前缀KV缓存和稀疏预填充策略，加速长上下文推理
+16. [STEDiff: Strengthening Text Embedding for Text-to-Image Alignment in Diffusion Model](/202606/13/2606.10653v1-stediff-strengthening-text-embedding-for-text-to-image-alignment-in-diffusion-model)  
+   标签：评分：9.0/10、query:mg
+   evidence：扩散模型中无需训练的文本嵌入增强用于文本到图像对齐
+17. [K-Forcing: Joint Next-K-Token Decoding via Push-Forward Language Modeling](/202606/13/2606.10820v1-k-forcing-joint-next-k-token-decoding-via-push-forward-language-modeling)  
    标签：评分：9.0/10、query:eli
-   evidence：面向MoE大语言模型服务的注意力-FFN分离设计空间探索
-16. [Speculative Pipeline Decoding: Higher-Accruacy and Zero-Bubble Speculation via Pipeline Parallelism](/20260512-20260610/2605.30852v1-speculative-pipeline-decoding-higher-accruacy-and-zero-bubble-speculation-via-pipeline-parallelism)  
+   evidence：联合下k令牌解码加速LLM推理
+18. [K-Forcing: Joint Next-K-Token Decoding via Push-Forward Language Modeling](/202606/13/2606.10820v2-k-forcing-joint-next-k-token-decoding-via-push-forward-language-modeling)  
    标签：评分：9.0/10、query:eli
-   evidence：基于流水线并行的投机解码，零气泡
-17. [Beyond Output Matching: Preserving Internal Geometry in NVFP4 LLM Distillatio](/20260512-20260610/2606.05682v1-beyond-output-matching-preserving-internal-geometry-in-nvfp4-llm-distillatio)  
+   evidence：提出联合多令牌解码方法加速推理，类似投机解码思路
+19. [Optimal Post-Training Quantization Scales and Where to Find Them](/202606/13/2606.10890v1-optimal-post-training-quantization-scales-and-where-to-find-them)  
    标签：评分：9.0/10、query:compression
-   evidence：聚焦NVFP4大模型蒸馏，针对后训练量化与蒸馏的极端压缩
-18. [Beyond Output Matching: Preserving Internal Geometry in NVFP4 LLM Distillation](/20260512-20260610/2606.05682v2-beyond-output-matching-preserving-internal-geometry-in-nvfp4-llm-distillation)  
+   evidence：大语言模型后训练量化
+20. [CLP: Collocation-Length Prediction for Zero-Loss Adaptive Multi-Token Inference](/202606/13/2606.10935v1-clp-collocation-length-prediction-for-zero-loss-adaptive-multi-token-inference)  
+   标签：评分：9.0/10、query:eli
+   evidence：多令牌预测用于投机解码
+21. [Express Language Modeling](/202606/13/2606.10944v1-express-language-modeling)  
+   标签：评分：9.0/10、query:llm-kernel
+   evidence：高效的I/O感知Triton实现，比FlashAttention 2提速
+22. [Mean Flow Distillation: Robust and Stable Distillation for Flow Matching Models](/202606/13/2606.11155v1-mean-flow-distillation-robust-and-stable-distillation-for-flow-matching-models)  
+   标签：评分：9.0/10、query:mg
+   evidence：面向流匹配模型的均值流蒸馏方法
+23. [ReasonAlloc: Hierarchical Decoding-Time KV Cache Budget Allocation for Reasoning Models](/202606/13/2606.11164v1-reasonalloc-hierarchical-decoding-time-kv-cache-budget-allocation-for-reasoning-models)  
+   标签：评分：9.0/10、query:eli
+   evidence：面向LLM推理的层次化解码时KV缓存预算分配
+24. [SPEAR: A System for Post-Quantization Error-Adaptive Recovery Enabling Efficient Low-Bit LLM Serving](/202606/13/2606.11244v1-spear-a-system-for-post-quantization-error-adaptive-recovery-enabling-efficient-low-bit-llm-serving)  
    标签：评分：9.0/10、query:compression
-   evidence：面向NVFP4大语言模型压缩的量化感知蒸馏
+   evidence：面向低比特LLM服务的后量化误差自适应恢复
+25. [Teaching Diffusion to Speculate Left-to-Right](/202606/13/2606.11552v1-teaching-diffusion-to-speculate-left-to-right)  
+   标签：评分：9.0/10、query:eli
+   evidence：利用扩散语言模型作为投机解码的草稿模型
+26. [A Comprehensive Ecosystem for Open-Domain Customized Video Generation](/202606/13/2606.11783v1-a-comprehensive-ecosystem-for-open-domain-customized-video-generation)  
+   标签：评分：9.0/10、query:mg
+   evidence：基于扩散Transformer的文本生成视频
+27. [Plan-and-Verify Video Reward Reasoning with Spatio-Temporal Scene Graph Grounding](/202606/13/2606.11838v1-plan-and-verify-video-reward-reasoning-with-spatio-temporal-scene-graph-grounding)  
+   标签：评分：9.0/10、query:mg
+   evidence：使用时空场景图的计划与验证视频奖励模型用于文本到视频对齐
+28. [SpecLoR: Spectral Lookahead Rectification for Motion-Coherent Text-to-Video Generation](/202606/13/2606.11969v1-speclor-spectral-lookahead-rectification-for-motion-coherent-text-to-video-generation)  
+   标签：评分：9.0/10、query:mg
+   evidence：文本到视频生成，使用流匹配和前瞻校正
+29. [VIA-SD: Verification via Intra-Model Routing for Speculative Decoding](/202606/13/2606.12243v1-via-sd-verification-via-intra-model-routing-for-speculative-decoding)  
+   标签：评分：9.0/10、query:eli
+   evidence：基于模型内路由验证的投机解码
+30. [Holding the FP8 Quality Ceiling at 8-Bit Weights and Activations: INT8 and GGUF Post-Training Quantization of Ideogram 4.0 for Consumer GPUs](/202606/13/2606.12280v1-holding-the-fp8-quality-ceiling-at-8-bit-weights-and-activations-int8-and-gguf-post-training-quantization-of-ideogram-40-for-consumer-gpus)  
+   标签：评分：9.0/10、query:mg
+   evidence：文本到图像生成使用扩散Transformer和流匹配；对Ideogram 4.0进行后训练量化
 
 ### 速读区论文标签
-1. [Mistletoe: Stealthy Acceleration-Collapse Attacks on Speculative Decoding](/20260512-20260610/2605.14005v1-mistletoe-stealthy-acceleration-collapse-attacks-on-speculative-decoding)  
+1. [When NPUs Are Not Always Faster: A Stage-Level Analysis of Mobile LLM Inference](/202606/13/2605.27435v1-when-npus-are-not-always-faster-a-stage-level-analysis-of-mobile-llm-inference)  
    标签：评分：8.0/10、query:eli
-   evidence：投机解码的安全性分析
-2. [Nonlinear Bipolar Compensation: Handling Outliers in Post-Training Quantization](/20260512-20260610/2605.16423v1-nonlinear-bipolar-compensation-handling-outliers-in-post-training-quantization)  
-   标签：评分：8.0/10、query:compression
-   evidence：后训练量化中的异常值补偿方法
-3. [OSCAR: Offline Spectral Covariance-Aware Rotation for 2-bit KV Cache Quantization](/20260512-20260610/2605.17757v1-oscar-offline-spectral-covariance-aware-rotation-for-2-bit-kv-cache-quantization)  
-   标签：评分：8.0/10、query:compression
-   evidence：基于频谱协方差感知旋转的2比特KV缓存量化
-4. [Runtime-Certified Bounded-Error Quantized Attention](/20260512-20260610/2605.20868v1-runtime-certified-bounded-error-quantized-attention)  
+   evidence：首次对异构SoC上的移动LLM推理进行系统性阶段级分析，揭示性能反转，指导低延迟部署。
+2. [Threshold-Based Exclusive Batching for LLM Inference](/202606/13/2606.00516v1-threshold-based-exclusive-batching-for-llm-inference)  
    标签：评分：8.0/10、query:eli
-   evidence：带运行时错误保证的KV缓存量化
-5. [From Token to Token Pair: Efficient Prompt Compression for Large Language Models in Clinical Prediction](/20260512-20260610/2605.11774v1-from-token-to-token-pair-efficient-prompt-compression-for-large-language-models-in-clinical-prediction)  
-   标签：评分：7.0/10、query:compression
-   evidence：用于临床预测中提示压缩的无损令牌对编码
-6. [$δ$-mem: Efficient Online Memory for Large Language Models](/20260512-20260610/2605.12357v1--mem-efficient-online-memory-for-large-language-models)  
+   evidence：分析批处理中预填充-解码干扰，提出基于阈值独占批处理以提升吞吐量
+3. [Rethinking LoRA Memory Through the Lens of KV Cache Compression](/202606/13/2606.05698v1-rethinking-lora-memory-through-the-lens-of-kv-cache-compression)  
+   标签：评分：8.0/10、query:eli
+   evidence：研究LoRA内存与KV缓存压缩的交互，与KV缓存优化相关
+4. [Domain-Adapted Small Language Models with Hybrid Post-Processing: Achieving Cost-Efficient, Low-Latency Multi-Label Structured Prediction via LoRA Fine-Tuning on Scarce Data](/202606/13/2606.05781v2-domain-adapted-small-language-models-with-hybrid-post-processing-achieving-cost-efficient-low-latency-multi-label-structured-prediction-via-lora-fine-tuning-on-scarce-data)  
+   标签：评分：8.0/10、query:eli
+   evidence：使用小语言模型+LoRA+后处理实现低延迟结构预测
+5. [QCFuse: Query-Aware Cache Fusion via Compressed View for Efficient RAG Serving](/202606/13/2606.05875v1-qcfuse-query-aware-cache-fusion-via-compressed-view-for-efficient-rag-serving)  
+   标签：评分：8.0/10、query:eli
+   evidence：面向高效RAG服务的查询感知KV缓存融合
+6. [Gated Bidirectional Linear Attention for Generative Retrieval](/202606/13/2606.07317v2-gated-bidirectional-linear-attention-for-generative-retrieval)  
    标签：评分：7.0/10、query:eli
-   evidence：轻量级在线记忆机制用于高效长上下文推理
-7. [WinQ: Accelerating Quantization-Aware Training of Language Models Around Saddle Points](/20260512-20260610/2605.17471v1-winq-accelerating-quantization-aware-training-of-language-models-around-saddle-points)  
+   evidence：线性时间双向注意力减少推理延迟
+7. [Sparse Subspace-to-Expert Sharing for Task-Agnostic Continual Learning](/202606/13/2606.07500v1-sparse-subspace-to-expert-sharing-for-task-agnostic-continual-learning)  
    标签：评分：7.0/10、query:compression
-   evidence：语言模型的量化感知训练加速
-8. [Context Memorization for Efficient Long Context Generation](/20260512-20260610/2605.18226v1-context-memorization-for-efficient-long-context-generation)  
+   evidence：面向LLM持续学习的稀疏子空间到专家共享
+8. [Where the Score Lives: A Wavelet View of Diffusion](/202606/13/2606.08309v1-where-the-score-lives-a-wavelet-view-of-diffusion)  
+   标签：评分：7.0/10、query:mg
+   evidence：扩散模型生成任务
+9. [Sparrow: Sparse Rollout for Stable and Efficient Long-context RL of Large Language Models](/202606/13/2606.08446v1-sparrow-sparse-rollout-for-stable-and-efficient-long-context-rl-of-large-language-models)  
    标签：评分：7.0/10、query:eli
-   evidence：通过注意力状态记忆实现高效长上下文生成
-9. [Mistletoe: Stealthy Acceleration-Collapse Attacks on Speculative Decoding](/20260512-20260610/2605.14005v2-mistletoe-stealthy-acceleration-collapse-attacks-on-speculative-decoding)  
+   evidence：稀疏注意力加速长上下文推理
+10. [Toward Compiler World Models: Learning Latent Dynamics for Efficient Tensor Program Search](/202606/13/2606.09312v1-toward-compiler-world-models-learning-latent-dynamics-for-efficient-tensor-program-search)  
+   标签：评分：7.0/10、query:llm-kernel
+   evidence：张量程序优化自动调度
+11. [Tensorizing Engram: Sharing Latents Across N-Gram Embeddings is Beneficial in LLMs](/202606/13/2606.08347v1-tensorizing-engram-sharing-latents-across-n-gram-embeddings-is-beneficial-in-llms)  
    标签：评分：6.0/10、query:eli
-   evidence：针对投机解码的攻击，揭示草案模型与目标模型近似漏洞
-10. [Prompt Compression in Diffusion Large Language Models: Evaluating LLMLingua-2 on LLaDA](/20260512-20260610/2605.17932v1-prompt-compression-in-diffusion-large-language-models-evaluating-llmlingua-2-on-llada)  
-   标签：评分：6.0/10、query:compression
-   evidence：面向扩散LLM的提示压缩
-11. [Beyond Query Memorization: Large Language Model Routing with Query Decomposition and Historical Matching](/20260512-20260610/2605.25558v1-beyond-query-memorization-large-language-model-routing-with-query-decomposition-and-historical-matching)  
+   evidence：张量化n-gram内存模块用于高效令牌表示
+12. [FlashCP: Load-Balanced Communication-Efficient Context Parallelism for LLM Training](/202606/13/2606.08476v1-flashcp-load-balanced-communication-efficient-context-parallelism-for-llm-training)  
+   标签：评分：6.0/10、query:llm-kernel
+   evidence：面向LLM训练的负载均衡通信高效上下文并行，消除冗余KV通信
+13. [TRADE: Transducer-Augmented Decoder for Speech LLM](/202606/13/2606.08486v1-trade-transducer-augmented-decoder-for-speech-llm)  
    标签：评分：6.0/10、query:eli
-   evidence：提出DecoR，一种通过匹配查询到合适模型来提高效率的路由框架，降低计算成本同时保持性能。
-12. [AsymVLM: Asymmetric Token Pruning for Efficient Vision-Language Model Inference](/20260512-20260610/2605.29535v1-asymvlm-asymmetric-token-pruning-for-efficient-vision-language-model-inference)  
+   evidence：换能器增强解码器实现低延迟流式语音LLM推理
+14. [Distilling LLM Reasoning into an Interpretable Policy Tree for Human-AI Collaboration](/202606/13/2606.08596v1-distilling-llm-reasoning-into-an-interpretable-policy-tree-for-human-ai-collaboration)  
    标签：评分：6.0/10、query:compression
-   evidence：针对视觉语言模型推理的token剪枝
+   evidence：通过蒸馏LLM推理到策略树降低推理成本
 
 
 <div class="dpr-home-promo-card">

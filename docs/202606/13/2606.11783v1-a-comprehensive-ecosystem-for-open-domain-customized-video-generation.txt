@@ -1,0 +1,205 @@
+Title: A Comprehensive Ecosystem for Open-Domain Customized Video Generation
+
+URL Source: https://arxiv.org/pdf/2606.11783v1
+
+Published Time: Thu, 11 Jun 2026 00:43:32 GMT
+
+Number of Pages: 5
+
+Markdown Content:
+# A COMPREHENSIVE ECOSYSTEM FOR OPEN-DOMAIN CUSTOMIZED VIDEO GENERATION 
+
+# Jingxu Zhang 1,2,∗, Yuqian Hong 1, Daneul Kim 3, Kai Qiu 2, Qi Dai 2,Jianmin Bao 2, Yifan Yang 2, Xiaoyan Sun 1,†, Chong Luo 2,†
+
+> 1
+
+# University of Science and Technology of China 2Microsoft Research Asia 
+
+> 3
+
+# Seoul National University 
+
+> ∗
+
+# Work done during internship at Microsoft Research Asia. †Corresponding authors. 
+
+ABSTRACT 
+
+Recent progress in video generation has shown impressive visual synthesis capabilities. However, open-domain customized video generation remains limited by the lack of large-scale, annotated datasets capturing diverse identity-specific attributes. To address this, we introduce PexelsCustom-1M, the first publicly available million-scale dataset for identity-preserving video generation, con-taining one million curated ⟨identity, text, video ⟩ triplets across 8,000+ categories. Leveraging this, we propose CustoMDiT, a parameter-efficient framework that adapts a pretrained multimodal Diffusion Transformer into a customized video generator with only 8% additional learnable parameters. Our method surpasses prior state-of-the-art. However, benchmarks such as DreamBooth cover only 100 classes, which is insufficient for real-world applications. To overcome this, we construct OpenCustom, a new benchmark with 1,000+ categories, created via cross-dataset knowledge fusion from ImageNet and MS-COCO. Extensive experiments confirm the advantages of both our dataset and model. We will open-source the entire ecosystem—including dataset, pipeline, benchmark, and implementations—to support further research. 
+
+Index Terms — Dataset, Data Curation, Video Customization, Open Domain, Diffusion Model 
+
+1. INTRODUCTION 
+
+The rapid advancement of video generation has intensified demands for customizable content creation in domains such as advertising and digital media. Customized Video Generation (CVG) seeks to preserve visual identities while embedding them into diverse sce-narios guided by text. Although prior works in customized image [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] and video generation [11, 12, 13, 14, 15, 16, 17, 18, 19] have shown promise, they remain limited by (1) narrow categorical scope [15, 16, 14, 19] or (2) reliance on test-time optimization with per-identity fine-tuning [1, 11, 12, 13]. These con-straints stem from the lack of large-scale multimodal data linking diverse identities with contextual descriptions. In this paper, we introduce PexelsCustom-1M, the first large-scale open-domain single-reference CVG dataset, curated via a dual-phase pipeline. Starting from 400K HD Pexels 1 videos, the prepro-cessing stage applies vision-language captioning, identity extraction, localization, and segmentation to establish precise identity-video correspondences. The postprocessing stage further refines samples through multi-stage filtering, subject-centric re-captioning with con-textual preservation, and augmentation to mitigate artifacts. This workflow yields one million high-quality ⟨identity, text, video ⟩
+
+> 1https://www.pexels.com
+
+triplets across 8,000+ categories, enabling unprecedented scale and contextual diversity. Built on PexelsCustom-1M, we propose CustoMDiT, a parameter-efficient Diffusion Transformer framework for CVG. CustoMDiT conditions text-to-video generation on identity-aware reference im-ages via bias-injected RoPE embeddings, while LoRA layers enable efficient adaptation with minimal additional parameters. Experi-ments demonstrate superior performance over existing methods on standard CVG benchmarks, together with improved efficiency. Existing CVG benchmarks cover only ˜ 100 categories, limiting generalization. To address this, we propose OpenCustom, a com-prehensive evaluation suite spanning 1,000+ categories by fusing ImageNet-1K [20] and MS-COCO [21]. OpenCustom provides a unified protocol for (1) identity extraction, (2) context-aware prompting, and (3) multi-dimensional evaluation. Extensive experiments on both prior and our new benchmark demonstrate the superiority of PexelsCustom-1M and CustoMDiT. Human studies further confirm our results match or surpass com-peting approaches, including commercial CVG APIs (e.g., Vidu 2). We will open-source the dataset, curation pipeline, benchmark, and model to advance community research. We summarize our key con-tributions: • PexelsCustom-1M: The first large-scale, publicly available dataset for CVG, providing 1M ⟨identity, text, video ⟩
+
+triplets across 8,000+ identity categories. • Scalable Data Pipeline: A reproducible framework for har-vesting and refining identity-text-video triplets, extensible to broader domains. • CustoMDiT: A parameter-efficient customized video genera-tion model achieving state-of-the-art CVG performance with minimal architectural overhead. • OpenCustom Benchmark: A comprehensive evaluation pro-tocol spanning 1,000+ categories to assess open-domain gen-eralization in realistic settings. 
+
+2. OPEN-DOMAIN DATA CURATION 2.1. Data Pre-Processing 
+
+Pexels-400K contains high-quality videos, each accompanied by a descriptive caption. However, these captions primarily focus on the main subject and its motion, while lacking descriptions of other present identities. To address this limitation, we employ a vision-language model (VLM) [22] to generate subject-centric captions for                                                           
+
+> 2https://www.vidu.cn/create/character2video
+> arXiv:2606.11783v1 [cs.CV] 10 Jun 2026 Boy, girl, table, laptop,
+> office, mug ...
+> VLM(Florence2) Data Filtering Grounded -SAM -2
+> Aboy and girl sitting at a
+> wooden table with a laptop in
+> an office . There is a mug ...
+> Aboy and girl sitting at a
+> wooden table with a laptop in
+> an office . There is a mug ...
+> Aboy and girl in discussion
+> using a laptop .
+> Aboy and girl in discussion
+> using a laptop .LLM(GPT -4o)
+> Center Frame Mask
+> …
+> Original Caption
+> ……
+> Segment
+> A girl wears the smart bracelet .A girl wears the smart bracelet .
+> The girl is listening. The girl is listening.
+> The mug is on the table. The mug is on the table.
+> The boy is talking. The boy is talking.
+> The laptop is on the table. The laptop is on the table.
+> LLM(GPT -4o) LLM(GPT -4o)
+
+Fig. 1 . Data curation pipeline of our PexelsCustom-1M. We aim at enriching dataset during pre-processing, while filtering and generating subject-centric caption during post-processing. the center frame of each video. Since VLMs naturally emphasize identifying multiple entities in image captioning, we can extract ad-ditional identities from videos by designing appropriate prompts. Next, we use GPT-4o to extract identities from both the origi-nal and subject-centric captions while filtering out background ele-ments. Following previous mask generation methods [14, 19], we apply Grounded-SAM [23] to generate masks for each extracted identity. Specifically, the extracted identities and the center frame of each video are first processed by Grounding-DINO [24] to obtain bounding boxes, which are then refined by SAM [25] to produce segmentation masks. Our data curation pipeline is shown in Fig. 1. 
+
+2.2. Data Post-Processing Data Filtering. To ensure the quality of reference images, we imple-ment a series of carefully designed data filtering strategies, including aesthetic filtering, bbox size filtering, overlapped object filtering, etc. 
+
+Re-Captioning. The identities extracted by VLM during pre-processing lack corresponding captions. While we could simply use VLM-generated captions or append identities to the original caption, these approaches either lack motion descriptions or detailed identity context. Instead, as illustrated in Fig. 1. We input the identity name, original caption,center frame and cropped reference image to GPT-4o to generate a new caption that focuses on the identity while pre-serving the original caption’s information.Caption–identity consis-tency is improved through re-captioning, raising the subject-identity CLIP score from 22.24 to 23.27. 
+
+Data Augmentation. The most effective approach to mitigating the copy-paste problem is cross-pair data training [26]. Additionally, we find that data augmentation during training further alleviates this issue. Specifically, we apply random resizing, rotation, and shifting to identities during training. Furthermore, we introduce a random shift in the frame sampling strategy to prevent the reference frame from being tied to a specific frame. The data augmentation effec-tively reduces the copy-paste problem. Name Open-Source Type Nc Ns
+
+Dreambooth[1] ✓ Image 30 158 CustomConcept[27] ✓ Image 101 634 Subjects200K[6] ✓ Image 4696 224K CustomStudio[28] × Image 13 68 VideoBooth[14] ✓ Video 9 49K DreamVideo-2[19] × Video 2538 230K PexelsCustom (ours) ✓ Video 8373 1M 
+
+Table 1 . Statistics comparison on different Custom Image/Video Dataset. Nc represents the number of classes, while Ns represents the number of samples. 
+
+2.3. Data Statistics 
+
+We report a comparison of the statistics of our dataset with other existing image/video customization datasets in Table 1. As the re-sults show, the only open-source video customization dataset is from VideoBooth. However, the number of classes in the VideoBooth dataset is extremely limited to just 9, and the total number of sam-ples is also insufficient. In contrast, we have collected our dataset with a significantly wider domain and larger scale, even compared to closed-source video customization datasets. 
+
+3. METHOD 
+
+Fig. 2 summarizes the training and inference pipeline of CustoMDiT. Following OminiControl [6], we inject the reference image via a Low-Rank Adapter (LoRA) while keeping the pretrained backbone frozen. Prior approaches [3, 10, 14] typically rely on a learned fea-ture extractor or an off-the-shelf image encoder (e.g., CLIP), which often emphasizes high-level semantics and makes fine-detail injec-tion difficult. Instead, we extract reference features using the pre-trained 3DVAE. To keep the model subject-focused (rather than drift-ing toward an image-to-video behavior), we gray-pad the masked Video Layers  🔥  Text  Layers  ❄     
+
+> MM -A2en4on +LoRA 🔥
+> MM -DiT Blocks
+> 3D
+> VAE
+> ❄
+> Output Video
+> Video Layers  🔥
+> Reference
+> Image
+> 𝑍 𝑖 𝑚 𝑎 𝑔 𝑒  𝑍 𝑣 𝑖 𝑑 𝑒 𝑜  𝑍 𝑡 𝑒 𝑥 𝑡
+> 3D
+> VAE
+> ❄
+> T5
+> ❄
+> Acat roaming
+> on the floor.
+> Prompt Noisy Latent
+> Text  Layers  ❄
+> Ground Truth
+> Loss
+
+🔥 Training    
+
+> 🔥 Trainable LoRA
+> ❄Frozen Weight
+> Reference
+> Image
+
+❄ Zero -shot Inference  
+
+> Prompt Noisy Latent
+> A person is
+> using macbook .
+> 𝑍 𝑖 𝑚 𝑎 𝑔 𝑒  𝑍 𝑣 𝑖 𝑑 𝑒 𝑜  𝑍 𝑡 𝑒 𝑥 𝑡
+> 3D
+> VAE
+> ❄
+> T5
+> ❄
+> Trained
+> LoRA  Text  Layers
+> Trained  LoRA
+> Text  Layers
+> Trained
+> LoRA
+> 3D
+> VAE
+> ❄
+> Output Video
+
+Fig. 2 . Overview of CustoMDiT. We demonstrate training pipeline (above) and how we conduct inference in zero-shot manner (below). The module enclosed in red dashed lines are equipped with LoRA layers and trained as shown in the figure above. Equipped with the trained LoRA, we conduct inference with the given reference image and prompt. background of the reference image. Given the modality fusion design of MM-DiT, we incorporate reference latents by reusing the video layers. We attach LoRA to all linear layers and attention projections in these video layers, process reference latents through the same layers, and concatenate them with video latents within attention. Importantly, LoRA is enabled only for reference-latent processing and disabled for video-latent processing, encouraging the adapters to specialize in reference feature injection. 
+
+4. EXPERIMENTS 4.1. Experimental Setup Implementation Details. We use CogVideoX-5B [29] as the base model for CustoMDiT, setting both the LoRA rank and LoRA al-pha to 128. CustoMDiT is trained on PexelsCustom-1M for 8,000 steps (global batch size 128) without data augmentation, using 64 NVIDIA A100 GPUs for 60 hours, followed by an additional 2,000 training steps with data augmentation. We use resolution of 480 ×
+
+720 with 49 frames at 8 FPS. The text drop rate is fixed at 0.1. We employ no learning rate scheduler and optimize using AdamW with a learning rate of 1 × 10 −4, betas of [0 .9, 0.95] ,and epsilon of 1 × 10 −8. Denoising is performed using DPM as the noise scheduler, with 50 denoising steps during inference. Additionally, we utilize text classifier-free guidance scale of 6.0. 
+
+Comparison Methods. We compare our method with zero-shot PT2V and PT2I approaches. For PT2I, we evaluate our model against broad-domain techniques, including OminiControl [6], MS-Diffusion [4], BLIP-Diffusion [5], and IP-Adapter [3]. As a naive baseline for generating customized videos, we apply CogVideoX-5B-I2V [29] to the generated customized images. For PT2V, we compare our approach with VideoBooth [14].                                                                                    
+
+> Method Dataset M.S. D.D. CLIP-T CLIP-I DINO-I
+> OminiControl[6] DreamBooth-Custom 98.91 24.00 30.45 68.64 43.69 OpenCustom 98.69 38.64 31.34 64.57 34.69 MS-Diffusion[4] DreamBooth-Custom 99.25 9.00 30.08 76.21 62.67 OpenCustom 98.90 20.36 31.51 75.23 59.44 BLIP-Diffusion[5] DreamBooth-Custom 98.93 4.00 27.64 76.36 54.21 OpenCustom 98.51 20.93 28.79 76.05 54.60 IP-Adapter[3] DreamBooth-Custom 98.93 7.00 28.96 76.52 54.57 OpenCustom 98.62 29.50 30.86 74.21 49.00 VideoBooth[14] DreamBooth-Custom 96.97 50.00 27.25 61.63 31.38 OpenCustom 96.61 57.86 28.20 67.69 41.48 ID-Animator[15] DreamBooth-Custom 99.30 5.00 30.94 67.29 34.62 OpenCustom 99.14 8.79 31.50 66.81 34.38 CustoMDiT (ours) DreamBooth-Custom 97.66 61.00 29.17 76.93 66.59
+> OpenCustom 97.42 70.29 30.96 75.32 65.80
+
+Table 2 . Benchmark results on two datasets. The best method is in 
+
+bold , and the second-best is underlined. 
+
+4.2. Evaluation Benchmark 
+
+As there is no publicly available or widely recognized benchmark for video customization, we evaluate the models using our own curated datasets. To assess the open-set generation capability of the models, we construct an evaluation dataset based on various image datasets. 
+
+DreamBooth-Custom Following prior works [11, 14, 19, 13], we select 30 subjects from the DreamBooth dataset [1] and 70 from the CustomConcept101 dataset [27], sampling one image per sub-ject. Each concept’s prompt is randomly chosen from the provided examples. 
+
+OpenCustom benchmark We build OpenCustom—an open-domain benchmark using ImageNet [30] and MS-COCO [31]. For ImageNet-1K, all 1,000 classes are used by manually selecting one high-resolution image per class with a prominent subject matching the class name; GPT-4o generates prompts (motion prompts for living creatures, camera motion for objects), forming ImageNet-Custom. For MS-COCO, five subjects per category (totaling 400 samples) are manually chosen—only those with a single, prominent instance and minimal interference are retained; GPT-4o similarly generates the prompts. 
+
+Evaluation Metrics We evaluate our method using seven met-rics, covering two key aspects of quality assessment. For identity preservation, we apply CLIP Image Similarity (CLIP-I) [32] and DINO Image Similarity (DINO-I) [33].For video quality and consis-tency, we introduce three additional metrics. CLIP Text Similarity (CLIP-T) is used to assess the model’s ability to follow prompts. Motion Smoothness (M.S.) and Dynamic Degree (D.D.), derived from VBench [34], evaluate motion consistency and modeling ca-pability. 
+
+4.3. Experiment Results Qualitative Comparison As shown in Fig. 3, our method ex-cels in both identity preservation and dynamic motion. On the left, it uniquely retains fine details—such as the lamp’s shape and texture—and is the only one to generate a crackling fireplace as prompted. On the right, while VideoBooth preserves the dog’s identity similarly, it falls short in capturing motion dynamics and following the text prompt. Moreover, although PT2I + I2V methods deliver strong prompt adherence and high aesthetic quality in initial frames, they often neglect the reference image and struggle with action consistency and camera movement. CustoMDiT (Ours)     
+
+> VideoBooth
+> MS -Diffusion
+> Alamp in a log cabin, a cozy fireplace crackling
+> nearby.
+> IP -Adapter
+> BLIP -Diffusion
+> Golden retriever walks on sandy beach with waves
+> and seagulls. Camera follows dog exploring
+> shoreline.
+
+Fig. 3 . Qualitative Comparison with previous methods. VideoBooth is a PT2V method while the other three methods are implemented in a naive PT2I + I2V pipeline. 
+
+Quantitative Comparison We present quantitative results in Table 2. CustoMDiT achieves state-of-the-art identity preservation across all benchmarks, with improved motion dynamics and com-petitive motion smoothness. The gains in DINO-I scores indicate its strong capacity to capture fine-grained subject details, complement-ing CLIP’s emphasis on semantic similarity. ID-Animator focuses on human face customization and does not generalize well, show-ing extremely low dynamic degree. Our method also outperforms VideoBooth and matches PT2I approaches in CLIP-T, confirming superior prompt adherence in both background consistency and mo-tion generation. In contrast, image customization methods adapted with I2V models exhibit poor motion dynamics despite text condi-tioning. Overall, these results validate the versatility of our approach in open-domain and real-world scenarios. 
+
+Human evaluation We conducted a user study to compare our method with VideoBooth [14], OminiControl + I2V [6], and the commercial video customization model Vidu2.0. Each participant was presented with 20 groups of videos, where each group contained four videos generated by the different methods in a randomized or-der. Participants were asked to evaluate the videos based on four criteria: (1) ID consistency, (2) Prompt alignment, (3) Motion qual-ity, and (4) Overall quality. 
+
+Method Prompt ID Motion Overall 
+
+VideoBooth[14] 1.913 2.103 1.888 1.550 OminiControl[6] 3.232 2.805 3.540 2.983 Vidu2.0[35] 3.792 4.062 3.878 3.688 CustoMDiT (ours) 3.973 4.445 3.895 3.833 Table 3 . Result on human evaluation, our method achieves best score on all aspects. A total of 30 participants took part in the study, and the re-sults, shown in Table 3, indicate that our method achieved the high-est scores across all four aspects. Notably, we significantly out-
+
+Setting M.S. D.D. CLIP-T CLIP-I DINO-I 
+
+Default 97.39 67.00 29.34 75.34 63.52 No recaption 97.90 48.00 29.51 75.56 64.19 
+
+Table 4 . Results for recaption ablation study. performed OminiControl and VideoBooth while also surpassing the commercial Vidu2.0 model. 
+
+4.4. Ablation Studies Subject-Centric Re-Captioning To evaluate the effectiveness of our enriched data with subject-centric re-captioning, we conducted an ablation study by removing the newly extracted subject infor-mation from the captions generated by the vision-language model (VLM) and replacing them with the original captions. As shown in Table 4, our mixed dataset, which combines original and newly ex-tracted subjects, achieves comparable results to the non-re-captioned dataset while enhancing motion dynamics. 
+
+5. CONCLUSION 
+
+We present a large-scale open-domain dataset for customized video generation (CVG). Building on this, we develop an efficient CVG framework via LoRA-adapted MMDiT. To rigorously evaluate open-domain generalization, we introduce a benchmark covering over 1,000 categories. We will open-source all resources to support fu-ture research. While our method advances CVG capabilities, there are some limitations: (1) Performance is inherited from the pre-trained MMDiT model, and a stronger base model could lead to a better performance; (2) Current focus on single-identity generation leaves multi-identity scenarios unexplored; (3) Cross-paired data could further enhance compositionality beyond our current data augmentation strategies. We plan to explore them in the near future. 6. REFERENCES 
+
+[1] Nataniel Ruiz et al., “Dreambooth: Fine tuning text-to-image diffusion models for subject-driven generation,” in Proceed-ings of the IEEE/CVF conference on computer vision and pat-tern recognition , 2023, pp. 22500–22510. [2] Rinon Gal et al., “An image is worth one word: Personaliz-ing text-to-image generation using textual inversion,” arXiv preprint arXiv:2208.01618 , 2022. [3] Hu Ye et al., “Ip-adapter: Text compatible image prompt adapter for text-to-image diffusion models,” arXiv preprint arXiv:2308.06721 , 2023. [4] Xiaowei Wang et al., “Ms-diffusion: Multi-subject zero-shot image personalization with layout guidance,” arXiv preprint arXiv:2406.07209 , 2024. [5] Dongxu Li et al., “Blip-diffusion: Pre-trained subject represen-tation for controllable text-to-image generation and editing,” 
+
+Advances in Neural Information Processing Systems , vol. 36, pp. 30146–30166, 2023. [6] Zhenxiong Tan et al., “Ominicontrol: Minimal and uni-versal control for diffusion transformer,” arXiv preprint arXiv:2411.15098 , vol. 3, 2024. [7] Yuxuan Zhang et al., “Ssr-encoder: Encoding selective subject representation for subject-driven generation,” in Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , 2024, pp. 8069–8078. [8] Chong Mou et al., “T2i-adapter: Learning adapters to dig out more controllable ability for text-to-image diffusion mod-els,” in Proceedings of the AAAI conference on artificial intel-ligence , 2024, vol. 38, pp. 4296–4304. [9] Lvmin Zhang et al., “Adding conditional control to text-to-image diffusion models,” in Proceedings of the IEEE/CVF international conference on computer vision , 2023, pp. 3836– 3847. [10] Yuxiang Wei et al., “Elite: Encoding visual concepts into textual embeddings for customized text-to-image generation,” in Proceedings of the IEEE/CVF International Conference on Computer Vision , 2023, pp. 15943–15953. [11] Jianzong Wu et al., “Motionbooth: Motion-aware customized text-to-video generation,” arXiv preprint arXiv:2406.17758 ,2024. [12] Yujie Wei et al., “Dreamvideo: Composing your dream videos with customized subject and motion,” in Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recog-nition , 2024, pp. 6537–6549. [13] Tao Wu et al., “Customcrafter: Customized video genera-tion with preserving motion and concept composition abili-ties,” arXiv preprint arXiv:2408.13239 , 2024. [14] Yuming Jiang et al., “Videobooth: Diffusion-based video gen-eration with image prompts,” in Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition ,2024, pp. 6689–6700. [15] Xuanhua He et al., “Id-animator: Zero-shot identity-preserving human video generation,” arXiv preprint arXiv:2404.15275 ,2024. [16] Shenghai Yuan et al., “Identity-preserving text-to-video generation by frequency decomposition,” arXiv preprint arXiv:2411.17440 , 2024. [17] Hila Chefer et al., “Still-moving: Customized video genera-tion without customized video data,” ACM Transactions on Graphics (TOG) , vol. 43, no. 6, pp. 1–11, 2024. [18] Yuwei Guo et al., “Animatediff: Animate your personalized text-to-image diffusion models without specific tuning,” arXiv preprint arXiv:2307.04725 , 2023. [19] Yujie Wei et al., “Dreamvideo-2: Zero-shot subject-driven video customization with precise motion control,” arXiv preprint arXiv:2410.13830 , 2024. [20] Olga Russakovsky et al., “Imagenet large scale visual recogni-tion challenge,” International journal of computer vision , vol. 115, pp. 211–252, 2015. [21] Tsung-Yi Lin et al., “Microsoft coco: Common objects in con-text,” in Computer vision–ECCV 2014: 13th European confer-ence, zurich, Switzerland, September 6-12, 2014, proceedings, part v 13 . Springer, 2014, pp. 740–755. [22] Bin Xiao et al., “Florence-2: Advancing a unified rep-resentation for a variety of vision tasks,” arXiv preprint arXiv:2311.06242 , 2023. [23] Tianhe Ren et al., “Grounded sam: Assembling open-world models for diverse visual tasks,” 2024. [24] Tianhe Ren et al., “Grounding dino 1.5: Advance the” edge” of open-set object detection,” arXiv preprint arXiv:2405.10300 ,2024. [25] Alexander Kirillov et al., “Segment anything,” in Proceedings of the IEEE/CVF international conference on computer vision ,2023, pp. 4015–4026. [26] Adam Polyak et al., “Movie gen: A cast of media foundation models,” 2025. [27] Nupur Kumari et al., “Multi-concept customization of text-to-image diffusion,” in Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , 2023, pp. 1931– 1941. [28] Zhao Wang et al., “Customvideo: Customizing text-to-video generation with multiple subjects,” arXiv preprint arXiv:2401.09962 , 2024. [29] Zhuoyi Yang et al., “Cogvideox: Text-to-video diffu-sion models with an expert transformer,” arXiv preprint arXiv:2408.06072 , 2024. [30] Jia Deng et al., “Imagenet: A large-scale hierarchical image database,” in 2009 IEEE conference on computer vision and pattern recognition . Ieee, 2009, pp. 248–255. [31] Tsung-Yi Lin et al., “Microsoft coco: Common objects in con-text,” in Computer vision–ECCV 2014: 13th European confer-ence, zurich, Switzerland, September 6-12, 2014, proceedings, part v 13 . Springer, 2014, pp. 740–755. [32] Alec Radford et al., “Learning transferable visual models from natural language supervision,” in International conference on machine learning . PmLR, 2021, pp. 8748–8763. [33] Mathilde Caron et al., “Emerging properties in self-supervised vision transformers,” in Proceedings of the IEEE/CVF inter-national conference on computer vision , 2021, pp. 9650–9660. [34] Ziqi Huang et al., “VBench: Comprehensive benchmark suite for video generative models,” in Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recog-nition , 2024. [35] Vidu et al., “Character to video generation,” 2025.
