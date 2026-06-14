@@ -1,0 +1,1588 @@
+Title: Understanding Quantization-Aware Training: Gradients at Quantized Weights Bias to the Low-Loss Basin
+
+URL Source: https://arxiv.org/pdf/2606.09012v1
+
+Published Time: Tue, 09 Jun 2026 01:41:50 GMT
+
+Number of Pages: 31
+
+Markdown Content:
+# Understanding Quantization-Aware Training: Gradients at Quantized Weights Bias to the Low-Loss Basin 
+
+Hanyang Li ∗ Jianhao Ma † Ying Cui ‡
+
+June 7, 2026 
+
+Abstract 
+
+Post-training quantization (PTQ) converts a trained full-precision model into low-bit weights without task-level retraining, while quantization-aware training (QAT) incorporates quantization into the training loop. Although PTQ is efficient and often accurate at moderate bitwidths, it can fail sharply at aggressive bitwidths; QAT is more expensive but can often recover the lost accuracy. We propose a unified geometric framework that explains both PTQ failure and QAT recovery. We model full-precision training as following a low-loss river inside a wider 
+
+valley : a normal neighborhood of the river forms a nearly flat basin , while leaving this basin incurs a sharp loss increase. When the quantization grid is comparable to the basin width, local PTQ objectives, including rounding and Hessian-based second-order reconstruction, can select a high-loss deployed quantized point outside the basin even when nearby low-loss quantized points exist. In this regime, straight-through-estimator-based QAT has a useful bias: it evaluates gradients at the deployed quantized weights while updating latent full-precision weights, causing the gradient to sense the valley wall and acquire an inward component that steers subsequent quantized iterates back into the basin. We formalize this mechanism through a local landscape model, construct a geometric PTQ failure mode, and prove finite-time QAT recovery under local quantizer-compatibility assumptions. Experiments across vision and language models under multiple neural-network quantization schemes corroborate the predicted basin-crossing failure of PTQ and the corresponding recovery mechanism of QAT. 
+
+## 1 Introduction 
+
+Quantization is a standard technique for reducing inference memory footprint, latency, and energy consumption of large-scale machine learning models [ 12 , 23 , 14 ]. A common deployment pipeline first trains a model in full precision and then converts it to a low-bit representation. The most economical variant is post-training quantization (PTQ), which takes a pretrained model as input and determines quantization scales and discrete weights without task-level fine-tuning, typically via local rounding rules or layer-wise reconstruction objectives [ 22 , 21 , 11 ]. Modern PTQ methods are highly effective at moderate bitwidths, particularly around 8 bits, making them attractive for practical deployment [ 17 , 21 , 28 ]. However, PTQ often becomes fragile around the 4-bit regime, 
+
+> ∗
+
+Department of IEOR, University of California, Berkeley (hanyang_li@berkeley.edu) 
+
+> †
+
+Department of Statistics and Data Science, University of Pennsylvania (jianhao@umich.edu) 
+
+> ‡
+
+Department of IEOR, University of California, Berkeley (yingcui@berkeley.edu) 
+
+1
+
+> arXiv:2606.09012v1 [cs.LG] 8 Jun 2026
+
+River Valley 
+
+Basin (a) River–valley–basin landscape. PTQ 
+
+FP
+
+QAT (b) Quantization compatibility. 
+
+Figure 1: River–valley–basin geometry of the loss and quantization compatibility induced by the gradient bias of QAT. (a) A loss landscape from a real 213M Llama model trained on the SlimPajama dataset, showing a low-loss river inside a broader valley and basin. (b) Illustration of the PTQ–QAT contrast: PTQ may round the full-precision solution to a quantized point outside the low-loss basin, whereas QAT can move the quantized model back into the basin. especially when both weights and activations are quantized, where even well-trained full-precision models can suffer sharp performance degradation [5, 19, 10]. A common remedy is quantization-aware training (QAT), which incorporates quantization into the training loop. In standard QAT based on the straight-through estimator (STE), training keeps a latent full-precision copy of the weights, but evaluates the forward pass using their quantized values. The gradient is therefore measured at the quantized weights, while the update is applied to the continuous full-precision weights. This STE update bypasses the fact that quantization is discrete and has zero or undefined derivatives almost everywhere [ 4, 7, 14 ]. 1 Practitioners often view PTQ and QAT as occupying different points on a cost–accuracy frontier: PTQ is fast, calibration-efficient, and easy to apply, but can incur substantial accuracy degradation at low precision, whereas QAT is usually more robust in low-precision regimes but requires additional data, optimizer state, hyperparameter tuning, and training compute. This tradeoff has motivated practical pipelines in which PTQ is first used as a low-cost quantization attempt; if the resulting model does not meet the target accuracy, practitioners switch to QAT fine-tuning to recover performance under the quantized forward pass. Despite the practical success of PTQ–QAT pipelines, their underlying mechanism remains poorly understood. When can PTQ fail sharply even after full-precision training has found a good model? What does full-precision pretraining contribute before QAT begins? And, under the same total training budget, why should QAT fine-tuning differ from continuing full-precision training and then applying PTQ again? These questions matter for both theory and practice: if QAT merely provides additional optimization steps, then its advantage should be reproducible by equal-budget full-precision fine-tuning followed by PTQ; if instead QAT corrects quantization-specific errors that remain invisible to full-precision training, then QAT has a quantization-specific benefit: it adapts the latent full-precision weights to perform well after quantization, which PTQ alone may fail to achieve. 
+
+> 1There are many variants of QAT beyond STE-based methods. In this paper, we focus on the standard STE-based formulation.
+
+2We argue that these questions can be understood through quantization compatibility : whether the deployed low-bit weights sit in a region of parameter space where loss remains low relative to the pretrained full-precision point. Our analysis is built on a river-valley-basin view of the loss landscape (see Figure 1(a)), supported by recent empirical and theoretical evidence [ 20 , 25 , 6, 3]. The river is a low-loss manifold or trajectory along which full-precision training can move without large cost increases. Around the river lies a tube-shaped basin (dashed lines in Figure 1(a)) in which normal perturbations cause little loss change. Outside the basin, valley walls produce steep increases in normal directions. PTQ can fail when the deployed quantized point falls outside the low-loss basin and lands on the valley wall, where the loss increases sharply and performance deteriorates, as illustrated in Figure 1(b). This can happen when the quantization grid resolution is comparable to the basin width: PTQ may cross the basin boundary even though another nearby quantized point remains inside the basin and has low loss. The mechanism is that the Hessian can be nearly flat inside the basin, so local quadratic surrogates may underestimate the boundary-crossing cost and fail to distinguish basin-compatible quantized points from incompatible ones. By contrast, QAT evaluates gradients at the quantized weights. When these weights fall outside the basin, the gradients probe the steep valley-wall regime and can contain a substantial inward normal component. Updates to the latent full-precision weights through the STE can therefore shift subsequent quantized iterates back toward the low-loss basin, restoring quantization compatibility. Ordinary full-precision fine-tuning, however, may keep improving the unquantized model along the river while leaving the normal quantization error uncorrected. Thus, QAT can help not merely because it uses additional compute, but because it optimizes the deployed quantized model and provides a quantization-specific correction that standard full-precision training does not. Our contributions are as follows: 
+
+• We formalize a river–valley–basin landscape together with quantization-compatibility conditions. This framework identifies a geometric PTQ failure mode: local rounding or second-order recon-struction objectives can select a high-loss quantized point outside the low-loss basin, even though nearby low-loss quantized points exist. 
+
+• We analyze QAT dynamics and show that, when the deployed quantized iterate lies outside the basin, the gradient evaluated at the quantized weights can contain an inward normal component that drives subsequent deployed quantized iterates back into the low-loss basin in finite time. 
+
+• We support the theory through experiments on low-dimensional landscapes, matrix factorization, and neural network quantization tasks, testing the predicted basin-crossing failure, inward-gradient correction, and QAT recovery behavior. 
+
+1.1 Related Work 
+
+PTQ and QAT. Early and widely used PTQ pipelines rely on rounding, calibration, and per-layer or per-channel scaling [ 17 , 2]. More advanced methods choose rounding decisions by minimizing local reconstruction objectives: loss-aware PTQ optimizes quantization decisions with a local loss proxy [ 22 ], AdaRound learns rounding decisions through a relaxed reconstruction objective [ 21 ], and GPTQ applies a layerwise second-order reconstruction procedure for transformers [ 11 ]. Architecture-specific PTQ methods have also been developed for vision transformers, including twin uniform quantization in PTQ4ViT [ 28 ] and Hessian-based reconstruction in APHQ-ViT [ 26 ]. Unlike PTQ, QAT includes quantization in the training loop, typically by applying quantization in the forward 3pass and using an STE in the backward pass [ 4, 7, 14 ]. Empirically, QAT is often more robust at low precision, but it is more expensive than PTQ. Recent work studies hybrid PTQ–QAT pipelines and compute allocation between full-precision training and QAT fine-tuning [ 5, 19 , 10 ]. Our work is complementary: rather than proposing a new quantization algorithm, we study a mechanism explaining when and why QAT can correct a PTQ failure. 
+
+Theory of straight-through estimators. Theoretical understanding of STE-based training remains limited. Existing analyses typically impose structural assumptions on the quantizer, architecture, objective, or data distribution. For binary weights, Li et al. [ 18 ] analyze STE-based SGD for finite-sum objectives and show convergence of averaged iterates to a neighborhood of the minimizer under strong convexity and smoothness conditions. Yin et al. [ 27 ] study STE for two-layer networks with binary activations under Gaussian inputs and show that the expected coarse gradient can be a descent direction for the population objective. More recent work extends aspects of this analysis beyond population objectives [ 15 ]. A complementary line of work gives optimization and regularization interpretations of quantized training and STE-like updates. Bai et al. [ 1] relate straight-through training to dual averaging for quantization-constrained optimization and propose ProxQuant, which formulates quantized training as regularized learning solved by proximal gradient updates. Dockhorn et al. [ 9] further interpret BinaryConnect through dual averaging and generalized conditional gradient methods, and introduce ProxConnect using proximal maps as a principled class of quantizers. More recently, PARQ [ 16 ] uses convex piecewise-affine regularization to induce weights toward discrete values, optimizes the resulting objective with an aggregate proximal stochastic-gradient method, and shows that STE can be viewed as an asymptotic form of this regularized proximal framework. These results clarify when STE updates can behave as useful biased gradients, or how STE-like quantized training can be interpreted through optimization principles. They do not, however, directly address the PTQ–QAT pipeline: why a pretrained full-precision model may be fragile under quantization, why QAT should start from such a model, or why QAT may be more useful than equal-budget full-precision fine-tuning. Our analysis focuses on these pipeline-specific questions. 
+
+Neural network loss landscapes. Our landscape model builds on recent work on anisotropic geometric structures in neural network loss functions. Ma et al. [ 20 ] argue that loss landscapes exhibit multiscale structure with subquadratic growth rates along some directions, so a single local quadratic approximation can miss qualitatively different behavior at larger scales. Wen et al. [ 25 ] propose a river-valley model to explain warmup-stable-decay learning rate schedules: high learning rates make progress along the river while oscillating across sharp valley walls, and learning rate decay reduces the off-river component. Chen et al. [ 6] observe basin-like stability regions in large language models, where performance is nearly unchanged inside a basin but collapses outside it. These empirical observations are consistent with optimization-theoretic analyses. In particular, Davis et al. [ 8] show that a smooth function with subquadratic growth rate admits a smooth ravine manifold on which growth normal to the ravine is at least quadratic near the minimum. Most recently, Bégout et al. [ 3]establish that, near the solution, gradient descent aligns with the eigenvector corresponding to the smallest eigenvalue of the Hessian. We combine these perspectives to study PTQ and QAT. 42 River-valley-basin Landscape 
+
+Motivated by the empirical and theoretical evidence of the loss landscape of neural networks reviewed in Section 1.1, we now introduce a local model that isolates the geometry relevant to quantization. The model has three components: a low-loss river that represents the full-precision training trajectory, a surrounding basin in which moderate normal perturbations do not substantially change the loss, and sharper valley walls outside this basin that generate an inward gradient. This abstraction is not intended as a global description of the full neural-network objective. Rather, it is a local description near a pretrained point, designed to separate tangential motion along the trained solution set from normal displacements induced by quantization. This separation is the key structure used later to explain both PTQ failure and QAT recovery. We first introduce the local geometric notation. Let wfp be the full-precision pretrained point, and let M ⊂ Rd be an m-dimensional C2,1 embedded manifold. For each π ∈ M , denote by TM(π)
+
+and NM(π) the tangent and normal spaces at π. Let H be a d × d dimensional symmetric positive definite matrix and define ∥x∥H = ( x⊤Hx)1/2. Denote the maximal and minimal eigenvalues of H
+
+by λ1 and λd. We assume HNM(π) ⊆ NM(π) for all π ∈ M , so that the weighted normal metric does not mix normal and tangential directions. Let U = {w ∈ Rd | dist (w, M) < R U } be a tubular neighborhood of M containing wfp , on which the nearest-point projection PM : U → M is well defined and assumed to be LP -Lipschitz continuous. For a radius R > 0, define the anisotropic normal tube T (π) = {π + ξ | ξ ∈ NM(π), ∥ξ∥H ≤ R} and T = S 
+
+> π∈M
+
+T (π). Equivalently, 
+
+T = {w ∈ U | ∥ w − PM(w)∥H ≤ R}.
+
+Assumption 1 (Local river-valley geometry) . The function f is L-smooth on U . Moreover, there exist constants ϵflat and c⊥ > 0 such that the following hold. 
+
+• (Anisotropic Basin) For any π ∈ M , w ∈ T (π), we have |f (w) − f (π)| ≤ ϵflat .
+
+• (River center) For every π ∈ M , it holds that ∇f (π) ∈ TM(π).
+
+• (Sharp valley outside the basin) For every w ∈ U \ T , defining the weighted normal direction 
+
+νH(w) = H(w − PM(w)) /∥H(w − PM(w)) ∥, we have ⟨∇ f (w), ν H(w)⟩ ≥ c⊥.
+
+The Anisotropic Basin models the basin-like near-flatness observed in neural-network loss landscapes: within the anisotropic tube T (π) of radius R around a river point π ∈ M , the loss changes by at most ϵflat . The metric H encodes anisotropic normal scaling, allowing some normal directions to be flatter than others; this is consistent with multiscale landscape structure [ 20 ] and with results that distinguish mild growth along a ravine from sharper transverse growth [ 8]. The River Center condition requires the gradient on M to be tangential, formalizing the idea that full-precision training can continue moving along a low-loss river [ 25 ] and relating to talweg- and direction-based descriptions near minimizers [ 3]. The Sharp Valley condition imposes sharp valley walls outside the basin: for every w ∈ U \ T , the normal pairing ⟨∇ f (w), ν H(w)⟩ is uniformly bounded below by 
+
+c⊥ > 0. This condition captures the sharp regime beyond basin stability observed in large language models [ 6] and provides the geometric input used later to prove finite-time recovery of the quantized iterate. Figure 2 gives local landscape diagnostics around pretrained checkpoints for three architectures. The observed profiles are qualitatively consistent with the river-valley-basin geometry of Assumption 1. However, the two-dimensional slices in Figure 2 can only probe the Anisotropic Basin and Sharp 
+
+5(a) ResNet on CIFAR-10 (b) ViT on ImageNet 2.5 0.0 2.5 5.0 7.5 10.0 12.5   
+
+> FP QAT
+> 10
+> 5
+> 0
+> 5
+> 10
+> perpendicular
+> FP
+> QAT
+> 2.840
+> 2.845
+> 2.850
+> 2.855
+> 2.860
+> Validation loss
+
+(c) Llama on SlimPajama 
+
+Figure 2: Local landscape diagnostics around pretrained checkpoints. Each panel plots the loss along one tangential and one normal direction relative to the QAT trajectory. The profiles are qualitatively consistent with Assumption 1: a near-flat basin in the normal direction and sharper growth outside it. 
+
+Valley conditions along sampled directions; they do not provide a quantitative verification of other conditions such as River Center , nor do they determine the constants ϵflat , c⊥, or R in the full parameter space. To complement this empirical evidence, we present two analytically tractable examples. The first is a two-dimensional landscape that makes the river-valley-basin geometry visually transparent. The second is an over-parameterized matrix factorization problem, which shows why an anisotropic normal metric naturally arises: some normal directions enter the loss quadratically, while others appear only through higher-order terms. For both examples, the detailed verification of Assumption 1 and the explicit constants are deferred to Appendices D.1 and E.1. 
+
+Example 1 (A two-dimensional river-valley-basin loss) . Let w =(x, y ) ∈ R2. Fix parameters u ∈ R, μ, r, ϵ > 0, and define 
+
+f (w) = 12 (x + u)2 + μ
+
+> 2
+
+ max {| y| − r, 0}2.
+
+The river center is the horizontal line M = {(x, 0) | x ∈ R}, and the basin is T = {(x, y ) ∈ U | | y| ≤ R} with R = r + p2ϵ/μ and 
+
+U = {(x, y ) ∈ R2 | | y| < R U } for any RU > R . This example satisfies Assumption 1 on U with H = I, LP = 1 , L = max {1, μ },
+
+ϵflat = ϵ, and c⊥ = √2μϵ .2.0 1.5 1.0 0.5 0.0 0.5 1.0 1.5 2.0    
+
+> x
+> 1.5
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> y
+> river (y= 0)
+> |y| = r
+> low
+> high
+> f(w)
+
+Notice that for fixed ϵflat = ϵ, increasing μ steepens the valley c⊥ ∝ √μ. That motivates calling 
+
+μ the sharpness parameter of f . In the next section, we use a variant of this example to illustrate why PTQ fails while QAT succeeds under the geometry of Assumption 1. The matrix factorization example below shows that the same geometry also appears in a standard over-parameterized nonconvex model, but with a genuinely anisotropic normal basin. 
+
+Example 2 (Over-parameterized matrix factorization) . Assume M ⋆ = Diag (D, 0) ∈ Rd×d, where 
+
+D ∈ Rr×r is positive definite and zero blocks have conformal dimensions. Consider 
+
+f (X) = ∥XX ⊤ − M ⋆∥2
+
+> F
+
+6with X =  PZ
+
+, where P ∈ Rr×k, Z ∈ R(d−r)×k, and k ≥ r. Fix a full-row-rank matrix P0 and a bounded open neighborhood Ω of P0 such that all P in Ω remain full-row-rank. Define 
+
+M =
+
+ P
+
+0
+
+
+
+P ∈ Ω
+
+
+
+, U =
+
+ PZ
+
+
+
+P ∈ Ω, ∥Z∥F < R U
+
+
+
+.
+
+Expanding the objective gives f (P, Z ) = ∥P P ⊤ − D∥2 
+
+> F
+
++ 2 ∥P Z ⊤∥2 
+
+> F
+
++ ∥ZZ ⊤∥2 
+
+> F
+
+. Thus the normal geometry is anisotropic: the part of Z seen by the row space of P contributes quadratically through 
+
+∥P Z ⊤∥2 
+
+> F
+
+, whereas the row-null part first appears through the quartic term ∥ZZ ⊤∥2 
+
+> F
+
+. Freezing this row-space decomposition at P0, one can choose a fixed positive definite metric H that weights the quadratic normal directions more heavily than the quartic ones. After possibly shrinking Ω, Assumption 1 holds on U with an anisotropic basin T , tolerance ϵflat = ϵ, and some c⊥ > 0. A precise construction of H,
+
+T , and c⊥ is given in Appendix E.1. 
+
+## 3 Quantization under the River-valley-basin Landscape 
+
+In this section, we analyze both PTQ and QAT under the river–valley–basin landscape introduced in Section 2. We first study how PTQ can fail when its deployed codeword crosses the basin boundary, then show how STE-based QAT can recover by updating latent full-precision weights using gradients evaluated at the quantized model. 
+
+3.1 Failure of Hessian-based PTQ 
+
+Many PTQ methods are motivated by a local second-order approximation around a fixed full-precision model. Given a pretrained point wfp and a quantization codebook Q, the idealized Hessian-based PTQ objective is 
+
+q∗ = argmin  
+
+> q∈Q
+> 12
+
+(q − wfp )⊤∇2f (wfp )( q − wfp ), (1) which is the second-order Taylor proxy for the loss function, with the linear term omitted because 
+
+∇f (wfp ) is small near a well-trained model. In practice, directly solving (1) with the exact Hessian is typically computationally impractical: the Hessian is often replaced by a cheaper approximation, and the resulting discrete optimization over the quantization codebook is handled through relaxations or greedy/blockwise heuristics. For example, AdaRound [ 21 ] derives a quadratic rounding objective from a Taylor expansion and then optimizes a layerwise reconstruction relaxation, while GPTQ [ 11 ] uses a layerwise output-reconstruction Hessian estimated from calibration data, together with damping and blockwise inverse-Hessian compensation. Thus, we treat (1) as a stylized model representing the core Hessian-based principle underlying these PTQ techniques. The failure mode we describe below, however, is not limited to this exact global objective; rather, it captures a broader limitation inherent to local PTQ surrogates. When wfp lies inside the flat basin, this quadratic proxy can be highly misleading. Within this band, the loss remains nearly constant in the normal direction, meaning the Hessian ∇2f (wfp )
+
+has very small eigenvalues along that direction. As a result, the proxy treats normal-direction displacements as inexpensive, even though crossing the band boundary on the true landscape incurs a sharp increase in loss. At the same time, the Hessian may have substantial curvature along the tangent direction of the river, causing the proxy to penalize tangent movements toward downstream grid points that actually have low true loss. This also explains why simply spending more budget on 7ordinary full-precision training need not fix the PTQ failure. Once the full-precision iterate is inside the flat band, its gradient may mainly improve the along-river coordinate and need not provide an inward normal correction for the deployed quantized point. As a result, after additional full-precision steps, the final PTQ step can still select a quantized codeword outside the low-loss basin. We rotate the function in Example 1 to show that the selected point of (1) can have arbitrarily larger loss than a nearby grid point inside the basin. 
+
+Revisiting Example 1: failure of Hessian-based PTQ. For any θ ∈ [π/ 6, π/ 4) , let Rθ =   cos θ sin θ    
+
+> −sin θcos θ
+
+ denote the clockwise rotation matrix by θ and set w0 = (1 , 0) . Define fθ(w) = f (Rθ(w −
+
+w0)) , where f is the loss in Example 1 with α = cos θ − sin θ,
+
+u ∈ ( α 
+
+> 2
+
+, α ), and R < cos θ + sin θ. The river center becomes M =
+
+{w0 + λ(cos θ, sin θ) | λ ∈ R} and the basin T = {w | dist (w, M) ≤
+
+R}. Consider uniform quantizer Q = ρ{0, ±1, · · · , ±(2 B−1 −1) }2 for 
+
+ρ = 1 and B ≥ 2. Fixing wfp to be any stationary point of fθ at which the Hessian exists, the minimizer q∗ of the Hessian proxy (1) lies outside the basin T , even though qg = (1 , 0) ∈ T is nearby. The loss gap fθ(q∗) − fθ(qg) grows linearly in the sharpness parameter μ.x
+
+> y
+> quantized points
+> FP
+> PTQ
+> qg
+> 0.0
+> 0.5
+> 0.9
+> 1.4
+> 1.8
+> 2.3
+> 2.7
+> 3.2
+> 3.6
+> f(w)
+
+Remark 1. (i) This failure holds throughout an open strip of stationary points, not just a single 
+
+wfp . (ii) The unit quantizer scale ρ = 1 is for ease of presentation. Appendix D.2 proves the same failure over an open interval of scale, so the failure mechanism is also robust to ρ.
+
+While the Hessian model (1) is intentionally stylized, it successfully isolates the local second-order logic common to practical PTQ algorithms. The previous example illustrates that this logic incorrectly ranks quantized candidates when the local curvature is nearly flat in the normal direction, completely ignoring the sharp rise in true loss that occurs just beyond the basin boundary. 
+
+3.2 QAT Recovers from PTQ Failure 
+
+Next, we demonstrate how QAT can recover from the aforementioned PTQ failure. Let wfp denote the full-precision pretrained checkpoint. Starting from w0 = wfp , we consider the following STE update: 
+
+wk+1 = wk − η∇f (Q(wk)) .
+
+Here the gradient is evaluated at the quantized weights Q(wk) but applied to the underlying full-precision weights wk. After T iterations, the deployed model is the quantized checkpoint Q(wT ).To proceed, we introduce the assumptions on the quantizer. Recall the notation for H and PM
+
+in Assumption 1. We denote the maximal and minimal eigenvalues of H by λ1 and λd.
+
+Assumption 2 (Quantizer compatibility) . There exist constants ρ, G, κM > 0 such that: (i) (Quantizer rounding error) For every w ∈ U , ∥Q(w) − w∥ ≤ ρ.(ii) (Projection regularity and bounded gradients) For every w ∈ U , ∥∇ f (w)∥ ≤ G. Moreover, 
+
+PM is C1,1 on U , i.e., there exists κM > 0 such that 
+
+∥∇ PM(w) − ∇ PM(w′)∥op ≤ κM∥w − w′∥, ∀w, w ′ ∈ U. 
+
+(iii) (River width) ρ(1 + LP )√λ1 max 
+
+n Gc⊥
+
+q λ1 
+
+> λd
+
+, 1
+
+o
+
+< R < √λd(RU − ρ), where the parameters 
+
+LP , c⊥, R and RU are defined in Assumption 1. 
+
+8Theorem 1 (Recovery from PTQ failure under STE) . Suppose Assumptions 1 and 2 hold. Assume 
+
+w0 = wfp ∈ T and Q(w0) /∈ T . Let T = inf {k ≥ 0 | Q(wk) ∈ T } be the first time the quantized iterate enters T . If η ≤ min 
+
+n c⊥   
+
+> √λdR−λ1(1+ LP)ρG λ1(1+ LP)G2
+
+, ρG
+
+o
+
+, then we have 
+
+T ≤ 1 + max 
+
+n
+
+∥w0 − PM(w0)∥2 
+
+> H
+
+−  R − √λ1ρ(1 + LP )2 , 0
+
+o
+
+η  c⊥
+
+√λdR − λ1(1 + LP )ρG  .
+
+The first-entry-time bound in Theorem 1 gives a cautious interpretation of scaling and bitwidth effects. If larger models have wider effective low-loss basins, as suggested by recent basin-visualization studies [ 6], then the bound predicts a shorter recovery phase, provided the other constants in the drift margin do not deteriorate. This offers a possible geometric explanation for empirical observations that larger models can be more tolerant to aggressive quantization [ 10 ]. Conversely, for a fixed quantizer family and dynamic range, lowering the bitwidth typically increases the quantization scale 
+
+ρ, and the bound then predicts a longer first-entry time, and in the extreme case the drift margin may become nonpositive, in which case this theorem no longer guarantees recovery. To further interpret the quality of the recovered point, we separate into two regimes. 
+
+Corollary 1 (Near-optimal pre-trained solution) . Assume the conditions of Theorem 1. Suppose additionally that ∥∇ f (π)∥ ≤ ϵ for all π ∈ M . Defining ∆ = κM
+
+ R/ √λd + 12 ηG , we have 
+
+f (Q(wT )) ≤ f (wfp ) + 2 ϵflat + ϵρ  κM(R/ pλd + ρ) + 1 | {z } 
+
+> final quantization error at wT
+
++ ηT G (∆ + 1)  ϵ + L 
+
+> 2
+
+ηG (∆ + 1) | {z }
+
+> accumulated tangent error along the river
+
+.
+
+In particular, since T = O(1 /η ), fixing η = O(ϵ) gives f (Q(wT )) ≤ f (wfp ) + 2 ϵflat + O(ϵ(ρ + 1)) .
+
+Corollary 1 describes the common fine-tuning regime where the pretrained model is already close to stationary on the river: after QAT brings the quantized iterate back into the basin, the recovered quantized loss is controlled by the basin flatness and the final quantization error. The next case covers a less optimized checkpoint, where the river direction still offers objective decrease. 
+
+Corollary 2 (Sub-optimal pre-trained solution) . Assume the conditions of Theorem 1. Suppose that there exists c∥ > 0 such that ⟨∇ f (PM(w)) , ∇f (w)⟩ > c ∥∥∇ f (PM(w)) ∥ for all w ∈ U . For 
+
+π ∈ M , denote the normalized gradient along the river by g(π) = ∇f (π)/∥∇ f (π)∥. If in addition, 
+
+η ≤ c2
+
+> ∥
+
+/2LG 2(κM(R/ √λd + ρ) + 1) 2, κM ≤ c∥ 
+
+> 4G(R/ √λd+ρ)
+
+, and there exists κ satisfying κ ≤ c∥ 
+
+> 4ρL PG
+
+such that ∥g(π) − g(π′)∥ ≤ κ∥π − π′∥ for any π, π ′ ∈ M . Then, 
+
+f (Q(wT )) ≤ f (wfp ) + 2 ϵflat + ρL P G − 14 ηT c 2
+
+> ∥
+
+.
+
+The negative term in Corollary 2 shows that, in this suboptimal regime, QAT can act as a descent method starting from wfp , up to the flat-basin and quantization-error terms. This connects our geometric view to prior understanding of STE [ 27 ] as a descent direction for the population loss in two-layer networks with activation quantization; our result isolates a complementary mechanism in which the gradient is evaluated at the deployed quantized weights to correct quantization incompatibility. 
+
+## 4 Experiments 
+
+We evaluate the PTQ-failure and QAT-recovery mechanism predicted by our landscape analysis on both vision and language tasks. Simulation results for the matrix factorization in Example 2 are deferred to Appendix E.2. 9ResNet-56       
+
+> (a) FP →PTQ (b) FP →QAT (c) 2D landscape
+
+DeiT-Tiny       
+
+> (d) FP →PTQ (e) FP →QAT (f) 2D landscape
+
+Figure 3: ResNet/CIFAR-10 and DeiT/ImageNet landscape diagnostics under 2-bit quantization. For ResNet-56, one-dimensional loss profiles from the FP checkpoint toward (a) the AdaRound anchor and (b) the QAT anchor; (c) Two-dimensional loss contour in the plane spanned by the FP →QAT direction and a randomly generated orthogonal direction. For DeiT-Tiny, (d)–(f) show the same diagnostics. 
+
+4.1 ResNet and DeiT on Image Classification Benchmarks 
+
+We first study image classification models. We quantize the convolutional and linear weights of ResNet-20/56 [ 13 ] on CIFAR-10, and the transformer-block linear weights of the 5M-parameter DeiT-Tiny model [ 24 ] on ImageNet. We compare round-to-nearest (RTN), AdaRound [ 21 ] or GPTQ, QAT, and equal-budget full-precision fine-tuning followed by PTQ. In all experiments, RTN and QAT use the same PTQ-calibrated per-channel or groupwise quantization grid. Thus, the comparison isolates the effect of applying the grid once as a post-training projection versus keeping the same grid fixed during STE-based QAT. Detailed settings and quantitative comparisons across bitwidths and random seeds are reported in Appendix A and Tables 1–2. The advantage of QAT over equal-budget full-precision fine-tuning followed by PTQ is most pronounced at low bitwidths, where the PTQ perturbation is large enough to leave the low-loss basin. Figure 3 shows representative landscape diagnostics under 2-bit quantization. For each model, the first two panels interpolate from the full-precision checkpoint toward the PTQ and QAT endpoints, while the third panel shows a two-dimensional slice spanned by the FP →QAT direction and a randomly generated orthogonal direction. The same flat-basin-plus-sharp-valley profile is observed across five independently sampled normal directions. The PTQ direction quickly leaves the low-loss region, whereas the QAT direction follows a substantially lower-loss quantized path. This contrast, 10 together with the fact that equal-budget full-precision fine-tuning followed by PTQ does not close the gap, is consistent with the regime-specific prediction of Section 3: QAT is beneficial when the latent iterate has already settled into the basin, so that the quantized gradient probes the valley wall, rather than merely continuing the cosine learning rate tail along the river. 
+
+4.2 Llama on SlimPajama 
+
+We next test the same mechanism in language modeling. We pretrain a 213M-parameter Llama-style decoder on SlimPajama for 60 ,000 iterations with a cosine learning rate schedule. We then deploy weight-only FP4 quantization with the E2M1 format on every linear layer inside the transformer blocks, while keeping the token embedding, language-model head, and RMSNorm parameters in bf16. GPTQ is used as the PTQ baseline. As in Section 4.1, QAT uses the GPTQ-fitted FP4 quantizer as a fixed STE quantizer. Thus, PTQ and QAT are evaluated on the same FP4 grid, and any difference reflects weight adaptation rather than a different quantizer fit. We initialize QAT from the full-precision checkpoint and run a short constant-learning-rate STE phase. Detailed settings are provided in Appendix A. Figure 4 reports one-dimensional loss profiles from the converged full-precision checkpoint toward the GPTQ and QAT anchors, together with a two-dimensional contour plot around the FP →QAT direction. The QAT displacement is much shorter than the GPTQ displacement in parameter-space Euclidean norm. Moreover, the two displacements are nearly orthogonal, forming an angle of approximately 92 ◦. Therefore, QAT is not a small correction along the GPTQ rounding direction; instead, it finds a distinct and much shorter adaptation direction. Panel 4(a) shows that the FP →GPTQ profile rises monotonically and has no local minimum near the GPTQ deployment point, which is consistent with the signature of rounding outside the basin. By contrast, Panel 4(b) shows that the FP →QAT profile first drops below the full-precision baseline over an interior interval and rises only after passing the QAT anchor. This indicates that QAT moves into a lower-loss region before eventually leaving it. Panel 4(c) further visualizes the local geometry in the plane defined by the QAT direction and a random orthogonal direction: the loss remains relatively flat along the QAT path and increases away from this low-loss band. 40 20 0 20 40 60 80 100         
+
+> Euclidean distance from xFP (xxFP 2)
+> 2.85
+> 2.86
+> 2.87
+> 2.88
+> 2.89
+> 2.90
+> Validation loss
+> (x)along xFP xPTQ
+> FP
+> PTQ
+
+(a) FP → PTQ 5 0 5 10 15          
+
+> Euclidean distance from xFP (xxFP 2)
+> 2.84
+> 2.85
+> 2.86
+> 2.87
+> 2.88
+> Validation loss
+> (x)along xFP xQAT
+> FP
+> QAT post-conv
+
+(b) FP → QAT 0 5 10   
+
+> Distance along FP QAT
+> 10.0
+> 7.5
+> 5.0
+> 2.5
+> 0.0
+> 2.5
+> 5.0
+> 7.5
+> 10.0
+> Distance along random orthogonal
+> 2.841
+> 2.842
+> 2.842
+> 2.843
+> 2.843
+> 2.845
+> 2.845
+> 2.846
+> 2.846
+> 2.848
+> 2.848
+> 2.849
+> 2.849
+> 2.851
+> 2.851
+> 2.853
+> 2.853
+> 2.854
+> 2.856
+> 2.857
+> 2.859
+> 2.860
+> 2.861
+> FP
+> QAT
+> 2.839
+> 2.842
+> 2.845
+> 2.848
+> 2.851
+> 2.854
+> 2.857
+> 2.860
+> 2.863
+> Loss
+
+(c) 2D landscape 
+
+Figure 4: Llama/SlimPajama landscape diagnostics at FP4. One-dimensional loss profiles from the converged FP checkpoint toward (a) the GPTQ anchor and (b) the post-convergence QAT anchor. (c) Two-dimensional loss contours in the plane spanned by the FP →QAT direction and a randomly generated orthogonal direction. These diagnostics extend the PTQ-failure/QAT-recovery pattern to language modeling at LLM 11 scale. The qualitative behavior is again consistent with the river–valley–basin geometry: GPTQ moves the deployed model toward a high-loss region, whereas QAT follows a different, basin-aligned direction and reaches a nearby low-loss quantized solution. We emphasize that this Llama experiment is a single-seed diagnostic study intended to support the generality of the proposed mechanism, rather than a controlled comparison across bitwidths and seeds. 
+
+## 5 Discussion 
+
+Our theoretical and empirical analysis makes several testable predictions on the model quantization. First, PTQ failure should be most visible when the quantization grid is comparable to the basin width: coarser grids are more likely to cross the boundary, while sufficiently fine grids should remain in the flat band. Second, during successful QAT, the loss of the deployed quantized model should improve before one observes a large change in the latent full-precision loss, reflecting a correction of quantization compatibility rather than ordinary full-precision optimization. Third, equal-budget full-precision fine-tuning followed by PTQ can remain fragile when its updates move mainly along the river and do not reduce the normal quantization error. 
+
+Limitations. Our landscape model is local, and our theory only gives sufficient rather than necessary conditions for QAT recovery. Empirically, our experiments rely on slice-based diagnostics of the loss landscape, which illustrate the phenomenon but do not offer a complete verification of the global, high-dimensional geometry. Furthermore, our analysis of Hessian-based PTQ abstracts complex, practical layerwise techniques into a simplified local second-order proxy. Consequently, this model does not account for practical deployment factors such as activation quantization, dynamic scale learning, gradient clipping, or specific hardware constraints. Lastly, while the Llama experiments confirm that our proposed mechanism operates at the scale of large language models, they are intended as proof-of-concept evidence rather than a comprehensive study of scaling laws across diverse model sizes and bitwidths. 
+
+## References 
+
+[1] Yu Bai, Yu-Xiang Wang, and Edo Liberty. Proxquant: Quantized neural networks via proximal operators. In International Conference on Learning Representations , 2018. [2] Ron Banner, Yury Nahshan, and Daniel Soudry. Post training 4-bit quantization of convolu-tional networks for rapid-deployment. In Advances in Neural Information Processing Systems ,volume 32, 2019. [3] Pascal Bégout, Jérôme Bolte, Thomas Mariotti, and Francisco Silva. Gradient extremals, talwegs, valleys, and directional alignment for generic gradient descent. arXiv preprint arXiv:2604.11213 ,2026. [4] Yoshua Bengio, Nicholas Léonard, and Aaron Courville. Estimating or propagating gradients through stochastic neurons for conditional computation. arXiv preprint arXiv:1308.3432 , 2013. [5] Albert Catalan-Tatjer, Niccolò Ajroldi, and Jonas Geiping. Training dynamics impact post-training quantization robustness. In International Conference on Learning Representations ,2026. 12 [6] Huanran Chen, Yinpeng Dong, Zeming Wei, Yao Huang, Yichi Zhang, Hang Su, and Jun Zhu. Unveiling the basin-like loss landscape in large language models. In International Conference on Learning Representations , 2026. [7] Matthieu Courbariaux, Yoshua Bengio, and Jean-Pierre David. BinaryConnect: Training deep neural networks with binary weights during propagations. In Advances in Neural Information Processing Systems , volume 28, pages 3123–3131, 2015. [8] Damek Davis, Dmitriy Drusvyatskiy, and Liwei Jiang. Gradient descent with adaptive stepsize converges (nearly) linearly under fourth-order growth. Mathematical Programming , pages 1–66, 2025. [9] Tim Dockhorn, Yaoliang Yu, Eyyüb Sari, Mahdi Zolnouri, and Vahid Partovi Nia. Demystify-ing and generalizing binaryconnect. In Advances in Neural Information Processing Systems ,volume 34, pages 13202–13216, 2021. [10] Aleksandr Dremov, David Grangier, Angelos Katharopoulos, and Awni Hannun. Compute-Optimal Quantization-Aware Training. In International Conference on Learning Representations ,2026. [11] Elias Frantar, Saleh Ashkboos, Torsten Hoefler, and Dan Alistarh. GPTQ: Accurate post-training quantization for generative pre-trained transformers. In International Conference on Learning Representations , 2023. [12] Song Han, Huizi Mao, and William J. Dally. Deep compression: Compressing deep neural networks with pruning, trained quantization and huffman coding. In International Conference on Learning Representations , 2016. [13] Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep residual learning for image recognition. In Proceedings of the IEEE conference on Computer Vision and Pattern Recognition ,pages 770–778, 2016. [14] Benoit Jacob, Skirmantas Kligys, Bo Chen, Menglong Zhu, Matthew Tang, Andrew Howard, Hartwig Adam, and Dmitry Kalenichenko. Quantization and training of neural networks for efficient integer-arithmetic-only inference. In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition , pages 2704–2713, 2018. [15] Halyun Jeong, Jack Xin, and Penghang Yin. Beyond discreteness: Finite-sample analysis of straight-through estimator for quantization. arXiv preprint arXiv:2505.18113 , 2025. [16] Lisa Jin, Jianhao Ma, Zechun Liu, Andrey Gromov, Aaron Defazio, and Lin Xiao. PARQ: Piecewise-affine regularized quantization. In Proceedings of the 42nd International Conference on Machine Learning , volume 267, pages 28044–28062. PMLR, 2025. [17] Raghuraman Krishnamoorthi. Quantizing deep convolutional networks for efficient inference: A whitepaper. arXiv preprint arXiv:1806.08342 , 2018. [18] Hao Li, Soham De, Zheng Xu, Christoph Studer, Hanan Samet, and Tom Goldstein. Training quantized nets: A deeper understanding. In Advances in Neural Information Processing Systems ,volume 30, 2017. 13 [19] Zechun Liu, Changsheng Zhao, Hanxian Huang, Sijia Chen, Jing Zhang, Jiawei Zhao, Scott Roy, Lisa Jin, Yunyang Xiong, Yangyang Shi, et al. ParetoQ: Improving scaling laws in extremely low-bit LLM quantization. In Advances in Neural Information Processing Systems , 2025. [20] Chao Ma, Daniel Kunin, Lei Wu, and Lexing Ying. Beyond the quadratic approximation: The multiscale structure of neural network loss landscapes. arXiv preprint arXiv:2204.11326 , 2022. [21] Markus Nagel, Rana Ali Amjad, Mart Van Baalen, Christos Louizos, and Tijmen Blankevoort. Up or down? adaptive rounding for post-training quantization. In International Conference on Machine Learning , pages 7197–7206, 2020. [22] Yury Nahshan, Brian Chmiel, Chaim Baskin, Evgenii Zheltonozhskii, Ron Banner, Alex M Bronstein, and Avi Mendelson. Loss aware post-training quantization. Machine Learning ,110(11):3245–3262, 2021. [23] Vivienne Sze, Yu-Hsin Chen, Tien-Ju Yang, and Joel S Emer. Efficient processing of deep neural networks: A tutorial and survey. Proceedings of the IEEE , 105(12):2295–2329, 2017. [24] Hugo Touvron, Matthieu Cord, Matthijs Douze, Francisco Massa, Alexandre Sablayrolles, and Hervé Jégou. Training data-efficient image transformers & distillation through attention. In 
+
+International Conference on Machine Learning , pages 10347–10357. PMLR, 2021. [25] Kaiyue Wen, Zhiyuan Li, Jason S Wang, David Leo Wright Hall, Percy Liang, and Tengyu Ma. Understanding warmup-stable-decay learning rates: A river valley loss landscape view. In 
+
+International Conference on Learning Representations , 2025. [26] Zhuguanyu Wu, Jiayi Zhang, Jiaxin Chen, Jinyang Guo, Di Huang, and Yunhong Wang. APHQ-ViT: Post-training quantization with average perturbation Hessian based reconstruction for vision transformers. In Proceedings of the Computer Vision and Pattern Recognition Conference ,pages 9686–9695, 2025. [27] P Yin, J Lyu, S Zhang, S Osher, YY Qi, and J Xin. Understanding straight-through estimator in training activation quantized neural nets. International Conference on Learning Representations ,2019. [28] Zhihang Yuan, Chenhao Xue, Yiqi Chen, Qiang Wu, and Guangyu Sun. PTQ4ViT: Post-training quantization for vision transformers with twin uniform quantization. In European Conference on Computer Vision , pages 191–207. Springer, 2022. 14 A Experimental Details 
+
+ResNet/CIFAR-10. Each full-precision ResNet is trained for 200 epochs with SGD, momentum 0.9, batch size 128, weight decay 2 · 10 −4, initial learning rate 0.1, and cosine annealing. We quantize all convolutional and linear weights with per-output-channel signed uniform scales. AdaRound uses 32 calibration batches of size 128, i.e. 4096 calibration images, and 10,000 rounding-optimization iterations. RTN uses the same AdaRound-fitted per-channel scales but no learned rounding. QAT starts from the epoch-180 checkpoint, keeps the AdaRound quantizer fixed, and trains for 20 epochs with SGD at learning rate 10 −4, dropping by 0.5 at epochs 10 and 16. The equal-budget control continues full-precision training from epoch 180 to 200 and then applies AdaRound. All ResNet-20 and ResNet-56 runs use a single NVIDIA RTX A5000 GPU per run. 
+
+DeiT/ImageNet. For DeiT-Tiny, we quantize the transformer-block linear layers at W2/W3/W4 and leave the classification head full precision. GPTQ uses 128 calibration images, group size 128, and no activation ordering. RTN uses the same fitted grid/group scales without GPTQ error correction. QAT starts from the pretrained full-precision checkpoint with the GPTQ quantizer frozen and runs for 10 epochs with AdamW at learning rate 5 · 10 −4. All DeiT/ImageNet runs use four NVIDIA A40 GPUs per run. 
+
+Llama/SlimPajama-6B. We pretrain a 213 M-parameter Llama-style decoder ( 24 layers, 12 heads, hidden size 768 , RMSNorm) on SlimPajama-6B for 60 ,000 iterations with AdamW (weight decay 0.1,
+
+β = (0 .9, 0.95) , gradient clip 1.0), a cosine schedule with base learning rate 10 −3 and 300 warmup steps, sequence length 512 , batch size 50 ×4 (50 per-device with gradient-accumulation 4, total batch 200 ) on a single H200, and bf16. GPTQ is applied weight-only to every nn.Linear inside the transformer blocks — the q_proj /k_proj /v_proj /o_proj attention projections and the gate_proj /up_proj /down_proj 
+
+MLP projections — at FP4 (E2M1, with levels {0, ±0.5, ±1, ±1.5, ±2, ±3, ±4, ±6}) with per-output-channel signed scales, input-column groups of size 128 , GPTQ block size 128 , and percent-damp 
+
+0.01 ; the token embedding, the language-model head, and the RMSNorm parameters remain in bf16. Calibration draws 128 sequences of length 512 from the SlimPajama train split with a fixed seed. The GPTQ-fitted per-Linear FP4 quantizer (scales and group structure) is persisted and reused as the STE fake-quant in both QAT regimes, so PTQ and QAT share an identical FP4 grid. Continuation QAT resumes from the iter-48 ,000 (80% ) FP checkpoint and runs the same cosine schedule (and the same data ordering, controlled by the seed) to iter 60 ,000 , i.e. 12 ,000 STE iterations along the cosine LR tail. Post-convergence QAT initializes weights from the iter-60 ,000 FP checkpoint with a fresh optimizer, uses a constant learning rate of 10 −5 with no warmup or decay, and trains for 
+
+3,000 STE iterations ( 5% of pretraining). All runs use a single seed; for the river-cross diagnostic we additionally average over three random perpendicular directions. 15 B Additional ResNet/CIFAR-10 Diagnostics 
+
+Table 1: ResNet/CIFAR-10 equal-budget comparison. Each method entry reports mean validation loss / top-1 accuracy over five seeds, with nonzero standard deviations in parentheses. The depth column reports the epoch-180 full-precision result. FP-200+AdaRound is the equal-budget full-precision control followed by AdaRound PTQ. RTN and QAT use the same AdaRound-calibrated weight grid as the AdaRound baseline. Bold marks the best quantized result in each row, separately for loss and accuracy. Depth (FP-180) Bits RTN AdaRound QAT FP-200 + AdaRound 20 
+
+> (0.329 / 91.96)
+
+W2 9.365 / 10.41 0.497 (0.017) / 86.62 (0.49) 0.407 (0.022) / 87.92 (0.67) 0.576 (0.030) / 84.51 (0.85) W3 1.201 / 73.96 0.358 (0.004) / 91.19 (0.02) 0.334 (0.003) / 91.19 (0.13) 0.362 (0.002) / 91.08 (0.09) W4 0.430 / 89.68 0.337 (0.001) / 91.79 (0.09) 0.335 (0.001) / 91.75 (0.07) 0.330 (0.001) / 91.87 (0.08) 56 
+
+> (0.281 / 93.50)
+
+W2 5.212 / 13.88 0.448 (0.010) / 88.83 (0.30) 0.337 (0.006) / 90.50 (0.17) 0.449 (0.015) / 89.07 (0.27) W3 0.618 / 86.21 0.314 (0.006) / 92.77 (0.15) 0.288 (0.005) / 92.80 (0.10) 0.299 (0.005) / 93.04 (0.14) W4 0.334 / 92.60 0.289 (0.001) / 93.30 (0.09) 0.278 (0.001) / 93.42 (0.04) 0.280 (0.001) / 93.46 (0.05) Figure 5 provides the additional ResNet-20 seed-1 interpolation diagnostics for W3/W4, and Figure 6 provides the corresponding ResNet-56 profiles. The W2 diagnostics are shown in the main body in Figure 3.                         
+
+> W2: FP-180 →RTN/QAT 1D profile W2: FP-180 →AdaRound/QAT 1D profile W2: FP-200 →AdaRound
+> W3: FP-180 →RTN/QAT 1D profile W3: FP-180 →AdaRound/QAT 1D profile W3: FP-200 →AdaRound
+> W4: FP-180 →RTN/QAT 1D profile W4: FP-180 →AdaRound/QAT 1D profile W4: FP-200 →AdaRound
+
+Figure 5: Additional ResNet-20 on CIFAR-10 interpolation diagnostics. W3/W4 seed-1 interpolation profiles from the pretrained ResNet checkpoint toward PTQ, QAT, and final-PTQ endpoints for ResNet-20. 16 W3: FP-180 → RTN/QAT 1D profile W3: FP-180 → AdaRound/QAT 1D profile W3: FP-200 → AdaRound         
+
+> W4: FP-180 →RTN/QAT 1D profile W4: FP-180 →AdaRound/QAT 1D profile W4: FP-200 →AdaRound
+
+Figure 6: Additional ResNet-56 on CIFAR-10 interpolation diagnostics. W3/W4 seed-1 interpolation profiles from the pretrained ResNet-56 checkpoint toward PTQ, QAT, and final-PTQ endpoints. 
+
+## C Additional DeiT/ImageNet Diagnostics 
+
+Table 2: DeiT/ImageNet equal-budget comparison. Each method entry reports validation loss / top-1 accuracy. RTN, GPTQ, and QAT report means over three random seeds with standard deviations in parentheses, while FPFT+GPTQ is the available seed-0 equal-budget control. RTN and QAT use the same GPTQ-fitted weight grid as the GPTQ baseline. Bold marks the best quantized result in each row, separately for loss and accuracy. 
+
+pre-trained FP Bits RTN GPTQ QAT fine-tuned FP + GPTQ 1.220 / 72.14 W2 7.216 (0.071) / 0.16 (0.05) 7.313 (0.084) / 0.19 (0.05) 2.121 (0.011) / 52.78 (0.18) 7.328 / 0.22 W3 3.166 (0.088) / 37.52 (1.28) 2.062 (0.029) / 56.78 (0.39) 1.439 (0.003) / 66.60 (0.12) 2.021 / 56.73 W4 1.402 (0.003) / 68.60 (0.08) 1.318 (0.002) / 70.17 (0.03) 1.245 (0.003) / 71.01 (0.17) 1.261 / 70.86 
+
+Figure 7 provides the one-dimensional interpolation profiles for the W3/W4 GPTQ and RTN anchors used in Table 2, together with the equal-budget FPFT+GPTQ control. The W2 diagnostics are shown in the main body in Figure 3. 17 W3: pre-trained FP → RTN/QAT 1D profile W3: pre-trained FP → GPTQ/QAT 1D profile W3: fine-tuned FP → GPTQ         
+
+> W4: pre-trained FP →RTN/QAT 1D profile W4: pre-trained FP →GPTQ/QAT 1D profile W4: fine-tuned FP →GPTQ
+
+Figure 7: DeiT/ImageNet interpolation diagnostics. Rows correspond to W3/W4. The first column uses RTN, the second uses GPTQ, and the third column interpolates from the equal-budget full-precision fine-tuned checkpoint toward the refit GPTQ endpoint. These plots are diagnostics for the PTQ-failure/QAT-recovery pattern and are not used as direct proof of the full high-dimensional geometry. 
+
+## D Toy examples 
+
+Example 3 (Generalization of the two-dimensional river-valley-basin loss) . Fix an angle θ ∈
+
+[π/ 6, π/ 4) and write τ = ( cos θ, sin θ), ν = ( − sin θ, cos θ), α = cos θ − sin θ, and δ = cos θ + sin θ.Let w0 = (1 , 0) and define t(w) = ⟨τ, w − w0⟩ and z(w) = ⟨ν, w − w0⟩. For parameters μ, r, ϵ > 0
+
+and u ∈ R, define R = r + p2ϵ/μ and consider 
+
+fθ(w) = 12
+
+ t(w) + u2 + μ
+
+> 2
+
+ max {| z(w)| − r, 0}2. (2) 
+
+The river center is M = {w0 + λτ | λ ∈ R}. For any tubular neighborhood U = {w ∈ R2 |
+
+dist (w, M) < R U } with RU > R , the basin is T = {w ∈ U | | z(w)| ≤ R}.
+
+D.1 Verification of Assumption 1 
+
+Claim: Example 3 satisfies Assumption 1 on U = {w ∈ R2 | dist (w, M) < R U } for RU > R , with 
+
+H = I, LP = 1 , L = max {1, μ }, ϵflat = ϵ, and c⊥ = √2μ ϵ .
+
+Proof. Since (τ, ν ) is an orthonormal basis, the nearest-point projection onto M is PM(w) = 
+
+w0 + t(w)τ , so PM is affine and LP = 1 . The loss in (2) is L-smooth with L = max {1, μ }. For any π = w0 + λτ ∈ M , we have t(π) = λ and z(π) = 0 , hence ∇fθ(π) = ( λ + u)τ ∈ TM(π), which verifies the river-center condition. Next, if w = π + ξν with |ξ| ≤ R, then t(w) = t(π) and z(w) = ξ.Therefore |fθ(w) − fθ(π)| = μ 
+
+> 2
+
+(max {| ξ| − r, 0})2 ≤ μ 
+
+> 2
+
+(R − r)2 = ϵ. For w ∈ U \ T , i.e., |z(w)| > R ,the outward normal direction is νH(w) = sgn( z(w)) ν. Thus 
+
+⟨∇ fθ(w), ν H(w)⟩ = μ(|z(w)| − r) ≥ μ(R − r) = p2μ ϵ = c⊥.
+
+This proves that the toy example satisfies Assumption 1. 18 D.2 Failure of Hessian-based PTQ 
+
+Claim: Consider the function fθ in Example 3 with u ∈ (α/ 2, α ) and R < δ . For a grid scale ρ > 0
+
+and bitwidth B ≥ 2, let Qρ,B = ρ{0, ±1, . . . , ±(2 B−1 − 1) }2. Define a grid point qg(ρ) = ( ρ, 0) .There exists an open interval Ifail containing ρ = 1 such that, for every ρ ∈ I fail and every B ≥ 2,the following hold. (a) The grid point qg(ρ) lies in T . Moreover, fixing wfp to be any stationary point of fθ at which the Hessian exists, the minimizer q∗(ρ) of the Hessian proxy in (1) lies outside T .(b) The loss gap fθ(q∗(ρ)) − fθ(qg(ρ)) grows linearly in the sharpness parameter μ.
+
+Proof. Write c = cos θ, s = sin θ, so that α = c − s and δ = c + s. Fix ζ = ( R + δ)/2. Since R < δ , we have R < ζ < δ . The stationary points of fθ are precisely those satisfying t(w) = −u and |z(w)| ≤ r.At every stationary point with |z(w)| < r , the Hessian exists and equals ∇2fθ(wfp ) = τ τ ⊤. Thus, for such a choice of wfp , the Hessian proxy is S(q) = 12 (t(q) + u)2.For integer pairs (i, j ), write qij (ρ) = ρ(i, j ). Then 
+
+tij (ρ) = c(ρi − 1) + sρj, zij (ρ) = −s(ρi − 1) + cρj, 
+
+and, since τ, ν are orthonormal, tij (ρ)2 + zij (ρ)2 = ( ρi − 1) 2 + ( ρj )2. Let qg(ρ) = ( ρ, 0) and 
+
+qb(ρ) = (0 , ρ ). Both are feasible for every signed symmetric uniform quantizer Qρ,B with B ≥ 2.Choose an open interval Ifail containing 1, sufficiently small such that for every ρ ∈ I fail ,
+
+s|ρ − 1| < r, s + cρ > R, c − sρ − u > 0.
+
+These conditions can be imposed simultaneously due to our assumption that u ∈ (α/ 2, α ) and R < δ .For qg(ρ), we have |z(qg(ρ)) | = s|ρ − 1| < r , so qg(ρ) ∈ T . For qb(ρ), we have z(qb(ρ)) = s + cρ > R ,so qb(ρ) /∈ T . Moreover, 
+
+|t(qb(ρ)) + u| = c − sρ − u, S(qb(ρ)) = 12 (c − sρ − u)2.
+
+We next show that every grid point with |z| < ζ has strictly larger Hessian proxy value than qb(ρ).Let N = {(1 , 0) , (0 , 0) , (2 , 0) , (1 , 1) , (1 , −1) }. At ρ = 1 , by direct calculation, for every (i, j ) ∈ N ,
+
+|tij (1) + u| > α − u = |t(qb(1)) + u|.
+
+Indeed, the only nontrivial comparisons use u > α/ 2 and s > α , where s > α follows from 
+
+θ ∈ [π/ 6, π/ 4) . Therefore, by continuity, after shrinking Ifail if necessary, 
+
+|tij (ρ) + u| > c − sρ − u, ∀(i, j ) ∈ N , ρ ∈ I fail .
+
+It remains to handle (i, j ) /∈ N . At ρ = 1 ,
+
+(i − 1) 2 + j2 ≥ 2, ζ2 + α2 < δ 2 + α2 = 2 .
+
+Thus, by discreteness of the integer lattice and continuity in ρ, after shrinking Ifail once more, 
+
+(ρi − 1) 2 + ( ρj )2 > ζ 2 + ( c − sρ )2, ∀(i, j ) /∈ N , ρ ∈ I fail .
+
+19 Hence, if (i, j ) /∈ N and |zij (ρ)| < ζ , then 
+
+tij (ρ)2 = ( ρi − 1) 2 + ( ρj )2 − zij (ρ)2 > (c − sρ )2.
+
+Therefore |tij (ρ)| > c − sρ , and so 
+
+|tij (ρ) + u| ≥ | tij (ρ)| − u > c − sρ − u. 
+
+Combining the cases of (i, j ) ∈ N and (i, j ) /∈ N , we have shown that 
+
+|z(qij (ρ)) | < ζ =⇒ S(qij (ρ)) > S (qb(ρ)) .
+
+Thus, S(qij (ρ)) ≤ S(qb(ρ)) implies |z(qij (ρ)) | ≥ ζ. Since qb(ρ) ∈ Q ρ,B , every Hessian-proxy minimizer q∗(ρ) satisfies S(q∗(ρ)) ≤ S(qb(ρ)) . Hence |z(q∗(ρ)) | ≥ ζ > R , so q∗(ρ) /∈ T . This proves part (a). For part (b), since |z(qg(ρ)) | < r , we have fθ(qg(ρ)) = 12
+
+ u + c(ρ − 1) 2. On the other hand, every proxy minimizer satisfies |z(q∗(ρ)) | ≥ ζ > r , so fθ(q∗(ρ)) ≥ μ 
+
+> 2
+
+(ζ − r)2. Therefore, 
+
+fθ(q∗(ρ)) − fθ(qg(ρ)) ≥ μ 
+
+> 2
+
+(ζ − r)2 − 12
+
+ u + c(ρ − 1) 2.
+
+Since ζ = ( R + δ)/2 and R > r , we have ζ − r > (δ − r)/2, and hence 
+
+fθ(q∗(ρ)) − fθ(qg(ρ)) ≥ μ 
+
+> 8
+
+(δ − r)2 − 12
+
+ u + c(ρ − 1) 2,
+
+which grows linearly in μ.
+
+## E Matrix Factorization 
+
+E.1 Verification of Assumption 1 
+
+We verify Assumption 1 for Example 2. The purpose is only to show that, after shrinking the local patch Ω, the matrix factorization objective satisfies Assumption 1 for a fixed anisotropic metric. All constants below are local constants depending on the chosen patch. 
+
+Proof. Write X =  PZ
+
+ with P ∈ Rr×k and Z ∈ R(d−r)×k. Then 
+
+f (P, Z ) = ∥P P ⊤ − D∥2 
+
+> F
+
++ 2 ∥P Z ⊤∥2 
+
+> F
+
++ ∥ZZ ⊤∥2 
+
+> F
+
+.
+
+Let 
+
+M =
+
+ P
+
+0
+
+
+
+P ∈ Ω
+
+
+
+, U =
+
+ PZ
+
+
+
+P ∈ Ω, ∥Z∥F < R U
+
+
+
+.
+
+On this local product neighborhood, the nearest-point projection is PM
+
+ PZ
+
+ =  P
+
+> 0
+
+, so LP = 1 and 
+
+NM(P, 0) =   0
+
+> R(d−r)×k
+
+.Since Ω is bounded and every P ∈ Ω has full row rank, define μ = inf P ∈Ω σmin (P ) > 0 and 
+
+M = sup P ∈Ω ∥P ∥op < ∞. For each full-row-rank matrix P , let ΠP = P ⊤(P P ⊤)−1P be the orthogonal projector onto the row space of P . Fix the base projector Π0 = P ⊤ 
+
+> 0
+
+(P0P ⊤ 
+
+> 0
+
+)−1P0. Choose positive weights λs ≥ λf > 0 as follows: 
+
+λf = max 
+
+ 4R2
+
+R2
+
+> U
+
+, 2R2
+
+√ϵflat 
+
+
+
+, λs = max 
+
+
+
+λf , 8M 2R2
+
+ϵflat 
+
+
+
+.
+
+20 Define C0 = λsΠ0 + λf (I − Π0). After vectorizing matrix pairs, define the linear operator 
+
+H(∆ P, Z ) = (∆ P, ZC 0).
+
+Since C0 ⪰ λf I, the matrix H is symmetric positive definite. Moreover, it is block diagonal with respect to the splitting (∆ P, Z ), so HNM(P, 0) ⊆ NM(P, 0) .Since the map P 7 → ΠP is continuous on the full-row-rank set, we may shrink Ω around P0 so that sup P ∈Ω ∥ΠP − Π0∥op ≤ δH, where δH > 0 will be chosen below. The bounds σmin (P ) ≥ μΩ and 
+
+∥P ∥op ≤ MΩ remain valid on the smaller patch. 
+
+Smoothness. For the full variable X, ∇f (X) = 4( XX ⊤ − M ⋆)X. For any perturbation E,
+
+∇2f (X)[ E] = 4( EX ⊤ + XE ⊤)X + 4( XX ⊤ − M ⋆)E. 
+
+Thus, ∥∇ 2f (X)[ E]∥F ≤ (12 ∥X∥2op + 4 ∥M ⋆∥op )∥E∥F . On U , we have ∥X∥2op ≤ M 2 + R2 
+
+> U
+
+and 
+
+∥M ⋆∥op = ∥D∥op . Therefore f is L-smooth on U with L = 12( M 2 + R2 
+
+> U
+
+) + 4 ∥D∥op .
+
+River center. At a point on the river center, the river-center condition holds because 
+
+∇f (P, 0) = 
+
+4( P P ⊤ − D)P
+
+0
+
+
+
+∈ TM(P, 0) .
+
+Metric comparison after freezing the row space. For each P ∈ Ω, define the moving metric 
+
+CP = λsΠP + λf (I − ΠP ).
+
+Let D0(Z)2 = ⟨Z, ZC 0⟩ and DP (Z)2 = ⟨Z, ZC P ⟩. Because C0 − CP = ( λs − λf )(Π 0 − ΠP ), we have 
+
+∥C0 − CP ∥op ≤ λsδH. Also CP ⪰ λf I, hence λf ∥Z∥2 
+
+> F
+
+≤ DP (Z)2. Therefore 
+
+|D0(Z)2 − DP (Z)2| = |⟨ Z, Z (C0 − CP )⟩| ≤ λsδH∥Z∥2 
+
+> F
+
+≤ λsδH
+
+λf
+
+DP (Z)2.
+
+Choosing δH ≤ λf 
+
+> 4λs
+
+, we obtain the uniform comparison 
+
+34 DP (Z)2 ≤ D0(Z)2 ≤ 54 DP (Z)2. (3) 
+
+Anisotropic basin. Define the basin by 
+
+T =
+
+ PZ
+
+
+
+∈ U D0(Z) = ∥Z∥C0 ≤ R
+
+
+
+.
+
+The choice λf ≥ 4R2/R 2 
+
+> U
+
+guarantees that D0(Z) ≤ R implies ∥Z∥F ≤ R/ √λf ≤ RU /2, so T ⊂ U .Suppose D0(Z) ≤ R. By the metric comparison (3) , DP (Z)2 ≤ 43 R2. Decompose Z = Zs + Zf with 
+
+Zs = ZΠP and Zf = Z(I − ΠP ). Since P (I − ΠP ) = 0 , we have P Z ⊤ 
+
+> f
+
+= 0 , and hence 
+
+f (P, Z ) − f (P, 0) = 2 ∥P Z ⊤ 
+
+> s
+
+∥2 
+
+> F
+
++ ∥ZZ ⊤∥2 
+
+> F
+
+.
+
+Using ∥P ∥op ≤ M , DP (Z)2 ≥ λs∥Zs∥2 
+
+> F
+
+, and DP (Z)2 ≥ λf ∥Z∥2 
+
+> F
+
+, we obtain 
+
+f (P, Z ) − f (P, 0) ≤ 2M 2 DP (Z)2
+
+λs
+
++ DP (Z)4
+
+λ2f
+
+21 ≤ 8M 2R2
+
+3λs
+
++ 16 R4
+
+9λ2f
+
+≤ ϵflat 
+
+3 + 4ϵflat 
+
+9 = 7ϵflat 
+
+9
+
+Thus |f (P, Z ) − f (P, 0) | ≤ ϵflat for all (P, Z ) ∈ T . This verifies the anisotropic-basin condition. It remains to verify the sharp-wall condition for the fixed metric C0.
+
+Step 1. We first prove the estimate for the moving metric CP . Notice that 
+
+⟨∇ Z f (P, Z ), ZC P ⟩ = ⟨4ZP ⊤P + 4 ZZ ⊤Z, ZC P ⟩
+
+= 4 λs⟨ZsP ⊤P, Z s⟩ + 4 ⟨ZZ ⊤Z, ZC P ⟩≥ 4λs∥P Z ⊤ 
+
+> s
+
+∥2 
+
+> F
+
++ 4 λf ∥ZZ ⊤∥2 
+
+> F
+
+.
+
+Since σmin (P ) ≥ μ on Ω, ∥P Z ⊤ 
+
+> s
+
+∥F ≥ μ∥Zs∥F . Also, with m0 = min {d − r, k }, it follows from Cauchy-Schwarz inequality that m0∥ZZ ⊤∥2 
+
+> F
+
+≥ ∥ Z∥4 
+
+> F
+
+. Thus 
+
+⟨∇ Z f (P, Z ), ZC P ⟩ ≥ 4λsμ2∥Zs∥2 
+
+> F
+
++ 4λf
+
+m0
+
+∥Z∥4 
+
+> F
+
+.
+
+If DP (Z) = 
+
+q
+
+λs∥Zs∥2 
+
+> F
+
++ λf ∥Zf ∥2 
+
+> F
+
+> R , then either √2λs∥Zs∥F ≥ DP (Z) or √2λf ∥Zf ∥F ≥ DP (Z).In the first case, 
+
+⟨∇ Z f (P, Z ), ZC P ⟩
+
+DP (Z) ≥ 2μ2DP (Z) ≥ 2μ2R. 
+
+In the second case, ∥Z∥F ≥ ∥ Zf ∥F ≥ DP (Z)/√2λf , and therefore 
+
+⟨∇ Z f (P, Z ), ZC P ⟩
+
+DP (Z) ≥ DP (Z)3
+
+m0λf
+
+≥ R3
+
+m0λf
+
+.
+
+Hence, whenever DP (Z) > R ,
+
+⟨∇ Z f (P, Z ), ZC P ⟩
+
+DP (Z) ≥ min 
+
+
+
+2μ2R, R3
+
+m0λf
+
+
+
+≜ c∗.
+
+Step 2. Next, we turn to the estimate for the fixed metric C0. Now suppose (P, Z ) ∈ U \ T ,i.e. D0(Z) > R . By the metric comparison (3) , DP (Z) ≥ 2D0(Z)/√5 > 2R/ √5. Applying the moving-metric estimate with threshold 2R/ √5 gives 
+
+⟨∇ Z f (P, Z ), ZC P ⟩
+
+D0(Z) ≥ 16 25 c∗.
+
+We next control the error caused by replacing CP with the frozen metric C0. On U ,
+
+∥∇ Z f (P, Z )∥F ≤ 4∥Z∥F ∥P ∥2op + 4 ∥Z∥3 
+
+> F
+
+≤ 4RU (M 2 + R2 
+
+> U
+
+) ≜ G. 
+
+Since D0(Z) ≥ √λf ∥Z∥F , we have 
+
+⟨∇ Z f (P, Z ), Z (C0 − CP )⟩
+
+D0(Z) ≤ ∥∇ Z f (P, Z )∥F ∥Z∥F ∥C0 − CP ∥op 
+
+D0(Z) ≤ Gλ sδH
+
+√λf
+
+.
+
+22 By further shrinking Ω, we may ensure δH ≤ c∗ 
+
+> √λf
+> 4Gλ s
+
+. Therefore 
+
+⟨∇ Z f (P, Z ), ZC 0⟩
+
+D0(Z) ≥
+
+ 16 25 − 14
+
+
+
+c∗ ≥ 14 c∗.
+
+Finally, Assumption 1 normalizes the sharp-wall direction as 
+
+νH(P, Z ) = H (P, Z ) − PM(P, Z )
+
+H (P, Z ) − PM(P, Z ) = (0 , ZC 0)
+
+∥ZC 0∥F
+
+.
+
+Since ∥ZC 0∥F ≤ √λs D0(Z), we obtain 
+
+⟨∇ f (P, Z ), ν H(P, Z )⟩ = ⟨∇ Z f (P, Z ), ZC 0⟩∥ZC 0∥F
+
+≥ c∗
+
+4√λs
+
+.
+
+Thus the sharp-valley condition holds with c⊥ = c∗ 
+
+> 4√λs
+
+> 0.Combining the smoothness, basin, river-center, and sharp-valley estimates proves that Example 2 satisfies Assumption 1 on U with the fixed metric H.
+
+E.2 Numerical Simulations of Matrix Factorization 
+
+We simulate the symmetric matrix factorization objective of Example 2, 
+
+f (X) = ∥XX ⊤ − M ⋆∥2 
+
+> F
+
+, M ⋆ =
+
+D 00 0
+
+
+
+, D ∈ Rr×r diagonal , D ≻ 0,
+
+with X ∈ Rd×k and k ≥ r, in the high-dimensional setting d = 100 , r = k = 5 (D = Ir, dk = 500 
+
+parameters). The loss landscape is no longer drawable directly, so we apply the same family of diagnostics used on Llama in the main text: a 1D loss profile from FP toward each anchor, a 2D contour on the FP/PTQ/QAT affine plane, and a 3D river-cross surface in the plane spanned by FP →QAT and a random perpendicular direction. 
+
+Pipeline. Stage 1 is full-precision gradient descent on f (X) from a small random initialization, 
+
+X0 ∼ 0.30 N (0 , I ), with step size ηFP = 0 .020 for 4000 iterations; this drives f (Xfp ) to numerical zero (≈ 10 −30 ). Stage 2 applies PTQ by per-entry rounding, XPTQ = Q(Xfp ) with Q(X) = ρ round (X/ρ )
+
+and ρ = 0 .30 , chosen so that no FP optimum lies on the grid ( f (X) > 0 for every B ∈ ρ Zd×k). Stage 3 runs STE-QAT continuing from Xfp ,
+
+Xk+1 = Xk − ηk ∇f  Q(Xk),
+
+for 1500 iterations with cosine-decayed step size ηk = 12
+
+ 1 + cos (πk/ 1500)  · 0.010 , mirroring the cosine schedule used for the LLM runs. We report the deployed loss f  Q(XQAT ) on the final QAT iterate. 23 Results. The deployed PTQ loss is f (XPTQ ) = 0 .7502 , a substantial gap from the FP optimum because the FP solution lies strictly off the grid in every coordinate. STE-QAT lowers the deployed loss to f  Q(XQAT ) = 0 .2543 , a 66% reduction over the PTQ initialization at the same grid resolution and weight scope. The displacements ∆PTQ = XPTQ − Xfp and ∆QAT = Q(XQAT ) − Xfp 
+
+have Frobenius norms 0.474 and 0.594 and meet at an angle of 95 .3◦ — they are nearly orthogonal, so QAT is not a small correction along the rounding direction but a separate, comparably-sized move. Figure 8 shows one-dimensional loss profiles along these two directions. The FP →PTQ profile rises smoothly through the PTQ anchor at t = 1 to its f = 0 .7502 value, while the FP →QAT profile reaches a lower f = 0 .2543 at t = 1 ; both rise monotonically because Xfp is the global minimum, but the slope along ∆QAT is markedly gentler, indicating a basin-aligned displacement compared to the rounding direction. Figure 9 renders the 2D loss landscape on the affine plane through the three anchors: FP, PTQ, and QAT fall at distinct corners with QAT placed inside the warm-color (low-loss) region while PTQ sits on a steeper part of the surface. Figure 10 tests the river-valley hypothesis directly: in the plane spanned by FP →QAT and a random perpendicular direction (rescaled to ∥∆FP →QAT ∥ and averaged over 5 random seeds, same construction as the ResNet/DeiT/Llama river-cross plots), the valley along b = 0 is narrow and deep; loss stays low along FP →QAT but rises sharply with |b|, consistent with Assumption 1 on this finite-dimensional matrix factorization instance. 0.25 0.00 0.25 0.50 0.75 1.00 1.25 1.50           
+
+> t(interpolation XFP +tPTQ )
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> 1.50
+> 1.75
+> f(X) =  XX  M 2
+> F
+> f(XFP ) = 9.49 e31
+> FP ( t= 0)
+> PTQ ( t= 1, f= 0.750)
+
+(a) FP → PTQ 1D profile 0.25 0.00 0.25 0.50 0.75 1.00 1.25 1.50            
+
+> t(interpolation XFP +tQAT )
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> f(X) =  XX  M 2
+> F
+> f(XFP ) = 9.49 e31
+> FP ( t= 0)
+> QAT ( t= 1, f= 0.254)
+
+(b) FP → QAT 1D profile 
+
+Figure 8: One-dimensional loss profiles for the high-dimensional Matrix Factorization simulation (Appendix E.2). Loss along the linear interpolations Xfp + t ∆PTQ (left) and 
+
+Xfp + t ∆QAT (right). The PTQ anchor at t = 1 sits at f = 0 .7502 ; the QAT anchor at t = 1 sits at 
+
+f = 0 .2543 . Xfp is the global minimum so both profiles start at zero, but the slope along ∆QAT is gentler than along ∆PTQ — the QAT direction follows a basin-aligned displacement rather than an off-river rounding move. Within each panel the dotted line marks f (Xfp ) and the dashed vertical line marks the anchor location at t = 1 .24 0.1 0.0 0.1 0.2 0.3 0.4 0.5 0.6              
+
+> distance along PTQ =XPTQ XFP (Frobenius)
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> distance along  QAT  = Q(XQAT ) XFP  (Frobenius)
+> 0.08
+> 0.17
+> 0.25
+> 0.34
+> 0.42
+> 0.42
+> 0.50
+> 0.59
+> 0.67
+> 0.76
+> 0.84
+> FP XFP (f= 0.000)
+> PTQ XPTQ (f= 0.750)
+> QAT Q(XQAT ) ( f= 0.254)
+> 0.000
+> 0.126
+> 0.252
+> 0.378
+> 0.504
+> 0.630
+> 0.756
+> 0.882
+> f (clipped at p90)
+
+Figure 9: FP/PTQ/QAT 2D loss landscape for the high-dimensional Matrix Factorization simulation. Loss on the affine plane X(a, b ) = Xfp + a ∆PTQ + b ∆QAT through the three anchors (FP at (0 , 0) , PTQ at (1 , 0) , QAT at (0 , 1) ). Axes are in Frobenius distance units ( ∥∆PTQ ∥ = 0 .474 ,
+
+∥∆QAT ∥ = 0 .594 , angle 95 .3◦). PTQ sits on a steeper part of the surface than QAT; the QAT anchor lands inside the warm-color (low-loss) basin. 0.2 0.0 0.2 0.4     
+
+> 0.6
+> 0.8
+> FP QAT
+> 0.8
+> 0.6
+> 0.4
+> 0.2
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> random orthogonal
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> f(X) =  XX  M 2
+> F
+> FP ( f= 0.000) QAT ( f= 0.254)
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> f over 5 seeds (clipped at p90)
+
+Figure 10: River-cross 3D loss landscape for the high-dimensional Matrix Factorization simulation. Loss f on the plane spanned by ∆FP →QAT = Q(XQAT ) − Xfp and a random direction projected orthogonal to it and rescaled to ∥∆FP →QAT ∥, averaged pointwise over 5 random seeds (same construction as the ResNet/DeiT/Llama river-cross plots in the main text). The valley along 
+
+b = 0 is narrow and deep: loss stays low along ∆FP →QAT (the river axis) but rises sharply with |b|,directly consistent with Assumption 1 on this finite-dimensional matrix factorization instance. 25 F Proofs in Section 3 
+
+F.1 Proof of Theorem 1 
+
+Proof of Theorem 1. For brevity, write qk = Q(wk) and πk = PM(wk), and dk = ∥wk − πk∥H. We prove the theorem in two steps. 
+
+Step 1: We prove by induction that for every k ≤ T ,(a) wk ∈ T and qk ∈ U ,(b) {δw k + (1 − δ)qk | δ ∈ [0 , 1] } ⊂ U ,(c) {wk − δ η ∇f (qk) | δ ∈ [0 , 1] } = {(1 − δ)wk + δw k+1 | δ ∈ [0 , 1] } ⊂ U .For the base case k = 0 , it follows from our assumption that w0 = wfp ∈ T and q0 /∈ T . By Assumption 2(i), ∥q0 − w0∥ ≤ ρ and, thus, for any δ ∈ [0 , 1] ,dist (δw 0 + (1 − δ)q0, M) ≤ (1 − δ)∥q0 − w0∥ + dist (w0, M) ≤ ρ + R/ pλd < R U .
+
+So the open set U contains the segment {δw k + (1 − δ)qk | δ ∈ [0 , 1] } and, in particular, q0 ∈ U \ T .The remaining property (c) is a direct consequence of η ≤ ρ/G and ∥∇ f (q0)∥ ≤ G.For the inductive step with k + 1 ≤ T , suppose wk ∈ T , qk ∈ U , and that U covers the line segment connecting wk and qk. Since k ≤ T − 1, we have qk ∈ U \ T .Below we will show that qk /∈ T implies progress in the normal direction, i.e., dk+1 ≤ dk and thus, wk+1 ∈ T given dk ≤ R. It then follows from ∥qk+1 − wk+1 ∥ ≤ ρ that dist (δw k+1 + (1 − δ)qk+1 , M) ≤ (1 − δ)∥qk+1 − wk+1 ∥ + dist (wk+1 , M)
+
+≤ ρ + R/ pλd < R U .
+
+Hence, {δw k+1 + (1 − δ)qk+1 | δ ∈ [0 , 1] } ⊂ U and qk+1 ∈ U . Similarly, ∥η∇f (qk+1 )∥ ≤ ηG ≤ ρ
+
+implies that wk+2 ∈ U and {wk+1 − δ η ∇f (qk+1 ) | δ ∈ [0 , 1] } ⊂ U . So properties (a)-(c) hold for 
+
+k + 1 ≤ T , completing the induction. 
+
+Progress in the normal direction when qk /∈ T . Consider Φ( w) = 12 ∥w − π(w)∥2
+
+> H
+
+. Since PM is 
+
+C1 on U and the range of ∇PM(w) lies in TM(PM(w)) while H(w − PM(w)) ∈ HNM(PM(w)) ⊂
+
+NM(PM(w)) , we have 
+
+∇Φ( w) = H(w − PM(w)) − ∇ PM(w)⊤[H(w − PM(w))] = H(w − PM(w)) .
+
+It follows from the LP -Lipschitz continuity of PM(·) that ∇Φ( ·) is λ1(1 + LP )-Lipschitz continuous on U . Thus, for any w, w ′ ∈ U such that {(1 − δ)wk + δw k+1 | δ ∈ [0 , 1] } ⊂ U , it follows from the descent lemma that 
+
+Φ( w′) ≤ Φ( w) + ⟨∇ Φ( w), w ′ − w⟩ + λ1(1 + LP )2 ∥w′ − w∥2.
+
+Notice that the segment {(1 − δ)wk + δw k+1 | δ ∈ [0 , 1] } ⊂ U due to dist ((1 − δ)wk + δw k+1 , M) ≤ δ∥wk+1 − wk∥ + dist (wk, M)
+
+≤ δηG + R/ pλd ≤ ρ + R/ pλd < R U .
+
+26 Therefore, we can take w = wk and w′ = wk+1 in the descent lemma to derive that 
+
+Φ( wk+1 ) ≤ Φ( wk) + ⟨∇ Φ( wk), w k+1 − wk⟩ + λ1(1 + LP )2 ∥wk+1 − wk∥2
+
+≤ Φ( wk) − η⟨H(wk − PM(wk)) , ∇f (qk)⟩ + λ1(1 + LP )G2
+
+2 η2.
+
+(4) Next we bound the inner product: 
+
+⟨H(wk − PM(wk)) , ∇f (qk)⟩
+
+= ⟨H(qk − PM(qk)) , ∇f (qk)⟩ + ⟨H(wk − qk) − H(PM(wk) − PM(qk)) , ∇f (qk)⟩≥ c⊥∥H(qk − PM(qk)) ∥− λ1(∥wk − qk∥ + ∥PM(wk) − PM(qk)∥)∥∇ f (qk)∥ (Assumption 1(iii)) 
+
+≥ c⊥
+
+pλd∥qk − PM(qk)∥H − λ1(1 + LP )∥wk − qk∥∥∇ f (qk)∥ (LP -Lipschitz continuity of PM)
+
+≥ c⊥
+
+pλd∥qk − PM(qk)∥H − λ1(1 + LP )ρG (Assumptions 2(i), (ii)) 
+
+≥ c⊥
+
+pλdR − λ1(1 + LP )ρG. (qk /∈ T )Substituting this into (4) and using η ≤ c⊥   
+
+> √λdR−λ1(1+ LP)ρG λ1(1+ LP)G2
+
+, we obtain 
+
+Φ( wk+1 ) ≤ Φ( wk) − η
+
+
+
+c⊥
+
+pλdR − λ1(1 + LP )ρG 
+
+
+
++ λ1(1 + LP )G2
+
+2 η2
+
+≤ Φ( wk) − 12 η
+
+
+
+c⊥
+
+pλdR − λ1(1 + LP )ρG 
+
+
+
+.
+
+In particular, dk+1 ≤ dk for all k < T .
+
+Step 2: Eventually, the quantized iterate enters T . If ∥wk − πk∥H ≤ R − √λ1ρ(1 + LP ), then, by the triangle inequality, 
+
+∥qk − PM(qk)∥H ≤ ∥ qk − wk∥H + ∥wk − πk∥H + ∥πk − PM(qk)∥H
+
+≤ pλ1∥qk − wk∥ + ∥wk − πk∥H + pλ1∥PM(wk) − PM(qk)∥≤ ∥ wk − πk∥H + pλ1ρ(1 + LP ) ≤ R, qk ∈ T . Therefore, while qk /∈ T , the squared distance Φ( wk) = 12 ∥wk − πk∥2 
+
+> H
+
+decreases by at least 
+
+> η
+> 2
+
+ c⊥
+
+√λdR − λ1(1 + LP )ρG . Thus, 
+
+T ≤ 1 + max 
+
+n
+
+d20 −  R − √λ1ρ(1 + LP )2 , 0
+
+o
+
+η  c⊥
+
+√λdR − λ1(1 + LP )ρG  .
+
+F.2 Proofs of Corollary 1 and Corollary 2 
+
+Before the proofs, we first introduce a standard property of the nearest-point projection. For any 
+
+π ∈ M , it holds that 
+
+∇PM(π) = PTM(π).
+
+27 Indeed, for any z ∈ Rd, decompose z = zT + zN , where zT ∈ TM(π) and zN ∈ NM(π). For the tangent component, choose a smooth curve γ ⊂ M with γ(0) = π and ˙γ(0) = zT . Since PM restricts to the identity map on M, differentiating PM(γ(t)) = γ(t) at t = 0 gives ∇PM(π)zT = zT . For the normal component, since PM(π + tz N ) = π for all sufficiently small t, differentiating at t = 0 gives 
+
+∇PM(π)zN = 0 . Therefore ∇PM(π)z = zT = PTM(π)z.We also have Lemma 1 about projection linearization around the river. 
+
+Lemma 1. Suppose PM : U → M is C1,1 with ∥∇ PM(z) − ∇ PM(z′)∥op ≤ κM∥z − z′∥ for any 
+
+z, z ′ ∈ U . Let w ∈ U and set π = PM(w). If {w + tδ | t ∈ [0 , 1] } ⊂ U , then 
+
+PM(w + δ) − PM(w) − PTM(π)δ ≤ κM
+
+
+
+∥w − π∥∥ δ∥ + 12 ∥δ∥2
+
+
+
+.
+
+Proof of Lemma 1. Note that PM(w + δ) − PM(w) = R 10 ∇PM(w + tδ )δ dt . Since π = PM(w) and 
+
+∇PM(π) = PTM(π), we have 
+
+PM(w + δ) − PM(w) − PTM(π)δ =
+
+Z 10
+
+[∇PM(w + tδ ) − ∇ PM(π)] δ dt. 
+
+Using the C1,1 regularity of PM gives 
+
+PM(w + δ) − PM(w) − PTM(π)δ ≤
+
+Z 10
+
+κM∥w + tδ − π∥∥ δ∥ dt 
+
+≤
+
+Z 10
+
+κM (∥w − π∥ + t∥δ∥) ∥δ∥ dt 
+
+= κM
+
+
+
+∥w − π∥∥ δ∥ + 12 ∥δ∥2
+
+
+
+,
+
+completing the proof. Now we are ready to prove Corollary 1. 
+
+Proof of Corollary 1. Write qk = Q(wk) and πk = PM(wk), and dk = ∥wk − πk∥H. By the definition of T , qk /∈ T for all k < T , and qT ∈ T . Moreover, the proof of Theorem 1 gives wk ∈ T for all 
+
+k ≤ T . Hence dk ≤ R.We first derive a common projected-loss estimate. Since the segment between wk and wk+1 is contained in U , by Lemma 1, 
+
+πk+1 − πk = −ηP TM(πk )∇f (qk) + rk,
+
+where 
+
+∥rk∥ ≤ κM
+
+
+
+η∥wk − πk∥∥∇ f (qk)∥ + 12 η2∥∇ f (qk)∥2
+
+
+
+≤ ηκ MG
+
+
+
+R/ pλd + 12 ηG 
+
+
+
+.
+
+Letting ∆ = κM
+
+ R/ √λd + 12 ηG , we have ∥rk∥ ≤ ηG ∆. Consequently, 
+
+∥πk+1 − πk∥ ≤ η PTM(πk )∇f (qk) + ∥rk∥ ≤ η∥∇ f (qk)∥ + ∥rk∥ ≤ ηG (∆ + 1) .
+
+28 By L-smoothness of f ,
+
+f (πk+1 ) ≤ f (πk) + ⟨∇ f (πk), π k+1 − πk⟩ + L
+
+2 ∥πk+1 − πk∥2
+
+= f (πk) − η ∇f (πk), P TM(πk )∇f (qk) + ⟨∇ f (πk), r k⟩ + L
+
+2 ∥πk+1 − πk∥2.
+
+Noting that 
+
+⟨∇ f (πk), P TM(πk )∇f (qk)⟩ = ⟨PTM(πk )∇f (πk), ∇f (qk)⟩ = ⟨∇ f (πk), ∇f (qk)⟩,
+
+and using the bounds on rk and ∥πk+1 − πk∥, we further obtain 
+
+f (πk+1 ) ≤ f (πk) − η ⟨∇ f (πk), ∇f (qk)⟩ + ηG ∆∥∇ f (πk)∥ + L
+
+2 η2G2(∆ + 1) 2. (5) The additional assumption of Corollary 1 gives us ∥∇ f (πk)∥ ≤ ϵ since πk ∈ M . Therefore, 
+
+|⟨∇ f (πk), ∇f (qk)⟩| ≤ ∥∇ f (πk)∥∥∇ f (qk)∥ ≤ ϵG. 
+
+Plugging this bound into (5) yields 
+
+f (πk+1 ) ≤ f (πk) + ηϵG (∆ + 1) + L
+
+2 η2G2(∆ + 1) 2.
+
+Summing over k = 0 , . . . , T − 1, we obtain 
+
+f (πT ) ≤ f (π0) + ηT G (∆ + 1) 
+
+
+
+ϵ + L
+
+2 ηG (∆ + 1) 
+
+
+
+. (6) We next compare f (PM(qT )) with f (πT ). Since the segment {δq T + (1 − δ)wT | δ ∈ [0 , 1] } ⊂ U , by the mean value theorem, there exists ewT ∈ { δw T + (1 − δ)qT | δ ∈ [0 , 1] } such that 
+
+f (PM(qT )) − f (πT ) = ⟨∇ (f ◦ PM)( ewT ), q T − wT ⟩ .
+
+Using the chain rule, ∇(f ◦ PM)( ewT ) = ∇PM( ewT )⊤[∇f (PM( ewT ))] . Note that 
+
+∥∇ (f ◦ PM)( ewT )∥ ≤ ∥∇ PM( ewT ) − ∇ PM(πT )∥op ∥∇ f (PM( ewT )) ∥
+
++ ∥∇ PM(πT )[ ∇f (PM( ewT ))] ∥.
+
+Since ∇PM(πT ) = PTM(πT ), we have 
+
+∥∇ PM(πT )[ ∇f (PM( ewT ))] ∥ = ∥PTM(πT )[∇f (PM( ewT ))] ∥ ≤ ∥∇ f (PM( ewT )) ∥ ≤ ϵ. 
+
+Thus, 
+
+∥∇ (f ◦ PM)( ewT )∥ ≤ κM∥ ewT − πT ∥ϵ + ϵ ≤ ϵ(κM(R/ pλd + ρ) + 1) .
+
+Therefore, 
+
+f (PM(qT )) − f (πT ) ≤ ϵρ  κM(R/ pλd + ρ) + 1 . (7) 29 Since wfp , q T ∈ T , Assumption 1(i) gives 
+
+f (qT ) ≤ f (PM(qT )) + ϵflat , f (π0) ≤ f (wfp ) + ϵflat .
+
+Combining these two inequalities with (6) and (7), we obtain 
+
+f (qT ) ≤ f (wfp ) + 2 ϵflat + ϵρ  κM(R/ pλd + ρ) + 1  + ηT G (∆ + 1) 
+
+
+
+ϵ + L
+
+2 ηG (∆ + 1) 
+
+
+
+.
+
+This completes the proof. We now proceed to Corollary 2. We will reuse the intermediate result (5) in the proof of Corollary 1, which is independent of the additional assumptions in Corollary 1. 
+
+Proof of Corollary 2. For k < T , the assumption gives ⟨g(PM(qk)) , ∇f (qk)⟩ > c ∥. Nevertheless, we need to estimate ⟨∇ f (πk), ∇f (qk)⟩ = ∥∇ f (πk)∥⟨ g(πk), ∇f (qk)⟩ in (5) . So next we bound the difference. Taking w = π ∈ M in the assumption yields ∥∇ f (π)∥ > c ∥. Thus, 
+
+min {∥∇ f (πk)∥, ∥∇ f (PM(qk)) ∥} > c ∥.
+
+Since the normalized gradient direction g(·) is κ-Lipschitz, 
+
+∥g(πk) − g(PM(qk)) ∥ ≤ κ∥πk − PM(qk)∥ ≤ κL P ∥wk − qk∥ ≤ κρL P .
+
+Therefore, 
+
+⟨g(πk), ∇f (qk)⟩ ≥ ⟨ g(PM(qk)) , ∇f (qk)⟩ − ∥ g(πk) − g(PM(qk)) ∥ · ∥∇ f (qk)∥ ≥ c∥ − κρL P G. 
+
+Plugging this into (5) gives 
+
+f (πk+1 ) ≤ f (πk) − η  c∥ − κρL P G − G∆ ∥∇ f (πk)∥ + L
+
+2 η2G2(∆ + 1) 2.
+
+Using our assumptions that κ ≤ c∥  
+
+> 4ρL PG
+
+and κM ≤ c∥ 
+
+> 4G(R/ √λd+ρ)
+
+, and the upper bound for the stepsize 
+
+η ≤ c2 
+
+> ∥
+> 2LG 2(κM(R/ √λd+ρ)+1) 2
+
+, we arrive at 
+
+f (πk+1 ) ≤ f (πk) − 12 η c 2 
+
+> ∥
+
++ L
+
+2 η2G2(∆ + 1) 2 ≤ f (πk) − 14 η c 2
+
+> ∥
+
+.
+
+Summing over k = 0 , 1, · · · , T − 1 yields 
+
+f (πT ) ≤ f (π0) − 14 ηT c 2
+
+> ∥
+
+. (8) We next compare f (PM(qT )) with f (πT ). Since {δw T + (1 − δ)qT | δ ∈ [0 , 1] } ⊂ U , applying the mean-value theorem to f ◦ PM gives 
+
+f (PM(qT )) − f (πT ) ≤ sup 
+
+> δ∈[0 ,1]
+
+∇(f ◦ PM) δw T + (1 − δ)qT
+
+ · ∥ qT − wT ∥.
+
+30 By the chain rule, ∇(f ◦ PM)( w) = ∇PM(w)⊤∇f (PM(w)) . Since PM is LP -Lipschitz on U and 
+
+∥∇ f (w)∥ ≤ G for all w ∈ U , we have ∥∇ (f ◦ PM)( w)∥ ≤ LP G. Therefore, 
+
+f (PM(qT )) − f (πT ) ≤ LP G∥qT − wT ∥ ≤ LP Gρ. (9) Combining (8) , (9) , and the facts that f (qT ) ≤ f (PM(qT )) + ϵflat and f (π0) ≤ f (wfp ) + ϵflat by Assumption 1(i), we conclude that 
+
+f (qT ) ≤ f (wfp ) + 2 ϵflat + GL P ρ − 14 ηT c 2
+
+> ∥
+
+.
+
+This completes the proof. 31

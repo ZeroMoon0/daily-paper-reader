@@ -1,0 +1,326 @@
+Title: AsyncLane: Decoupling Refinement from Advancement in Diffusion Language Model Decoding
+
+URL Source: https://arxiv.org/pdf/2606.08411v1
+
+Published Time: Tue, 09 Jun 2026 00:58:28 GMT
+
+Number of Pages: 11
+
+Markdown Content:
+# AsyncLane: Decoupling Refinement from Advancement in Diffusion Language Model Decoding 
+
+Yingxuan Ren 1,∗ Yuxuan Lou 1,∗ Yong Liu 1,∗ Pengcheng Fang 2
+
+Ziming Wang 1 Pengfei Zhou 1 Yang You 1,†
+
+> 1
+
+National University of Singapore 2University of Southampton 
+
+Abstract 
+
+Block-wise semi-autoregressive decoding has become the dominant inference paradigm for diffusion large language models, but it imposes a strict serial depen-dency between blocks: the current block must be fully decoded, or exhaust its denoising budget, before the next block can begin. This serialization places two qualitatively distinct operations on the same critical path: refinement of residual low-confidence positions in the current block, and advancement into the next block. However, we observe that once the current block has already formed a reliable delimiter boundary or stable semantic prefix, the continuation need not always wait for every remaining token in the current block to be resolved. Building on this, we propose AsyncLane , a training-free decoding scheduler that decouples refinement from advancement in diffusion language model decoding. AsyncLane forks a generate lane at observed delimiter boundaries into a refine lane and a continuation generate lane: the prefix remains editable, while the continuation starts advancing before prefix refinement finishes. Forking induces a lane tree that records decoding dependencies and output reconstruction order, while exe-cution proceeds over the active lane set. To make this asynchronous schedule efficient under bidirectional attention, AsyncLane uses shared-prefix lane batching, lookahead draft reuse, cascading termination, and compact cache refresh with refresh-logit reuse, keeping model-call cost from scaling directly with the number of lanes. AsyncLane is a drop-in replacement for block-wise DLM samplers and requires no model retraining. Experiments on mathematical reasoning and code generation benchmarks show that AsyncLane consistently improves throughput while maintaining competitive generation quality. Across both LLaDA and Dream backbones, AsyncLane achieves the highest TPS in all evaluated benchmark-length settings; relative to the fastest competing baseline in each setting, it reaches peak speedups of 2.95 × on LLaDA-based setting and 3.04 × on Dream-based setting, with especially large gains under longer generation budgets. Our code is available at https://github.com/renyingxuan/AsyncLane.git 
+
+1 Introduction 
+
+Diffusion language models (DLMs) have recently emerged as a promising alternative to autoregressive language models [Li et al., 2022, Lou et al., 2023, Sahoo et al., 2024, Nie et al., 2025, Ye et al., 2025]. Instead of generating tokens strictly from left to right, they initialize the generation region with mask tokens and iteratively denoise the sequence, allowing multiple masked positions to be predicted in one forward pass. In practice, however, efficient inference commonly relies on block-wise semi-autoregressive decoding, where the generation region is partitioned into blocks and decoded sequentially [Sahoo et al., 2024, Nie et al., 2025, Wu et al., 2025]. While this improves stability and simplifies cache reuse, it imposes a block completion barrier: the decoder must keep refining the   
+
+> ∗Equal contribution. †Corresponding author. Correspondence to: Yang You <yangyou@nus.edu.sg>. Preprint.
+> arXiv:2606.08411v1 [cs.CL] 7 Jun 2026
+
+current block until it is completed or its denoising budget is exhausted before activating the next block. This schedule couples refinement of the current region with advancement of the generation frontier, forcing downstream generation to wait even when the current block has exposed a reliable delimiter boundary or stable prefix. This observation motivates our central question: can we decouple refinement from advancement in diffusion language model decoding, without retraining the model? We do not assume that adjacent regions are independent, nor do we aim to merely choose a better block length. Instead, we argue that the dependency between refinement and advancement is not all-or-nothing. Figure 1 illustrates this phenomenon: Once a partial prefix reaches a reliable boundary, the following region can begin denoising while the prefix remains editable. This suggests an asynchronous decoding schedule in which the past continues to be refined while the future starts to advance. We propose AsyncLane , a training-free decoding scheduler that realizes this idea through active-lane scheduling. AsyncLane replaces the single global block pointer with a set of active lanes. A generate lane advances the decoding frontier, while a refine lane continues improving a prefix discovered during denoising. When a generate lane exposes a valid delimiter boundary, AsyncLane performs a branch-and-refine operation: the prefix before the boundary is assigned to a refine lane, and the continuation after the boundary is assigned to a new generate lane. Both lanes become active, allowing the continuation to start before prefix refinement finishes. Thus, AsyncLane’s asynchrony comes from changing the decoding dependency structure, not merely from batching multiple regions for execution. To make this asynchronous schedule efficient for bidirectional diffusion language models, AsyncLane exploits the structure created by forking. Forked sibling lanes share prefix states and can be evaluated with grouped batched forwards. Future-window logits are reused as high-confidence drafts for later generate lanes, while cascading termination prevents downstream lanes from being created beyond EOS or unresolved frontiers. AsyncLane further uses compact cache refresh and refresh-logit reuse to control stale prefix states under bidirectional attention. Together, these mechanisms allow AsyncLane to maintain multiple active lanes without making model-call cost scale directly with the number of lane nodes. Experiments on mathematical reasoning and code generation benchmarks show that AsyncLane consistently improves throughput while maintaining competitive generation quality. Across all evaluated benchmark-length settings, AsyncLane achieves the highest throughput among compared decoding methods, and this advantage becomes even more pronounced with a longer generation length. Our contributions are: • We identify the block completion barrier in block-wise DLM decoding and formulate it as a refinement-advancement synchronization problem. • We propose AsyncLane, a training-free active-lane scheduler that decouples prefix refine-ment from frontier advancement through boundary-triggered branch-and-refine. • We introduce efficient asynchronous execution mechanisms and show empirically, across LLaDA and Dream backbones, that AsyncLane improves throughput while maintaining competitive quality. 
+
+2 Related Work 
+
+Diffusion language models Diffusion-based text generation has been studied as an alternative to autoregressive language modeling, with early work exploring continuous diffusion over word embeddings and later work developing discrete or masked diffusion formulations for language generation [Li et al., 2022, Lou et al., 2023, Sahoo et al., 2024]. Recent large-scale diffusion language models, such as LLaDA and Dream, show that masked denoising can scale to instruction following, mathematical reasoning, and code generation [Nie et al., 2025, Ye et al., 2025]. These models offer parallel token refinement and arbitrary-order generation, but practical inference often still relies on block-wise semi-autoregressive schedules, which decode blocks sequentially and therefore reintroduce serialization. 2Figure 1: Motivating phenomenon for asynchronous advancement. Even before the current block is fully decoded, the model can assign high confidence to tokens in the next block. Panels (a) and (b) 
+
+show two intermediate states of block i, together with the model’s predictions for block i+1 . Panel (c) visualizes next-block prediction confidence as the current block progresses. The observation suggests that waiting for full block completion can be overly conservative, motivating AsyncLane to start continuation decoding once a reliable boundary is exposed while the prefix remains refinable. 
+
+Efficient decoding for DLMs Recent work accelerates diffusion language model inference by reducing redundant computation or improving token-level commit decisions. Fast-dLLM enables training-free acceleration through approximate KV caching and confidence-aware parallel decod-ing [Wu et al., 2025]. FlashDLM proposes FreeCache and Guided Diffusion for efficient caching and guided unmasking [Hu et al., 2025]. Other cache-based methods, including dKV-Cache, d 2Cache, and Elastic-Cache, study how to reuse or selectively refresh KV states under bidirectional atten-tion [Ma et al., 2025, Jiang et al., 2025, Nguyen-Tri et al., 2025]. Complementary approaches such as APD and Learn2PD adapt token-level parallel decoding decisions [Israel et al., 2025, Bao et al., 2025]. Adaptive block scheduling methods such as AdaBlock-dLLM adjust block sizes according to semantic delimiters and confidence dynamics [Lu et al., 2025]. AsyncLane is complementary to these methods. Rather than designing a new token-level commit rule, cache policy, or adaptive block-size heuristic, we target the temporal scheduling bottleneck: whether advancement to the next region must wait for refinement of the current region to finish. 
+
+3 Methods 
+
+Method overview Figure 2 summarizes AsyncLane. Standard block-wise decoding advances a single global block pointer, whereas AsyncLane maintains an active set of lanes and forks generate lanes at reliable delimiter boundaries. We next formalize lane states, branch-and-refine, active-lane scheduling, and efficient execution. 
+
+3.1 From Synchronous Block Decoding to Lane-tree Scheduling 
+
+Standard block-wise diffusion decoding is synchronous by construction. Given a prompt c =(c0, . . . , c P −1) of length P and generation length L, the model initializes the generation region as fully masked and decodes it block by block, with Bk = [ kB, min(( k + 1) B, L )) . At each denoising step, the sampler transfers a subset of masked positions according to confidence. The key property is that the decoder maintains a single active block frontier: Bk+1 is activated only after Bk is completed or its denoising budget is exhausted. To break this lockstep dependency, AsyncLane introduces a lane as the basic scheduling unit. We represent a lane ℓ as 
+
+ℓ = ( rℓ, s ℓ, b ℓ, zℓ, t ℓ), (1) where rℓ ∈ { gen , ref } is the lane role, sℓ its start position in generation coordinates, zℓ is the current token state, tℓ is its local denoising step. A generate lane performs advancement: it expands the decoding frontier and may reveal future delimiter boundaries. A refine lane performs refinement: it continues improving a prefix that has already been discovered by a generate lane and does not advance the frontier. Thus, AsyncLane replaces the single global block pointer with an active set of lanes, each progressing according to its own local clock. 3... ... ... ... ... ... ... ...                                     
+
+> The .MASK
+> .The cat
+> The cat sat .It slept ... ...
+> It
+> It slept
+> slept ... ...
+> ... ...
+> t = T
+> t = T- 2
+> t = T- 4
+> t = 0
+> ...
+> finished
+> Denoising over
+> time Block 0 Block 1 Block 2
+> Block 1 (and Block 2) cannot
+> start until Block 0 is fully
+> decoded
+> start
+> Refinement and advancement are coupled
+> Block 0 Block 1 Block 2
+> Semi-Autoregressive Decoding
+> Sequence divided into blocks
+> (a) Synchronous Block-Wise decoding
+> cat The
+> MASK
+> MASK
+> MASK MASK MASK MASK
+> MASK .
+> Initial generate lane / block
+> MASK MASK
+> Split by reliable delimiter boundary
+> cat The MASK .
+> slept
+> MASK MASK slept
+> Refine lane
+> Generate lane
+> Prefix remains editable
+> Continuation starts early
+> Refine lane 2
+> Generate lane 2
+> Split by a reliable
+> delimiter boundary
+> (b) Boundary-triggered branch and refine
+> Output reconstructed in refine-first order
+> cat The MASK .
+> ...
+> Refining
+> Advancing
+> Refine lane
+> Generate lane
+> Batched forward pass Shared-prefix batching
+> Lookahead draft reuse
+> High-confidence non-EOS drafts beyond the
+> frontier are reused by later generate lanes.
+> on the mat cat The MASK .MASK MASK slept
+> Future windows
+> Write drafts (high confidence)
+> (c) Efficient asynchronous execution
+> Cascading termination and compact
+> refresh
+> EOS or confused frontier
+> No successor lane
+> Downstream
+> blocks skipped
+> Prompt Meaningful decoded prefix Margin
+> Refresh only this window
+> AsyncLane
+
+Figure 2: Overview of AsyncLane. (a) Block-wise decoding imposes a synchronous block completion barrier: later blocks wait until the current block finishes refinement. (b) AsyncLane removes this barrier by forking a generate lane at a reliable delimiter boundary into a refine lane and a continuation generate lane, allowing the continuation to start before prefix refinement finishes. (c) 
+
+Shared-prefix batching, lookahead draft reuse, cascading termination, and compact cache refresh make the asynchronous schedule efficient. 
+
+3.2 Asynchronous Branch-and-Refine Decoding 
+
+AsyncLane starts by defining a single block and performs step-by-step decoding within it. Once a token representing a sentence-level closure is committed inside the block and the block’s fill ratio reaches a threshold, AsyncLane no longer waits for the remaining masked positions in that block to be resolved. Instead, the block is split in place: the prefix up to the sentence end is handed off to a refine lane that continues polishing it, while the positions past the sentence end are handed off to a new generate lane that immediately begins producing the continuation. We call this in-place split at a delimiter boundary branch-and-refine .We describe each iteration through four components: lane-local denoising, boundary-aware branch point detection, the fork operator, and advancement control. 
+
+Lane-local denoising Each active lane is updated independently using its own prefix state. For a lane ℓ, the prefix state κℓ is the cached KV representation of the context before the lane, up to position 
+
+P + sℓ, where P is the prompt length and sℓ is the lane start position in generation coordinates. The lane input consists of the current lane state followed by an optional lookahead window: 
+
+uℓ = [ zℓ; xP +sℓ+bℓ:P +sℓ+bℓ+wℓ ] , (2) where bℓ is the lane length and wℓ is the lookahead window size. The model is evaluated as 
+
+oℓ = fθ (uℓ; κℓ). (3) The first bℓ logits of oℓ are used to update the current lane with the same confidence-based token transfer rule as the underlying block-wise sampler. The only lane-specific modification is the valid update region. For generate lanes, the entire lane is eligible for transfer. For refine lanes, updates are restricted to the discovered prefix region, and EOS predictions are suppressed because refinement should not terminate generation. Generate lanes allow EOS so that the advancing frontier can stop naturally. After transfer, the updated tokens are written back to both the lane state zℓ and the corresponding global positions in x.
+
+Boundary-aware branch point AsyncLane forks a generate lane only at a reliable structural boundary. Let Dtask denote the task-specific delimiter set. In our main experiments, the exact delimiter set is specified in 4.1; for example, mathematical reasoning tasks use period and Chinese-period delimiters with numeric-period exclusions, while code generation uses newline delimiters. 4We take the last observed valid delimiter as the split point, 
+
+pℓ = 1 + max {i : zℓ,i ∈ D task and ValidBoundary( zℓ, 1: i)}. (4) If no valid delimiter is observed, the lane is not forked. To avoid premature branching, we require sufficient local evidence: 
+
+|{ i : zℓ,i ̸ = [MASK] }| 
+
+bℓ
+
+≥ ρmin , tℓ ≥ tmin . (5) The predicate ValidBoundary filters delimiters that are unlikely to mark a stable closure point. For code, this includes avoiding splits inside unclosed brackets, incomplete statements, or task-specific no-fork patterns. 
+
+Fork operator Given a generate lane ℓ and a valid split point pℓ, AsyncLane forks it into a refine lane and a continuation generate lane: 
+
+F(ℓ, p ℓ) =  ℓref , ℓ gen  . (6) The refine lane covers the prefix before the boundary, while the continuation generate lane starts imme-diately after the boundary and inherits the current global token state, including any already denoised suffix tokens or lookahead drafts. Both children become active, so refinement and advancement proceed with separate lane clocks: 
+
+Start( ℓgen ) < Finish( ℓref ). (7) This inequality captures the asynchronous property of AsyncLane: the continuation no longer waits for prefix refinement to finish. The continuation uses the boundary prefix state available at fork time, and stale states are controlled by the cache refresh mechanism in Section 3.4. 
+
+Advancement control AsyncLane uses two lightweight rules to control how far advancement proceeds, as illustrated in Figure 2. First, let E = EOS , when a generate-lane forward includes a lookahead window, high-confidence non-EOS predictions in the future window are written into the global sequence as drafts: 
+
+xj ← ˆxj if xj = [MASK] , q j ≥ τfuture , ˆxj /∈ E . (8) These drafts are inherited by later generate lanes. Second, after a generate lane completes, AsyncLane spawns a successor only if the completed lane provides a non-empty valid prefix. Let 
+
+vℓ = min ( {i − 1 : zℓ,i = [MASK] or zℓ,i ∈ E} ∪ { bℓ}) . (9) If vℓ = 0 , advancement stops from this lane. This cascading rule prevents downstream lanes from being created beyond EOS or unresolved frontiers. We analyze the efficiency effect of lookahead reuse and cascading termination in Section 3.4. 
+
+3.3 Active-Lane Scheduling and Output Collection 
+
+The branch-and-refine operator defines a local transition. To compose these transitions into a complete decoder, AsyncLane maintains an active set of unfinished lanes and records their parent-child relations in Tlane . The tree records dependencies and output order, while execution proceeds over the active frontier 
+
+At = {ℓ ∈ T lane : ℓ is unfinished }. (10) At each iteration, the scheduler updates active lanes, applies boundary-aware forks, and either spawns successor generate lanes or stops advancement from invalid frontiers. Algorithm 1 summarizes the procedure. 
+
+Output reconstruction After decoding, AsyncLane traverses the induced lane tree to reconstruct the sequence. Refine children are emitted before generate children, ensuring that refined prefixes precede their continuations; leaf lanes are truncated at the first mask token, and generate lanes are additionally truncated at EOS. This is a linear post-processing step with no additional model calls. 5Algorithm 1 AsyncLane active-lane decoding 
+
+Require: Prompt c, generation length L, block size B 
+
+> 1:
+
+Initialize x ← [c; [MASK] L] 
+
+> 2:
+
+Create root generate lane ℓ0 and initialize Tlane  
+
+> 3:
+
+while there exists an active lane and decoding budget remains do  
+
+> 4:
+
+At ← { ℓ ∈ T lane : ℓ is unfinished } 
+
+> 5:
+
+UPDATE LANES (At, x) 
+
+> 6:
+
+for each generate lane ℓ ∈ A t do  
+
+> 7:
+
+if ℓ satisfies the boundary-aware fork condition then  
+
+> 8:
+
+(ℓref , ℓ gen ) ← F (ℓ, p ℓ) 
+
+> 9:
+
+Attach ℓref and ℓgen to Tlane  
+
+> 10:
+
+Mark ℓ as completed  
+
+> 11:
+
+else if ℓ is completed then  
+
+> 12:
+
+vℓ ← VALID PREFIX LENGTH (ℓ) 
+
+> 13:
+
+if vℓ = 0 or the next start position exceeds L then  
+
+> 14:
+
+STOP ADVANCE (ℓ) 
+
+> 15:
+
+else  
+
+> 16:
+
+Finalize the valid prefix of ℓ 
+
+> 17:
+
+Spawn a successor generate lane starting at sℓ + vℓ and attach it to Tlane  
+
+> 18:
+
+return COLLECT DFS( Tlane )
+
+3.4 Efficient Asynchronous Execution 
+
+A natural concern is that maintaining multiple active lanes may increase the number of model calls. AsyncLane avoids this by exploiting the structure created by forking: sibling lanes share prefix states, future logits are reused by later lanes, terminated frontiers stop spawning downstream lanes, and cache refresh is restricted to the meaningful decoded prefix. 
+
+Shared-prefix lane batching When a generate lane is forked, its refine child and continuation generate child are created from the same boundary state and therefore share the same fork prefix state. At iteration t, AsyncLane groups active lanes by shared prefix state into Gt. Each group is evaluated with one batched model call, so the model-call cost of the iteration is 
+
+NFE call  
+
+> t
+
+= |G t| ≤ |A t|. (11) This does not eliminate token-level computation, but replaces serial lane forwards with grouped GPU execution. We therefore report both model-call NFE and wall-clock latency. 
+
+Future computation reuse The advancement-control rules in Section 3.2 also reduce future computation. Lookahead drafts are inherited by later generate lanes, so future lanes often start with fewer masked positions. Cascading termination prevents successor lanes from being spawned when the frontier begins with EOS or an unresolved mask, short-circuiting downstream computation once the meaningful frontier stops. 
+
+Compact cache refresh and reuse Because bidirectional attention makes prefix states stale as earlier tokens are updated, AsyncLane periodically refreshes them. Instead of refreshing the full prompt-plus-generation sequence, it refreshes only the meaningful prefix plus a small margin: 
+
+Lrefresh = min( P + L, P + Leff + m), Leff = max 
+
+> ℓ∈T lane
+
+(sℓ + vℓ). (12) The refresh logits are reused in the next iteration for lane-local transfer and lookahead prefilling, amortizing the refresh cost. 
+
+Model-call NFE accounting Standard block-wise decoding requires roughly NFE block = N · S
+
+model calls for N = ⌈L/B ⌉ blocks and S denoising steps per block. In contrast, AsyncLane has 
+
+NFE AsyncLane = 1 + 
+
+> T
+
+X
+
+> t=1
+
+|G t| + Nrefresh − Nreuse . (13) Thus, the cost scales with shared-prefix groups and the meaningful frontier length, rather than directly with the number of lane nodes. 64 Experiments 
+
+4.1 Experimental Setup 
+
+We evaluate AsyncLane on five representative tasks. For mathematical reasoning, we evaluate on GSM8K [Cobbe et al., 2021], MATH [Hendrycks et al., 2021], and GSM8K-CoT (chain-of-thought reasoning). For code generation, we use HumanEval [Chen et al., 2021] and MBPP [Austin et al., 2021]. For each backbone, all experiments use the same pretrained masked diffusion language model without fine-tuning. We evaluate decoding efficiency using tokens per second (TPS), and generation quality using exact-match accuracy or pass@1, depending on the benchmark. To validate the effectiveness of our approach, we compare AsyncLane framework with state-of-the-art dLLM methods, including vanilla LLaDA [Nie et al., 2025] and Dream [Ye et al., 2025], and the training-free inference acceleration method Fast-dLLM [Wu et al., 2025]. We additionally evaluate an inference-only variant of d3LLM [Qian et al., 2026], denoted as d3LLM-TF. Since the full d3LLM framework includes pseudo-trajectory distillation during training, we exclude this training component and use only its inference-side multi-block decoding and cache-refresh strategy on the same pretrained base model. For boundary-aware forking, we instantiate the delimiter set according to the task. For mathematical reasoning tasks, the default delimiter set contains period and Chinese-period tokens, with numeric-period patterns excluded. For code generation tasks, we use newline tokens. Unless otherwise specified, AsyncLane uses the same block size, generation length, and denoising budget as the block-wise baseline. We use a single H100 GPU and fix the batch size to 1 for all models for inference. 
+
+4.2 Evaluation of AsyncLane Framework Results on LLaDA-based Models As shown in Table 1, across all benchmarks and generation budgets, AsyncLane achieves the highest throughput. This shows that active-lane scheduling does not introduce prohibitive overhead despite maintaining multiple lanes. Instead, the combination of shared-prefix batching, lookahead reuse, cascading termination, and compact cache refresh makes asynchronous decoding substantially more efficient. The throughput advantage becomes more pronounced as the generation length increases. Averaged over all benchmarks, the speedup of AsyncLane over the fastest competing baseline increases from approximately 1.45 × at length 256 to 1.62 × at length 512 and 2.25 × at length 1024. This trend is consistent with the design of AsyncLane: longer generation budgets create more opportunities for early continuation, future-logit reuse, and downstream termination, which amplify the benefit of decoupling refinement from advancement. In terms of generation quality, AsyncLane maintains competitive accuracy across reasoning and code-generation tasks. On MATH, AsyncLane achieves the best accuracy at lengths 512 and 1024 while also delivering the highest TPS. On code benchmarks, AsyncLane substantially improves throughput while remaining competitive with training-free acceleration baselines. Overall, the results indicate that AsyncLane provides a favorable speed-quality tradeoff: it consistently improves practical decoding efficiency while avoiding the large quality degradation that would result from overly aggressive early commitment. 
+
+Results on Dream-based Models Table 2 evaluates AsyncLane on the Dream backbone. Across all benchmarks and generation lengths, AsyncLane-Dream achieves the highest TPS among the compared Dream-based methods, showing that the proposed scheduler is not specific to LLaDA. The advantage becomes stronger for longer generation budgets: the average speedup over the fastest non-AsyncLane baseline increases from about 1.16 × at length 256 to 2.49 × at length 1024. This supports our intuition that longer sequences expose more opportunities for early continuation, lookahead reuse, and cascading termination. Accuracy remains competitive overall, although vanilla Dream often has the strongest exact-match accuracy on reasoning tasks. These results confirm that AsyncLane provides a backbone-agnostic throughput improvement with a reasonable speed-quality tradeoff. 7Table 1: Comparison of AsyncLane-LLaDA with other LLaDA based models. We report accuracy (Acc) and throughput in tokens per second (TPS). For GSM8K and MATH, Acc is exact-match accuracy; for MBPP and HumanEval, Acc is pass@1. The best results are highlighted in bold .                                                                                                                                                
+
+> Method Metric GSM8K-CoT (0-shot) GSM8K (5-shot) MATH (4-shot) MBPP (3-shot) HumanEval (0-shot) 256 512 1024 256 512 1024 256 512 1024 256 512 1024 256 512 1024 LLaDA Acc(%) ↑73.00 74.30 75.13 77.86 79.00 78.85 32.94 31.74 31.19 40.20 39.00 39.40 37.19 35.98 36.01 TPS ↑41.61 19.54 6.19 15.19 5.89 1.86 20.13 10.01 4.28 15.67 10.76 2.85 13.52 6.04 1.19 Fast-dLLM-LLaDA Acc(%) ↑74.30 74.83 73.46 76.57 78.00 77.41 30.96 31.40 30.00 37.80 38.60 35.80 37.80 37.46 37.37 TPS ↑104.99 100.83 74.65 84.01 64.55 35.20 69.31 72.73 68.69 76.69 77.38 53.09 60.84 35.88 11.28 d3LLM-TF-LLaDA Acc(%) ↑72.10 74.91 74.98 78.24 78.24 78.85 31.40 31.80 31.50 40.80 39.60 36.00 39.02 44.51 40.24
+> TPS ↑128.82 115.74 76.80 78.85 68.33 46.21 75.46 73.56 66.02 84.37 76.20 52.93 112.61 92.52 71.72
+> AsyncLane-LLaDA Acc(%) ↑74.91 73.77 73.39 76.42 77.33 76.80 32.52 32.36 32.04 38.40 39.80 37.80 38.47 37.80 38.22 TPS ↑166.15 163.30 165.42 130.29 131.66 136.34 136.05 138.35 145.40 112.43 106.26 111.89 140.58 137.88 138.58
+
+Table 2: Comparison of AsyncLane-Dream with other Dream-based models. We report accuracy (Acc) and throughput in tokens per second (TPS). For GSM8K and MATH, Acc is exact-match accuracy; for MBPP and HumanEval, Acc is pass@1. The best results are highlighted in bold .                                                                                                                                                
+
+> Method Metric GSM8K-CoT (0-shot) GSM8K (5-shot) MATH (4-shot) MBPP (3-shot) HumanEval (0-shot) 256 512 1024 256 512 1024 256 512 1024 256 512 1024 256 512 1024 Dream Acc(%) ↑83.17 82.95 82.16 78.77 78.43 77.83 38.27 38.58 38.29 60.00 59.40 58.10 47.56 47.79 47.65 TPS ↑16.34 4.73 1.08 11.60 4.64 1.05 17.73 7.73 4.75 5.48 2.14 0.95 9.70 4.24 1.70 Fast-dLLM-Dream Acc(%) ↑78.09 78.32 77.52 76.95 75.97 76.42 37.98 37.59 37.70 56.40 54.80 54.40 56.70 54.87 56.70
+> TPS ↑72.50 56.13 34.60 81.10 57.15 32.34 87.06 75.50 64.62 23.86 16.99 9.79 68.25 54.30 31.28 d3LLM-TF-Dream Acc(%) ↑80.52 82.03 81.05 77.41 76.72 77.26 37.82 37.68 37.02 48.20 49.20 48.20 50.60 53.04 51.82 TPS ↑121.96 81.66 49.94 138.80 90.54 56.89 130.00 102.05 74.37 68.31 68.18 45.81 105.69 79.51 51.66
+> AsyncLane-Dream Acc(%) ↑80.03 80.30 80.44 77.19 77.58 77.11 37.69 38.80 37.66 54.40 54.60 54.30 53.05 51.83 52.44 TPS ↑148.60 151.29 151.64 146.40 147.69 147.71 141.36 140.83 140.43 89.69 89.76 90.44 126.00 115.03 121.72
+
+4.3 Ablation Study Ablation on Refinement-Advancement Decoupling Table 3 isolates the two key components of branch-and-refine. Boundary-aware Coupled uses the same delimiter detector as AsyncLane, but waits for prefix refinement to finish before starting the continuation. Commit-and-Advance starts the continuation immediately after a detected boundary, but commits the prefix without spawning a refine lane. Full AsyncLane combines both properties: the prefix remains refinable while the continuation starts early. The results show that both properties are necessary. Boundary-aware Coupled is more efficient than Block-wise decoding, but remains slower than AsyncLane because advancement is still gated by refinement completion. Commit-and-Advance achieves low NFE but suffers a large accuracy drop, indicating that prematurely committing the prefix hurts reasoning quality. AsyncLane achieves the best speed-quality tradeoff, improving accuracy to 74.91%, reducing NFE to 60,378, and achieving the highest TPS of 166.15. Table 4 confirms that this gain is associated with actual asynchronous execution. Boundary-aware Coupled has zero positive lead and zero overlap by construction, whereas AsyncLane obtains non-zero advancement lead and overlap. This indicates that continuation lanes measurably start before their corresponding refine lanes finish, supporting our claim that AsyncLane decouples refinement from advancement rather than merely changing the boundary detector. 
+
+Ablation on Efficient Execution Mechanisms Table 5 ablates lookahead prefilling and refresh-logit reuse. Since these variants can emit different numbers of tokens, we report NFE/token in addition to TPS. Disabling lookahead causes a large accuracy drop and much shorter outputs; although its raw NFE is lower, its NFE/token increases from 0.288 to 0.399 and TPS drops from 166.15 to 117.8. This shows that lookahead prefilling helps future generate lanes inherit useful drafts rather than simply reducing computation by early termination. Disabling refresh-logit reuse preserves accuracy and output length, but increases NFE/token and lowers TPS, confirming that refresh logits amortize the cost of cache refresh. The full AsyncLane achieves the best quality-throughput tradeoff. 8Table 3: Ablation study on refinement-advancement decou-pling. We report accuracy, NFE, and TPS on the GSM8K-CoT dataset (0-shot).                                
+
+> Method Bnd. aware Prefix ref. Early adv. Acc(%) ↑NFE ↓TPS ↑
+> Block-wise ×××73.01 337,664 41.61 Commit-and-Advance ✓×✓68.46 60,750 104.77 Boundary-aware Coupled ✓✓×73.39 67,449 144.19
+> AsyncLane ✓✓✓74.91 60,378 166.15
+
+Table 4: Asynchrony diagnostics of AsyncLane. We report advancement lead, positive lead ratio, overlap ratio, and fork count on the GSM8K-CoT dataset (0-shot).                
+
+> Method Avg. lead Pos. lead Overlap Fork pairs Boundary-aware Coupled -1.000 0.000 0.000 4,126 Commit-and-Advance ––0.000 0
+> AsyncLane +0.105 0.080 0.074 3,906
+
+Table 5: Ablation study on efficient execution mechanisms. We ablate lookahead prefilling and refresh-logit reuse on GSM8K-CoT (0-shot).                      
+
+> Variant Acc(%) ↑Total tokens NFE/token ↓TPS ↑
+> Full AsyncLane 74.91 209,882 0.288 166.15
+> w/o Lookahead 67.02 123,079 0.399 117.77 w/o Refresh-Reuse 74.37 209,613 0.312 145.94 w/o Both 67.02 123,079 0.424 110.58
+
+Table 6: Ablation study on boundary selection strategies. We compare period-based, punctuation-augmented, and fixed-interval split rules on GSM8K-CoT (0-shot).                        
+
+> Boundary rule Acc(%) ↑∆Acc TPS ↑Fork count Split p25/med/p75
+> Period delimiter 74.91 –166.15 3,906 11 / 17 / 24 Punct.-augmented 72.48 −2.43 pp 149.35 8,097 11 / 15 / 21 Fixed-K=16 71.34 −3.57 pp 147.52 8,318 16 / 16 / 16
+
+Boundary Selection Ablation Table 6 studies how the choice of branch point affects AsyncLane. We compare our period/newline delimiter boundary with two alternatives: a punctuation-augmented and a fixed-position split at K = 16 . Split statistics report the 25th percentile, median, and 75th percentile of fork positions within a lane. The comma and fixed-position variants produce substantially more fork events, but both reduce accuracy. In particular, comma-based splitting increases the number of forks from 3,906 to 8,097, yet lowers accuracy by 2.43 percentage points. Fixed-position splitting behaves similarly and yields an even larger accuracy drop. These results indicate that more frequent branching is not sufficient; AsyncLane benefits from branching at low-ambiguity delimiter boundaries that provide more reliable prefix closure. 
+
+5 Conclusion 
+
+We introduced AsyncLane, a training-free decoding scheduler for bidirectional diffusion language models. Our key observation is that standard block-wise decoding imposes a block completion barrier: refinement of the current region and advancement of the generation frontier are forced to proceed in a synchronous order. AsyncLane removes this barrier through active-lane scheduling. When a generate lane exposes a reliable delimiter boundary, branch-and-refine splits the decoding process into a refine lane for the discovered prefix and a continuation generate lane for the suffix, allowing the future to advance while the prefix remains editable. To make this asynchronous schedule efficient, AsyncLane uses shared-prefix lane batching, lookahead draft reuse, cascading termination, and compact cache refresh with refresh-logit reuse. Experiments on mathematical reasoning and code generation benchmarks show that AsyncLane improves decoding throughput across generation lengths while maintaining competitive quality. These results suggest that relaxing the temporal dependency between refinement and advancement is a promising direction for efficient diffusion language model inference. A limitation of the current implementation is that boundary selection remains rule-based and task-dependent. While delimiter-based boundaries work well in our experiments, they may not always provide the optimal split point for branch-and-refine. Future work could train a lightweight boundary selector from confidence trajectories or downstream quality signals to decide when and where to fork, potentially improving the speed-quality tradeoff, especially for code generation and other structurally rich domains. 9References 
+
+Jacob Austin, Augustus Odena, Maxwell Nye, Maarten Bosma, Henryk Michalewski, David Dohan, Ellen Jiang, Carrie Cai, Michael Terry, Quoc Le, and Charles Sutton. Program synthesis with large language models. arXiv preprint arXiv:2108.07732 , 2021. Wenrui Bao, Zhiben Chen, Dan Xu, and Yuzhang Shang. Learning to parallel: Accelerating diffusion large language models via learnable parallel decoding. arXiv preprint arXiv:2509.25188 , 2025. Mark Chen, Jerry Tworek, Heewoo Jun, Qiming Yuan, Henrique Ponde de Oliveira Pinto, Jared Kaplan, Harri Edwards, Yuri Burda, Nicholas Joseph, Greg Brockman, Alex Ray, Raul Puri, Gretchen Krueger, Michael Petrov, Heidy Khlaaf, Girish Sastry, Pamela Mishkin, Brooke Chan, Scott Gray, Nick Ryder, Mikhail Pavlov, Alethea Power, Lukasz Kaiser, Mohammad Bavarian, Clemens Winter, Philippe Tillet, Felipe Petroski Such, Dave Cummings, Matthias Plappert, Fotios Chantzis, Elizabeth Barnes, Ariel Herbert-Voss, William Hebgen Guss, Alex Nichol, Alex Paino, Nikolas Tezak, Jie Tang, Igor Babuschkin, Suchir Balaji, Shantanu Jain, William Saunders, Christopher Hesse, Andrew N. Carr, Jan Leike, Josh Achiam, Vedant Misra, Evan Morikawa, Alec Radford, Matthew Knight, Miles Brundage, Mira Murati, Katie Mayer, Peter Welinder, Bob McGrew, Dario Amodei, Sam McCandlish, Ilya Sutskever, and Wojciech Zaremba. Evaluating large language models trained on code. arXiv preprint arXiv:2107.03374 , 2021. Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser, Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, and John Schulman. Training verifiers to solve math word problems. arXiv preprint arXiv:2110.14168 ,2021. Dan Hendrycks, Collin Burns, Saurav Kadavath, Akul Arora, Steven Basart, Eric Tang, Dawn Song, and Jacob Steinhardt. Measuring mathematical problem solving with the math dataset. In 
+
+Proceedings of the Neural Information Processing Systems Track on Datasets and Benchmarks ,2021. Zhanqiu Hu, Jian Meng, Yash Akhauri, Mohamed S. Abdelfattah, Jae-sun Seo, Zhiru Zhang, and Udit Gupta. Flashdlm: Accelerating diffusion language model inference via efficient kv caching and guided diffusion. arXiv preprint arXiv:2505.21467 , 2025. Daniel Israel, Guy Van den Broeck, and Aditya Grover. Accelerating diffusion llms via adaptive parallel decoding. arXiv preprint arXiv:2506.00413 , 2025. Yuchu Jiang, Yue Cai, Xiangzhong Luo, Jiale Fu, Jiarui Wang, Chonghan Liu, and Xu Yang. d 2cache: Accelerating diffusion-based llms via dual adaptive caching. arXiv preprint arXiv:2509.23094 ,2025. Xiang Lisa Li, John Thickstun, Ishaan Gulrajani, Percy Liang, and Tatsunori B. Hashimoto. Diffusion-lm improves controllable text generation. arXiv preprint arXiv:2205.14217 , 2022. Aaron Lou, Chenlin Meng, and Stefano Ermon. Discrete diffusion modeling by estimating the ratios of the data distribution. arXiv preprint arXiv:2310.16834 , 2023. Guanxi Lu, Hao Chen, Yuto Karashima, Zhican Wang, Daichi Fujiki, and Hongxiang Fan. Adablock-dllm: Semantic-aware diffusion llm inference via adaptive block size. arXiv preprint arXiv:2509.26432 , 2025. Xinyin Ma, Runpeng Yu, Gongfan Fang, and Xinchao Wang. dkv-cache: The cache for diffusion language models. arXiv preprint arXiv:2505.15781 , 2025. Quan Nguyen-Tri, Mukul Ranjan, and Zhiqiang Shen. Attention is all you need for kv cache in diffusion llms. arXiv preprint arXiv:2510.14973 , 2025. Shen Nie, Fengqi Zhu, Zebin You, Xiaolu Zhang, Jingyang Ou, Jun Hu, Jun Zhou, Yankai Lin, Ji-Rong Wen, and Chongxuan Li. Large language diffusion models. arXiv preprint arXiv:2502.09992 ,2025. doi: 10.48550/arXiv.2502.09992. 10 Yu-Yang Qian, Junda Su, Lanxiang Hu, Peiyuan Zhang, Zhijie Deng, Peng Zhao, and Hao Zhang. d3llm: Ultra-fast diffusion llm using pseudo-trajectory distillation. arXiv preprint arXiv:2601.07568 , 2026. doi: 10.48550/arXiv.2601.07568. Subham Sekhar Sahoo, Marianne Arriola, Yair Schiff, Aaron Gokaslan, Edgar Marroquin, Justin T. Chiu, Alexander Rush, and Volodymyr Kuleshov. Simple and effective masked diffusion language models. arXiv preprint arXiv:2406.07524 , 2024. Chengyue Wu, Hao Zhang, Shuchen Xue, Zhijian Liu, Shizhe Diao, Ligeng Zhu, Ping Luo, Song Han, and Enze Xie. Fast-dllm: Training-free acceleration of diffusion llm by enabling kv cache and parallel decoding. arXiv preprint arXiv:2505.22618 , 2025. doi: 10.48550/arXiv.2505.22618. Jiacheng Ye, Zhihui Xie, Lin Zheng, Jiahui Gao, Zirui Wu, Xin Jiang, Zhenguo Li, and Lingpeng Kong. Dream 7b: Diffusion large language models. arXiv preprint arXiv:2508.15487 , 2025. doi: 10.48550/arXiv.2508.15487. 11

@@ -1,0 +1,1998 @@
+Title: Unified Energy for Invariant and Independent Decoding in Diffusion Language Models
+
+URL Source: https://arxiv.org/pdf/2606.09159v1
+
+Published Time: Tue, 09 Jun 2026 02:24:27 GMT
+
+Number of Pages: 26
+
+Markdown Content:
+# Unified Energy for Invariant and Independent Decoding in Diffusion Language Models 
+
+Yuchen Yan Department of Computer Science National University of Singapore 
+
+yan1998@comp.nus.edu.sg 
+
+Minkai Xu Department of Computer Science Stanford University 
+
+minkai@cs.stanford.edu 
+
+Zaiquan Yang Department of Computer Science City University of Hong Kong 
+
+zaiquyang2-c@my.cityu.edu.hk 
+
+Yatao Bian ∗
+
+Department of Computer Science National University of Singapore 
+
+ybian@nus.edu.sg 
+
+June 9, 2026 
+
+Abstract 
+
+Diffusion Language Models (DLMs) enable parallel text generation by iteratively denoising a full sequence, offering attractive flexibility compared to auto-regressive (AR) decoding. However, existing methods fail to fully capture token relationships, leading to a performance gap relative to AR baselines, especially as the degree of parallelism increases. In this paper, we give a systematic analysis of the gap, identifying three key factors: (i) model capacity, (ii) dependency, and (iii) invariance. To address these issues, we first propose an invariant energy (Inv-E) together with an effective sampling-based estimator to handle the invariance issue. By further combining with the independent energy (Ind-E), we obtain a unified energy (Uni-E), that accounts for all these factors. Uni-E enjoys a unique advantage: it can be computed exactly without sampling-based partition estimation. Besides, Uni-E is model agnostic and can therefore be scaled to models of arbitrary size. We further prove that Uni-E can correct the distribution shift caused by dependency and invariance. Extensive experiments across Diffusion Language Models (DLMs) and Diffusion Large Language Models (DLLMs) demonstrate the effectiveness of the proposed Uni-E. 
+
+> ∗
+
+Correspondence to: Yatao Bian < ybian@nus.edu.sg >. 
+
+> arXiv:2606.09159v1 [cs.CL] 8 Jun 2026
+
+Unified Energy for Invariant and Independent Decoding in Diffusion Language Models 
+
+Contents 
+
+1 Introduction 32 Related Work 43 Preliminaries 44 Method 5
+
+4.1 Expressive Limitation of DLMs . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 54.2 Energy Function for Invariant Decoding . . . . . . . . . . . . . . . . . . . . . . . . . . 64.3 Unified Energy for Independent and Invariant Decoding . . . . . . . . . . . . . . . . . 7
+
+5 Experiments 9
+
+5.1 Experiments on Diffusion Language Models (DLMs) . . . . . . . . . . . . . . . . . . . 95.2 Experiments on Diffusion Large Language Models (DLLMs) . . . . . . . . . . . . . . . 11 
+
+6 Conclusion 12 Bibliography 13 7 Appendix 17 
+
+7.1 Training Algorithm . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17 7.2 Inference Algorithm . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17 7.3 Inference Algorithm for Diffusion Large Language Models (DLLMs) . . . . . . . . . . 18 7.4 Proof of Invariance Divergence Estimation . . . . . . . . . . . . . . . . . . . . . . . . . 18 7.5 Proof of Uni-EDLM’s Effectiveness . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 20 7.6 Settings on Diffusion Language Model Experiments . . . . . . . . . . . . . . . . . . . . 21 7.7 Comparison with Speculative Decodings . . . . . . . . . . . . . . . . . . . . . . . . . . 21 7.8 Comparison with Remask Strategies . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22 7.9 Settings of Baselines on Diffusion Large Language Models (DLLMs) Experiments . . . 22 7.10 Hyper-parameter Analysis on Diffusion Large Language Model . . . . . . . . . . . . . 23 7.11 Benchmark Performance of Diffusion Large Language Models (DLLMs) . . . . . . . . 23 7.12 Case Study . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 24 2Unified Energy for Invariant and Independent Decoding in Diffusion Language Models 
+
+1. Introduction 
+
+Diffusion Language Models (DLMs) [26, 46] have emerged as a compelling alternative to the dominant auto-regressive (AR) paradigm in text generation, where tokens are generated in a fixed left-to-right order [50, 6, 52]. Unlike AR-based methods, DLMs iteratively decode tokens across the entire sequence in parallel, leading to higher flexibility, diversity, and efficiency. However, traditional DLMs [35, 2, 28, 1, 36] still underperform AR-based generation when decoding in parallel, as they assume tokens can be decoded independently and invariantly, failing to model their relationships. To handle this limitation, one line of research uses score guidance [45, 41, 25, 29] or proxy models [27, 42] to capture token relationships. Another line of research [38, 44, 48] proposes correcting decoding errors in later steps through remasking strategies. Nevertheless, these approaches either lack a systematic understanding of DLM limitations or primarily focus on modeling dependencies among decoded tokens, providing only partial improvements. To fully address these limitations, we first conduct a theoretical analysis of DLMs. We model the expressive limitation of DLMs as a distribution shift between the diffusion process and the ground-truth. We find that this shift is governed by three factors: (i) the capacity factor : the model’s ability to fit the target distribution; (ii) the independency factor : the model’s ability to select independent tokens at each decoding step; and (iii) the invariance factor : the model’s ability to select tokens that can be totally determined by the current context and remain invariant to masked positions. Limitations in any of these factors can lead to distribution deviation and result in unreasonable outputs. We provide two simple examples in the top left panel of Figure 1: (i) when the model lacks dependency awareness, it fails to capture relationships between tokens (e.g., ”cat and mat” or ”dog and bone”), leading to an implausible output such as ”cat sits on the bone”; and (ii) when the model lacks invariance, it may decode ”cat” without sufficient context, which should instead be ”car”. The first factor can be alleviated by increasing model scale, but a unified solution for all three factors is still lacking. Based on this insight, we design an unified solution via energy function for all three factors. 
+
+First , we focus on the invariance factor and generalize the re-weighting principle [51] from causal inference to text generation. This principle encourages the model to learn invariant mappings by down-weighting non-invariant samples and emphasizing invariant ones. Specifically, we propose an invariant energy (Inv-E) function to implement this idea. Inv-E uses a proxy model to estimate possible future decoding over the entire sequence to capture the token invariance, where it assigns low energy to tokens that remain invariant under the current context and high energy otherwise. We further prove that this estimation can be achieved with a bounded error. Second , based on the principle of energy additivity [24, 15], we integrate an existing energy function for the independency factor (Ind-E) [42] with our Inv-E, resulting in an unified energy function (Uni-E). Uni-E is model-agnostic and can be parameterized at different scales using pretrained parameters (Uni-EDLM-AR) or NCE fine-tuning (Uni-EDLM-NCE). We also show that Uni-E has a unique advantage: its partition function can be computed analytically, enabling accurate and efficient energy computation without Markov Chain Monte Carlo (MCMC) sampling. Third , we theoretically analyze the gap to the ground-truth distribution and show that Uni-EDLM achieves a strictly smaller gap than existing DLMs in non-independent or non-invariant scenarios. To validate our method, we conduct experiments on multiple benchmark datasets for both DLMs and Diffusion Large Language Models (DLLMs). For DLMs, Uni-E consistently outperforms baselines and achieves around a 22% speedup while maintaining generation quality comparable to AR models. For DLLMs, Uni-E improves performance across several benchmarks and significantly mitigates degradation as parallelism increases, consistently enhancing performance at different decoding speeds. The code is provided via link: https://github.com/ BlueWhaleLab/Uni-E .3Unified Energy for Invariant and Independent Decoding in Diffusion Language Models 
+
+2. Related Work 
+
+Diffusion Language Models . Diffusion Language Models (DLMs) are proposed as an alternative to auto-regressive (AR) text generation, allowing multiple tokens to be generated in parallel [26]. Early work mainly focused on extending diffusion process from continuous data to discrete text [2, 19, 5], which led to the development of DLMs [28, 2, 35, 1]. Building on this, later studies scaled these models to larger sizes, developing Diffusion Large Language Models (DLLMs) that achieve performance close to Large Language Models (LLMs) [32, 45, 4]. However, their performance still lags behind AR-based methods, especially when reducing the decoding steps. This is because they predict multiple tokens independently, making it hard to capture the relationships between them [25]. 
+
+Dependency-aware Parallel Decoding. To address this, one line of research uses score guid-ance [45, 25, 29] or leverages a proxy model [27, 42, 20] to estimate token relationships. For example, EDLM [42] introduces energy-based guidance from an AR model to compensate for dependency effects, while speculative decoding [20] combines AR logits to improve generation. However, these methods mainly focus on dependency while overlooking another crucial factor: invariance. Another line of work designs remask strategy [38, 44, 48] to fix the decoding ”error” in future steps, but these these meth-ods are heuristic and unstable without theoretical guarantees, and generally require large decoding steps to perform well. We provide a detailed comparision with remask methods in Appendix 7.8. In this work, we provide a systematic analysis of the performance gap and propose a unified solution to capture all these factors. 
+
+3. Preliminaries 
+
+Diffusion Language Model (DLM): We denote the token sequence as x and we use subscript to denote the diffision time step and superscript to denote the position. For example, xit represents the 
+
+i-th token in the sequence at time step t. As for the diffusion process, we consider the time step range from 0 to 1 where x0 denotes the clean data and x1 denotes the fully noised data. Given discrete data 
+
+xt−1 at time t − 1, one diffusion step is defined as q(xt|xt−1) := Cat (xt; p = xt−1Qt) where Cat (.; p) is a categorical distribution parameterized by p, and Qt is the transition matrix. The forward process at time t is defined as q(xt|x0) := Cat (xt; p = x0 ¯Qt), where ¯Qt := Q1Q2... Qt. The reverse process at time t is defined as: 
+
+q(xt−1|xt, x0) := q(xt|xt−1, x0)q(xt−1|x0)
+
+q(xt|x0) = Cat (xt−1; p = xtQTt ⊙ x0 ¯Qt−1
+
+x0 ¯QtxTt
+
+). (1) In this paper, we focus on masked diffusion language models (MDLMs) where the forward process replaces each unmasked token with a mask token m with probability (1 −αt) at time t, thus the process between any two time steps 0 < s < t < 1 is simplified as q(xt|xs) = Cat (xt; αt/sxs + (1 − αt/s)m)
+
+where αt/s = αt/αs. The backward process is computed from q(xt−1|xt, x0) as: 
+
+q(xs|xt, x0) = 
+
+
+
+Cat (xs; xt), if xt̸ = m
+
+Cat (xs; (1 − αs)m + ( αs − αt)x0
+
+1 − αt
+
+). if xt = m (2) MDLMs parameterize the backward process using a denoising model fθ(xt, t ) to approximate x0 in Eq. 2. In practice, they adopt an independence assumption: fθ(xt, t ) = ∏Ll=1 fθ(xlt, t ), which leads to 
+
+pθ(xs|xt) = ∏Ll=1 pθ(xls|xt) where L is the sequence length. 
+
+Distribution of DLM: Given a sequence x0, we consider K intermediate time steps ( t =1, 2, . . . , K ), and the deriving decoding order is denoted as {Z1, Z 2, ..., Z K }. Each Zt = {i|i ∈{1, 2, ..., L }} is an index set representing the decoding positions at step t. Based on the framework proposed in [23, 8], we model the distribution of DLM by two parts: a decoding planner μϕ and a distribution learner pθ. The decoding planner μϕ determines the decoding order, while the distri-4Unified Energy for Invariant and Independent Decoding in Diffusion Language Models bution learner pθ predicts the token distribution. The overall DLM distribution across all possible decoding orders is defined as Pdlm (x0) = ∏Kt=0 μϕ(Zt|Z>t , xt+1 )pθ(xZt 
+
+> t
+
+|xt+1 ), where Z>t is the union of Zt+1 , Z t+2 , ..., Z K and xZt 
+
+> t
+
+denotes the tokens of xt positioned by Zt. For a specific decoding order 
+
+Ψ = {Z1, Z 2, ..., Z K } the distribution learner is written as pθ(x0, Ψ) = ∏Kt=0 pθ(xZt 
+
+> t
+
+|xt+1 ).
+
+4. Method 
+
+In this section, we first conduct a theoretical analysis about the limitation of Diffusion Language Models (DLMs). We then propose the invariant energy (Inv-E) as the re-weighting function for invariant decoding. Next, we combine Inv-E with the existing independent energy (Ind-E) to obtain a unified energy (Uni-E), which can be easily parameterized and eliminates the need for partition estimation. Finally, we theoretically analyze the effectiveness of our method. The overall framework of our Uni-E is shown in Figure 1. 
+
+4.1 Expressive Limitation of DLMs 
+
+To better understand the expressive limitations of DLMs, we analyze the distribution shift from the ground-truth distribution, defined as the Kullback –Leibler (KL) divergence between the model distribution and the ground-truth distribution: 
+
+KL (π(x0)|| Pdlm (x0)) = Eπ(x0)[log π(x0)
+
+Pdlm (x0) ] = Eπ(x0),μ ϕ(x0,Ψ) [log π(x0)
+
+pθ(x0, Ψ) ], (3) where π(.) denotes the ground-truth distribution. Given a specific order Ψ = {Z1, Z 2, ..., Z K }, the KL divergence can be expanded as: 
+
+log π(x0)
+
+pθ(x0, Ψ) = ∑
+
+> t
+
+log π(xZt 
+
+> t
+
+|x0 − xZt 
+
+> t
+
+)
+
+pθ(xZt 
+
+> t
+
+|x0 − xZt 
+
+> t
+
+) = ∑
+
+> t
+
+[
+
+log π(xZt 
+
+> t
+
+|x0 − xZt 
+
+> t
+
+)
+
+π(xZt 
+
+> t
+
+|xt+1 ) + log π(xZt 
+
+> t
+
+|xt+1 )
+
+∏ 
+
+> i∈Zt
+
+π(xit|xt+1 )+log 
+
+∏ 
+
+> i∈Zt
+
+π(xit|xt+1 )
+
+∏ 
+
+> i∈Zt
+
+pθ(xit|xt+1 ) + log 
+
+∏ 
+
+> i∈Zt
+
+pθ(xit|xt+1 )
+
+pθ(xZt 
+
+> t
+
+|xt+1 ) + log pθ(xZt 
+
+> t
+
+|xt+1 )
+
+pθ(xZt 
+
+> t
+
+|x0 − xZt 
+
+> t
+
+)
+
+]
+
+,
+
+(4) where x0 − xZt 
+
+> t
+
+denotes the relative complement of xZt 
+
+> t
+
+to x0. We find that the KL divergence is governed by the following three factors: (i) Capacity Factor : This factor corresponds to the third term of the expanded KL divergence, which describes the model’s capacity to fit the target distribution: 
+
+Llr := log 
+
+∏ 
+
+> i∈Zt
+
+π(xit|xt+1 )
+
+∏ 
+
+> i∈Zt
+
+pθ(xit|xt+1 ) = ∑
+
+> i∈Zt
+
+log π(xit|xt+1 )
+
+pθ(xit|xt+1 ) . (5) (ii) Dependency Factor : This factor corresponds to the second and fourth terms: 
+
+Ldp := log π(xZt 
+
+> t
+
+|xt+1 )
+
+pθ(xZt 
+
+> t
+
+|xt+1 ) + log 
+
+∏ 
+
+> i∈Zt
+
+pθ(xit|xt+1 )
+
+∏ 
+
+> i∈Zt
+
+π(xit|xt+1 ) = log π(xZt 
+
+> t
+
+|xt+1 )
+
+∏ 
+
+> i∈Zt
+
+π(xit|xt+1 ) + log 
+
+∏ 
+
+> i∈Zt
+
+pθ(xit|xt+1 )
+
+pθ(xZt 
+
+> t
+
+|xt+1 ) . (6) One way to reduce this factor is to simultaneously reduce: i) the divergence between pθ(xZt 
+
+> t
+
+|xt+1 ) and 
+
+π(xZt 
+
+> t
+
+|xt+1 ); and ii) the divergence between pθ(xit|xt+1 ) and π(xit|xt+1 ) for all positions. However, this is almost infeasible because modeling the joint distribution pθ(xZt 
+
+> t
+
+|xt+1 ) is difficult, and sampling from 
+
+π(xZt 
+
+> t
+
+|xt+1 ) is intractable. An alternative way is to identify independent tokens that can be decoded in one denoising step, such that π(xZt 
+
+> t
+
+|xt+1 ) = ∏ 
+
+> i∈Zt
+
+π(xit|xt+1 ), and a well-optimized pθ should also satisfy pθ(xZt 
+
+> t
+
+|xt+1 ) = ∏ 
+
+> i∈Zt
+
+pθ(xit|xt+1 ). Therefore, this factor is totally bounded by the independency of Zt.5Unified Energy for Invariant and Independent Decoding in Diffusion Language Models Lack of dependency     
+
+> The [MASK1] sits on the [MASK2]
+> Ground-truth:"cat, mat"/"dog, bone"
+> cat 50% MASK1:
+> MASK2:
+> dog 50%
+> mat 50% bone 50%
+> DLM independent prediction
+> Output: The cat sits on the bone
+> Absurd combination!
+
+Existing DLM Challenges 
+
+Lack of invariance        
+
+> "cat" should be "car"
+> Sentence collapse!
+> Ctx t: the [MASK1] runs on the [MASK2].
+> Ctx s: the cat runs on the [MASK2].
+> Ctx 0: the cat runs on the road.
+> Step Step Step
+> MASK2:road
+
+... 
+
+> Inv-E Ind-E
+
+Independent 
+
+Energy 
+
+> Uni-E
+
+Dependency  
+
+> cat mat
+> Proxy AR model
+> Ind-E
+> Ind-E calculation
+
+Invariant 
+
+Energy   
+
+> cat car road
+> Proxy AR model
+> Inv-E calculation
+> Inv-E(car+road)
+> Inv-E(cat+road)
+
+Invariance High probability 
+
+Ind-E + Inv-E 
+
+Unified Energy (Uni-E) 
+
+> Candidate
+> generation
+> (DLM logits)
+> Masked sequence
+
+Uni-E Decoding Workflow  
+
+> Medium
+> Low
+> High
+> Uni-E =
+> Calculate Ind-E
+> +
+> Calculate Inv-E
+> Conduct inference
+> road
+> MASK1: cat
+
+...   
+
+> Ground-truth: the car runs on the road.
+
+Figure 1: Challenges of Diffusion Language Models and the framework of our unified energy (Uni-E). Uni-E uses a proxy model to capture both dependency and invariance to guide the decoding process. (iii) Invariance Factor : This factor corresponds to the first and last terms: 
+
+Liv := log π(xZt
+
+t |x0 − xZt
+
+t )
+
+pθ(xZt
+
+t |x0 − xZt
+
+t ) + log pθ(xZt
+
+t |xt+1 )
+
+π(xZt
+
+t |xt+1 ) = log π(xZt
+
+t |x0 − xZt
+
+t )
+
+π(xZt
+
+t |xt+1 ) + log pθ(xZt
+
+t |xt+1 )
+
+pθ(xZt
+
+t |x0 − xZt
+
+t ) . (7) Due to the same reasons of sampling and joint distribution modeling, we require that the decoded tokens at each step can be fully determined. This leads to π(xZt
+
+t |x0 − xZt
+
+t ) = π(xZt
+
+t |xt+1 ). And a well-optimized model should satisfy pθ(xZt
+
+t |x0 − xZt
+
+t ) = pθ(xZt
+
+t |xt+1 ). This factor describes invariance in decoding: the distribution of decoded tokens (e.g. xZt
+
+t ) should be fully determined by the current context (e.g. xt+1 ) and remain unchanged in subsequent steps. 
+
+4.2 Energy Function for Invariant Decoding 
+
+In order to address the expressive limitations of DLMs, we first propose an effective way to guide invariant decoding for the invariance factor. Our solution is inspired by the re-weighting principle from causal inference [51], whose idea is that models can learn invariant representations across dif-ferent feature parts (e.g., objects and background) by reweighting samples using clustering, graph partitioning, or neural network guidance. We generalize this principle to text generation in two ways: (i) we treat tokens in the sequence as basic units and consider their invariance, and (ii) we adjust the token distribution using a re-weighting function to ensure that the posterior distribution of the current decoding is close to the posterior distribution of its invariant part. Specifically, for the i-th token at step t, we assume its invariant part is Vi, satisfying π(xit|x0 − xi
+
+0) = π(xit|xVi
+
+0 ). This re-weighting function enforces W(xit, xt+1 )pθ(xit|xt+1 ) = π(xit|xVi
+
+0 ). We define the current context intersection as 
+
+V+
+
+i := Vi ∩ Z>t and the current context difference as V−
+
+i := Vi − Z>t . The re-weighting function can then be derived as: 
+
+W(xit, xt+1 ) = π(xit|xVi
+
+0 )
+
+pθ(xit|xt+1 ) = π(xit|xV+
+
+> i
+
+0 , xV−
+
+> i
+
+0 )
+
+pθ(xit|xt+1 ) = π(xi
+
+0, xV−
+
+> i
+
+0 |xV+
+
+> i
+
+0 )
+
+π(xi
+
+0|xV+
+
+> i
+
+0 )π(xV−
+
+> i
+
+0 |xV+
+
+> i
+
+0 )
+
+π(xi
+
+0|xV+
+
+> i
+
+0 )
+
+pθ(xit|xt+1 ) . (8) Here, xV+ 
+
+> i
+
+is difficult to obtain directly, so we use a proxy AR-based model pAR (.|xt+1 ) to estimate 
+
+π(.|xV+ 
+
+> i
+
+). The reasons behind are: (i) xit remains invariant to the unmasked tokens in xt+1 except those in V+
+
+i , so xt+1 can serve as a valid conditioning context; (ii) an AR model pretrained on clean data x0 is well-suited to model this distribution, and its posterior can be computed efficiently as 
+
+pAR (x0|xt) = pAR (xt, x0 − xt)/ pAR (xt) = pAR (x0)/ pAR (xt) where pAR (xt) = ∑
+
+Zt pAR (xZt
+
+0 , x0 − xt)
+
+6Unified Energy for Invariant and Independent Decoding in Diffusion Language Models since the unmasked tokens are fixed and unchanged. We represent the re-weighting function as an energy function, called invariant energy (Inv-E), which is defined as: W(xit, xt+1 ) = exp (−Einv (xit,xt+1 ))   
+
+> F(xt)
+
+.Based on Eq. 8 we obtain the following energy formulation: 
+
+Einv (xit, xt+1 ) = log pθ(xit|xt+1 )
+
+pAR (xi
+
+> 0
+
+|xt+1 ) + log pAR (xV− 
+
+> i
+> 0
+
+|xt+1 )
+
+pAR (xV− 
+
+> i
+> 0
+
+|xi
+
+> 0
+
+, xt+1 )
+
+− logF (xt). (9) Another question is that the term log pAR (xV−  
+
+> i
+> 0|xt+1 )
+> pAR (xV−
+> i
+> 0|xi
+> 0,xt+1 )
+
+cannot be calculated directly, since the difference part V− 
+
+> i
+
+is unknown. Fortunately, it can be effectively estimated through Lemma 4.1. The detailed proof is provided in Appendix 7.4. 
+
+Lemma 4.1 (Invariance Sampling Estimation) . The invariance divergence term can be estimated by sampling Z<t . Given the sampled index set is Zs, the average estimation over all possible Zs satisfies the following property: 
+
+EZs
+
+{
+
+log pAR (xZs 
+
+> 0
+
+|xt+1 )
+
+pAR (xZs 
+
+> 0
+
+|xi
+
+> 0
+
+, xt+1 )
+
+}
+
+= βlog π(xV− 
+
+> i
+> 0
+
+|xt+1 )
+
+π(xV− 
+
+> i
+> 0
+
+|xi
+
+> 0
+
+, xt+1 )+ γ, (10) 
+
+where β is the approximation degree falling into (0 , 1] and γ is the approximation error between pAR (.)
+
+and π(.). If the sampling number is r and the index length of V− 
+
+> i
+
+and Z<t − V − 
+
+> i
+
+is x and y respectively, then the average β is rx+y .
+
+For each time step t, we randomly select another time step s satisfying 0 < s < t < 1. The forward diffusion produces two noised data xs and xt, where xt carries all masked tokens from xs. (i.e., 
+
+x0 mask 
+
+−−−→ xs mask 
+
+−−−→ xt). We treat xs as the ”next step” of xt and the decoding of the masked tokens in 
+
+xs is regarded as ”future decoding”(i.e., invariance sampling Zs). Based on the energy formulation in Eq. 9 and Lemma 4.1, Inv-E can be estimated as: 
+
+Einv (x0, xs, xt) = log pθ(xs|xt)
+
+pAR (xs|xt) + log pAR (x0|xt)
+
+pAR (x0|xs) − logF inv (xt), (11) where Finv (xt) is the partition function. Intuitively, the first term log pθ (xs|xt) 
+
+> pAR (xs|xt)
+
+corresponding to term 
+
+log p(xit|xt+1 ) 
+
+> pAR (xi
+> 0|xt+1 )
+
+in Eq. 9 describes the model ability to predict the next step distribution. The second term log pAR (x0|xt) 
+
+> pAR (x0|xs)
+
+acts as the Invariance Sampling Estimation describing the invariance, since if the decoding is invariant it will have no impact on the rest tokens (i.e., pAR (x0|xt) ≈ pAR (x0|xs)). 
+
+4.3 Unified Energy for Independent and Invariant Decoding 
+
+Based on our Inv-E, we further propose an unified energy (Uni-E) for all the factors. For the depen-dency factor, we adopt the independent energy (Ind-E) proposed in [42], which is defined as: 
+
+Eind (x0, xt) = log pθ(x0|xt)
+
+pAR (x0|xt) − logF ind (xt), (12) where Find (xt) is the partition function. The idea behind Ind-E is that the independence of parallel decoded tokens can be captured by an AR model, as it operates on the entire sequence and decodes tokens sequentially. More details can be found in [42]. We argue that Ind-E can be seamlessly integrated with Inv-E for two reasons: (i) Ind-E acts as the residual term for the DLM distribution, which has a similar form to the re-weighting function used in Inv-E; and (ii) energy functions can be 7Unified Energy for Invariant and Independent Decoding in Diffusion Language Models naturally combined due to the principle of additivity [24]. This leads to the unified energy (Uni-E): 
+
+Euni (x0, xs, xt) = Einv + Eind = log pθ(xs|xt)
+
+pAR (xs|xt) + log pθ(x0|xt)
+
+pAR (x0|xs) − logF (xt), (13) where F (xt) is the new partition function. This unified formulation simultaneously captures both dependency and invariance through the term log pθ (x0|xt) 
+
+> pAR (x0|xs)
+
+: the AR guidance models the dependency relationships (i.e., pθ(x0|xt) ≈ pAR (x0|xt)), while the decoding from xs/xt reflects the invariance (i.e., 
+
+pAR (x0|xt) ≈ pAR (x0|xs)). We parameterize the unified energy-based model (Uni-EBM) as: 
+
+Eϕ(x0, xs, xt) = log pθ(xs|xt)
+
+pAR (xs|xt) + log pθ(x0|xt)
+
+pAR (x0|xs) , (14) 
+
+Partition Function Estimation : Estimating the partition function is notoriously intractable. Tra-ditional methods like Markov Chain Monte Carlo (MCMC) sampling or importance sampling require a large number of samples, which is not only inefficient but also inaccurate. Here, we show that the partition function of Euni can be calculated analytically, avoiding intractable sampling and estimation .Based on the definition logF (xt) = log ∑ 
+
+> x0
+
+pθ(x0|xt)exp (−Eϕ(x0, xs, xt)) , we derive it as: 
+
+logF (xt) = log ∑
+
+> x0
+
+pθ(x0|xt) pAR (xs|xt)
+
+pθ(xs|xt)
+
+pAR (x0|xs)
+
+pθ(x0|xt) = log 
+
+{∑
+
+> x0
+
+pAR (x0|xs)
+
+}
+
++ log pAR (xs|xt)
+
+pθ(xs|xt) , (15) where ∑ 
+
+> x0
+
+pAR (x0|xs) = 1 , and the partition function is log pAR (xs|xt)  
+
+> pθ(xs|xt)
+
+. This closed-form partition provides a unique advantage: Uni-EBM avoids the need for intractable estimation and enables accurate computation of the evidence lower bound (ELBO). After applying the Uni-EBM Eϕ(x0, xs, xt) to the DLM, we obtain the unified energy-based DLM (Uni-EDLM) as: 
+
+pϕ,θ (x0|xt) = exp (−Eϕ(x0, xs, xt)) 
+
+F (xt) pθ(x0|xt). (16) 
+
+Uni-EDLM Parameters : Similar to the independent energy-based diffusion language model [42], there are two ways to obtain the model parameters of Uni-EDLM. The first is to utilize a pretrained AR model and a DLM to directly calculate Eϕ(x0, xs, xt), and we refer to the resulting model as Uni-EDLM-AR. The second one is to fine-tune the pretrained parameters using the Noise Contrastive Estimation (NCE) loss [14]. In this setting, we freeze the pretrained AR model and fine-tune the parameters of the DLM. We use the clean data x0 together with xs, xt as positive samples, and we sample ˆx0 from pθ(x0|xt) and derive ˆxs as negative samples. We refer to the fine-tuned model as Uni-EDLM-NCE. The loss is described as follows, and the training algorithm is in Appendix 7.1. 
+
+LN CE (ϕ, θ ) = Ex0,xt∼π,q {Exs∼q(.|xt,x0)log 11 + exp (Eϕ(x0, xs, xt)) + Eˆx0,ˆxs∼pθ (.|xt),q (.|xt,ˆx0)log 11 + exp (−Eϕ(ˆ x0, ˆxs, xt)) }.
+
+(17) 
+
+Inference of Uni-EDLM : We adapt the self-normalized importance sampling strategy [16, 22, 42] to Uni-EDLM, whose framework is shown at the bottom of Figure 1. At each time step t, we randomly select time step s < t . The importance sampling involves: (i) sampling multiple x0 candidates {xj
+
+> 0
+
+}kj=1 
+
+from the DLM in parallel; (ii) sampling xjs from xj 
+
+> 0
+
+and xt in parallel via the backward process in Eq. 2; (iii) feeding these tuples {(xj
+
+> 0
+
+, xjs, xt)}kj=1 into the energy function in batch to calculate their energies; and (iv) selecting the xj 
+
+> 0
+
+with the lowest energy. The selected xj 
+
+> 0
+
+is then fed into q(xt−1|xt, x0)
+
+to conduct one-step inference. In practice, we also define a sampling window with size w (w = 0 .2
+
+8Unified Energy for Invariant and Independent Decoding in Diffusion Language Models by default), and apply importance sampling only within the interval (1 − w, 1] . The full inference algorithm is provided in Appendix 7.2. 
+
+Effectiveness Discussion : We analyze the effectiveness of Uni-EDLM with respect to the three lim-itation factors. First we ask: Can Uni-EDLM reduce the model distribution shift in non-independent or non-invariant decoding scenarios? Our answer is yes . The effectiveness of Uni-EDLM on depen-dency and invariance factors is formalized in Lemma 4.2, with the proof provided in Appendix 7.5. Besides, Uni-EBM can be integrated with any scale models to obtain Uni-EDLMs with various size. This addresses the limitation related to the capacity factor. 
+
+Lemma 4.2 (Effectiveness of Uni-EDLM) . Across all the possible decodings, the Kullback-Leibler divergence between Uni-EDLM and the ground-truth distribution is strictly lower than that between DLM and the ground-truth distribution in non-independent or non-invariant scenarios. 
+
+5. Experiments 
+
+5.1 Experiments on Diffusion Language Models (DLMs) Settings : Following prior works [42, 36, 35, 1], we use OpenWebText (OWT) [12] for fine-tuning and evaluation, along with seven zero-shot datasets: PTB [30], Wikitext [31], LM1B [7], Lambada [33], AG News [49], Pubmed and Arxiv [10]. The baselines include: (i) Transformer (AR) [37]; (ii) traditional DLMs: MDLM [35], SEDD [28], Duo [36] and Block Diffusion [1]; (iii) dependency-aware DLMs: EDLM-(AR and NCE) [42] and DCD [27]; and (iv) remask: ReMDM [38]. Perplexity (PPL) and Generative Perplexity (Gen PPL) are used to measure effectiveness and we follow [42] to use average wall-clock time to evaluate efficiency. More details are provided in Appendix 7.6. 
+
+Implementation Details : For the AR models, we follow common practice and use GPT-2-small [34, 35, 42] for our method and baselines. We use the pretrained MDLM [35] as the diffusion backbone. These pretrained models are used directly for Uni-EDLM-AR. For Uni-EDLM-NCE, we freeze the AR model and fine-tune the MDLM parameters using 4xH200 GPUs. The maximum fine-tuning step is 1,000,000, with a learning rate of 3e-4. The per-GPU batch size is 16. We save checkpoint every 10,000 steps and select the best model based on the dev set (randomly select 0.1% data). We set the candidate size k as 2 for importance sampling and set the window size w as 0.2 by default. Table 1: Perplexity of all the methods. The Lower is better. ∗ denotes reproduced results, † taken from [42], ‡ taken from [36]. The best result is in bold and the second best is underlined (except AR).                                                                                         
+
+> Methods OWT PTB WikiText LM1B Lambada AG News Pubmed Arxiv AR †17.56 82.05 25.75 51.25 51.28 52.09 49.01 41.73 SEDD †24.56 100.09 34.28 68.20 49.86 62.09 44.53 38.48 MDLM †23.83 95.26 32.83 67.01 47.52 61.15 41.89 37.37 Duo ‡23.25 89.35 33.57 73.86 49.78 67.81 44.48 40.39 Block Diffusion ∗21.27 97.23 31.82 61.39 49.50 62.16 42.18 38.74 DCD ∗23.33 95.69 35.20 66.51 46.71 61.35 47.65 40.09 EDLM-NCE †21.52 93.21 30.77 63.19 46.92 60.02 41.80 36.63 EDLM-CoAR †17.58 89.73 28.31 60.23 50.04 57.94 46.31 39.02 Uni-EDLM-AR 17.41 87.36 26.62 60.51 46.62 58.40 41.35 37.37 Uni-EDLM-NCE 16.54 86.18 24.01 58.14 48.26 58.66 42.74 35.53
+
+Perplexity (PPL) : The PPL results are shown in Table 1. Uni-EDLM significantly outperforms traditional DLMs. In particular, compared to the backbone MDLM, it achieves a 26.9% improvement on OWT without fine-tuning. After fine-tuning, Uni-EDLM even achieves lower perplexity than the AR model. In addition, Uni-EDLM performs better than other energy baselines under both pre-training and fine-tuning settings. These results demonstrate the effectiveness of Uni-EDLM. 9Unified Energy for Invariant and Independent Decoding in Diffusion Language Models Table 2: Generative Perplexity under Llama2, Llama3, and GPT2. ↓ means the lower is better. The best results are highlighted with bold . ∗ denotes reproduced results, † taken from [42].                                                                                    
+
+> Method Timesteps Llama2 ↓Llama3 ↓GPT2 ↓Entropy Data -7.0 9.4 14.7 7.7 AR †1024 22.9 40.3 35.7 8.1 SEDD †128 / 256 / 512 / 1024 46.3 / 36.1 / 32.5 / 27.3 86.6 / 65.0 / 54.3 / 43.7 78.5 / 64.8 / 52.2 / 41.5 8.1 / 7.8 / 7.7 / 7.6 MDLM †128 / 256 / 512 / 1024 48.5 / 37.2 / 30.6 / 27.6 86.7 / 66.9 / 52.6 / 44.6 78.8 / 66.8 / 52.4 / 42.6 8.1 / 7.9 / 7.8 / 7.6 Duo ∗128 / 256 / 512 / 1024 45.8 / 35.6 / 29.5 / 25.4 85.3 / 65.4 / 51.9 / 43.7 74.1 / 63.2 / 48.6 / 36.6 7.9 / 7.7 / 7.6 / 7.6 Block Diffusion ∗128 / 256 / 512 / 1024 47.1 / 37.9 / 31.1 / 26.7 89.8 / 69.6 / 54.1 / 45.0 83.9 / 66.7 / 51.8 / 40.8 7.7 / 7.5 / 7.3 / 7.1 DCD ∗128 / 256 / 512 / 1024 43.8 / 36.6 / 28.5 / 22.2 82.4 / 64.1 / 48.4 / 40.9 74.3 / 63.5 / 47.3 / 38.7 7.9 / 7.6 / 7.6 / 7.5 ReMDM ∗128 / 256 / 512 / 1024 47.2 / 35.4 / 29.6 / 21.8 86.4 / 64.0 / 42.8 / 33.0 76.4 / 64.1 / 44.6 / 26.9 8.1 / 7.7 / 7.7 / 7.5 EDLM-AR †128 / 256 / 512 / 1024 43.2 / 34.7 / 26.8 / 19.0 83.2 / 62.2 / 44.4 / 28.8 71.3 / 62.1 / 42.0 / 25.5 8.0 / 7.9 / 7.6 / 7.2 EDLM-NCE †128 / 256 / 512 / 1024 43.2 / 35.7 / 26.3 / 19.6 83.5 / 62.9 / 44.1 / 28.8 71.7 / 61.7 / 42.5 / 25.5 8.0 / 7.9 / 7.6 / 7.3 Uni-EDLM-AR 128 / 256 / 512 / 1024 40.4 / 32.4 / 23.2 / 13.4 79.9 /56.5 / 37.6 / 19.2 68.2 / 55.5 / 37.6 / 19.2 8.1 / 7.9 / 7.5 / 7.2 Uni-EDLM-NCE 128 / 256 / 512 / 1024 40.6 / 32.2 /22.8 /13.1 80.0 / 57.3 / 37.5 /18.9 69.4 / 54.3 /37.5 /18.9 8.1 / 7.9 / 7.5 / 7.2
+
+Generative Perplexity (Gen PPL) : The Gen PPL under different oracle Large Language Models (LLMs), along with entropy, is reported in Table 2. In this evaluation we set energy-based sampling window size w as 1 to show the full power of Uni-E. Uni-EDLM consistently outperforms the baselines across all timesteps. Moreover, Uni-EDLM achieves comparable (22.8 vs 22.9 on Llama2) or better (37.5 vs 40.3 on Llama3) performance than the AR model while using only half of the timesteps (512). This indicates that Uni-E improves generation quality and reduces the number of required timesteps. Furthermore, the improvement over EDLM increases as the number of timesteps grows. A possible reason is that Inv-E reduces non-invariant error accumulation, which benefits more for longer timestep. The remask strategy can only perform well in large timesteps as it needs more steps to fix ”error”. As for entropy, Uni-EDLM maintains a similar level of diversity as others. 128 256 512 1024 
+
+Decoding Steps 
+
+0
+
+15 
+
+30 
+
+45 
+
+> Generative Perplexity
+> Uni-EDLM
+> Ind-EDLM
+> Inv-EDLM
+> No-Energy
+
+Figure 2: Ablation studies. Inv-EDLM only uses invariant energy. Ind-EDLM only uses independent energy. 
+
+Ablation Studies : We use Uni-EDLM-AR as an ex-ample to conduct an ablation study to examine the influence of different energy terms. To show the full effect, we also set the window size w as 1. The Gen PPL via Llama2 is shown in Figure 2. No energy has the same performance as the diffusion backbone MDLM. Using only the invariant en-ergy (Inv-EDLM) provides limited benefits at small timesteps but yields significant improvements at larger timesteps. This observation suggests that invariant decoding is more bene-ficial at larger timesteps. In contrast, at smaller timesteps, independence becomes more important, as more tokens are decoded at each step. Using only the independent energy (Ind-EDLM) shows a larger gap compared to Uni-EDLM at larger timesteps, due to the lack of invariance modeling. 1 2 4 8
+
+Candidate Size k     
+
+> 0
+> 10
+> 20
+> 30
+> 40
+> Generative Perplexity  256 steps
+> 512 steps
+> 1024 steps
+> 00.2 0.4 0.6 0.8
+
+Sampling Window w     
+
+> 0
+> 10
+> 20
+> 30
+> 40
+> Generative Perplexity  256 steps
+> 512 steps
+> 1024 steps
+> 0510 15 20
+
+Wall-clock Time (s)      
+
+> 20
+> 30
+> 40
+> 50
+> 60
+> Generative Perplexity  Uni-EDLM(Ours)
+> EDLM
+> MDLM
+> Block Diffusion
+> AR
+> 0510 15 20 25
+
+Wall-clock Time (s) 
+
+> 7.0
+> 7.4
+> 7.8
+> 8.2
+> 8.6
+> 9.0
+> Entropy
+> Uni-EDLM(Ours)
+> EDLM
+> MDLM
+> Block Diffusion
+> AR
+
+Figure 3: Hyper-parameter and efficiency analysis. From left to right, the first two figures show the influence of candidate size k and sampling window w respectively; the last two figures show the trade-off between Gen PPL/entropy and wall-clock time. Llama2 is used as the oracle model. 10 Unified Energy for Invariant and Independent Decoding in Diffusion Language Models 
+
+Analysis : We conduct a hyperparameter study and efficiency analysis, with results shown in Figure 3. We use Uni-EDLM-AR as the example, where k is set as 2 and w is set as 0.2 by default. For the candidate size k, we find that extra candidate sampling mainly benefits small timesteps, with limited gains at larger timesteps. This is because when the number of timesteps is small, additional candidate sampling can improve decoding independency. For the sampling window w, we observe that applying energy function in the first 40% steps can significantly improves generation quality, while the gain decreases substantially in the remaining 60% steps (less than 3 points). This is consistent with the observation in [42] that most errors occur in the early decoding steps. Based on this, we argue that applying Uni-E only in the first 20% of steps with a candidate size of 2 is sufficient. As shown in the trade-off between Gen PPL and average wall-clock time, Uni-EDLM requires less time than the AR model to achieve the same performance, providing about a 22% speedup (10.5s vs. 13.5s). In terms of entropy, all DLMs demonstrate better generative diversity than the AR model. 
+
+Case Study : Case study is given in Appendix 7.12 to show the effects of invariance and inde-pendency. 
+
+5.2 Experiments on Diffusion Large Language Models (DLLMs) 
+
+Uni-E is model agnostic and can be easily integrated into DLLMs: for xt we generates k clean can-didates {xj
+
+> 0
+
+}kj=1 from the DLLM logits. To better align with the decoding trajectory of DLLMs, we use the highest logit of tokens as the weight to select m unmasked positions for each xj
+
+> 0
+
+, masking the remaining positions in xj 
+
+> 0
+
+to generate xjs. We calculate energy via Eq. 14 and select the xjs with lowest energy as the decoding result. The algorithm of this process are provided in Appendix 7.3. This integration is similar to speculative decoding [20, 11], but the key difference is that existing specula-tive decodings are heuristic and ignore the decoding invariance. We provide a detailed discussion in Appendix 7.7. 
+
+Settings: Following [20], we use the pretrained Qwen2.5-0.5B [43] as the proxy AR model, and LLaDa-8B-Instruct [32] and Dream-7B-Instruct [45] as the DLLM backbones. We use these models to compute Uni-E directly. We set k = 3 and m = 4 for energy-based decoding, and apply energy decoding only in the first 20% of decoding steps. We evaluate on the following benchmark datasets: MATH500 [18], GSM8K [9], MBPP [3], LiveCodeBench V2(LCB V2) [21], LiveBench [40], MMLU [17] and HellaSwag [47]. We compare against (i) Qwen2.5-0.5B, Qwen2.5-7B [43], and Llama3.1-8B [13]; (ii) Speculative decoding APD [20]; (iii) Dependency decoding DAWN [29]; and (iv) Remask CORE [48]. The detailed settings are provided in Appendix 7.9. Table 3: Benchmark results. † taken from [39]. ‡ taken from [43]. ∗ means reproduced results.                                                                                                                 
+
+> Model MATH500 GSM8K MBPP LCB V2 LiveBench MMLU HellaSwag Qwen2.5-7B †74.0 89.9 74.9 26.9 31.1 74.2 80.2 Qwen2.5-0.5B ‡33.8 41.6 39.3 10.4 12.1 47.5 52.1 LLaDa-8B ∗35.2 78.1 34.4 5.8 4.1 57.3 68.2 +DAWN ∗38.3 (+3.1) 79.0 (+0.9) 33.6 (-0.8) 5.5 (-0.3) 4.8 (+0.7) 58.6 (+1.3) 68.8 (+0.6) +APD ∗36.8 (+1.6) 77.5 (-0.6) 32.6 (-1.8) 7.1 (+1.3) 6.3 (+2.2) 60.5 (+3.2) 69.6 (+1.4) +CORE ∗35.6 (+0.4) 78.7 (+0.6) 33.9 (-0.5) 4.9 (-0.9) 3.0 (-1.1) 56.5 (-0.8) 68.0 (-0.2) +Ind-Energy 37.6 (+2.4) 79.5 (+1.4) 34.9 (+0.5) 9.2 (+3.4) 8.6 (+4.5) 62.7 (+5.4) 69.9 (+1.7) +Inv-Energy 36.5 (+1.3) 78.7 (+0.6) 35.0 (+0.6) 7.8 (+2.0) 5.7 (+1.6) 59.4 (+2.1) 69.0 (+0.8) +Uni-Energy 39.2 (+4.0) 80.1 (+2.0) 35.2 (+0.8) 10.5 (+4.7) 10.9 (+6.8) 66.5 (+9.2) 71.2 (+3.0) Dream-7B ∗34.4 69.7 55.4 7.5 7.1 61.8 70.6 +APD ∗35.9 (+1.5) 71.4 (+1.7) 55.8 (+0.4) 9.0 (+1.5) 8.2 (+1.1) 61.3 (-0.5) 71.3 (+0.7) +CORE ∗34.6 (+0.2) 70.1 (+0.4) 56.0 (+0.6) 6.3 (-1.2) 6.5 (-0.6) 62.2 (+0.4) 69.8 (-0.8) +Ind-Energy 35.7 (+1.3) 71.3 (+1.6) 56.7 (+1.3) 9.8 (+2.3) 9.3 (+2.2) 62.4 (+0.6) 72.6 (+2.0) +Inv-Energy 35.2 (+0.8) 70.2 (+0.5) 56.3 (+0.9) 8.1 (+0.6) 8.8 (+1.7) 62.7 (+0.9) 71.4 (+0.8) +Uni-Energy 36.4 (+2.0) 71.9 (+2.2) 57.2 (+1.8) 11.1 (+3.6) 9.9 (+2.8) 63.2 (+1.4) 73.7 (+3.1)
+
+11 Unified Energy for Invariant and Independent Decoding in Diffusion Language Models 
+
+Results: Table 3 presents performance across benchmark datasets and full results are in Ap-pendix 7.11. Applying Uni-E consistently improves the performance of DLLMs, with gains exceeding those of APD and DAWN. This advantage is likely due to Uni-E jointly modeling both indepen-dency and invariance. CORE has limited performance since the remask strategy is unstable. Across MATH500, GSM8K, LCB V2, MMLU, and HellaSwag, Uni-E outperforms both the AR proxy model and the corresponding DLLM, demonstrating its effectiveness. In contrast, using only independent energy (Ind-E) or invariant energy (Inv-E) yields limited improvements, which is consistent with the observations in Figure 2, suggesting that modeling only dependency or invariance alone is insufficient. 30 40 50 60 70 80 
+
+> Throughput(tokens/sec)
+> 20
+> 25
+> 30
+> 35
+> 40
+> Accuracy(%)
+> Accuracy vs Throughput
+> Uni-Energy
+> LlaDa-8B
+> APD
+> DAWN
+
+Figure 4: Efficiency Analysis 
+
+Analysis: To evaluate efficiency, we follow [20] and measure throughput as the average number of tokens generated per second. We use MATH500 as an example. The results are shown in Figure 4, we observe that increasing decoding parallelism significantly degrades the performance of DLLMs. Incorporating proxy AR models such as APD or Uni-E mitigates this degradation, as they partially capture token dependencies. Notably, Uni-Energy consistently achieves better performance at the same throughput. Although it introduces extra computational cost, it improves generation quality and enables more tokens to be decoded both independently and invariantly. We provide the hyper-parameter analysis in Appendix 7.10. 
+
+6. Conclusion 
+
+In this paper, we first analyze the gap between Diffusion Language Models (DLMs) and the ground-truth distribution, which is governed by: (i) model capacity, (ii) dependency, and (iii) invariance. To address all these factors, we then propose an unified energy (Uni-E) that combines an invariant energy (Inv-E) and an independent energy (Ind-E). We also give theoretical analysis to show that Uni-E can be calculated efficiently and accurately, and can mitigate the distribution shift caused by dependent or non-invariant decoding. Finally, we conduct extensive experiments on both Diffusion Language Models (DLMs) and Diffusion Large Language Models (DLLMs) to demonstrate its effectiveness. 12 Unified Energy for Invariant and Independent Decoding in Diffusion Language Models 
+
+Bibliography 
+
+[1] Marianne Arriola, Aaron Gokaslan, Justin T Chiu, Zhihan Yang, Zhixuan Qi, Jiaqi Han, Subham Sekhar Sahoo, and Volodymyr Kuleshov. “Block diffusion: Interpolating between autoregressive and diffusion language models.” In: arXiv preprint arXiv:2503.09573 (2025). [2] Jacob Austin, Daniel D Johnson, Jonathan Ho, Daniel Tarlow, and Rianne Van Den Berg. “Struc-tured denoising diffusion models in discrete state-spaces.” In: Advances in neural information processing systems 34 (2021), pp. 17981–17993. [3] Jacob Austin, Augustus Odena, Maxwell Nye, Maarten Bosma, Henryk Michalewski, David Dohan, Ellen Jiang, Carrie Cai, Michael Terry, Quoc Le, et al. “Program synthesis with large language models.” In: arXiv preprint arXiv:2108.07732 (2021). [4] Tiwei Bie, Maosong Cao, Kun Chen, Lun Du, Mingliang Gong, Zhuochen Gong, Yanmei Gu, Jiaqi Hu, Zenan Huang, Zhenzhong Lan, et al. “Llada2.0: Scaling up diffusion language models to 100b.” In: arXiv preprint arXiv:2512.15745 (2025). [5] Andrew Campbell, Joe Benton, Valentin De Bortoli, Thomas Rainforth, George Deligiannidis, and Arnaud Doucet. “A continuous time framework for discrete denoising models.” In: Advances in Neural Information Processing Systems 35 (2022), pp. 28266–28279. [6] Yupeng Chang, Xu Wang, Jindong Wang, Yuan Wu, Linyi Yang, Kaijie Zhu, Hao Chen, Xiaoyuan Yi, Cunxiang Wang, Yidong Wang, et al. “A survey on evaluation of large language models.” In: 
+
+ACM transactions on intelligent systems and technology 15.3 (2024), pp. 1–45. [7] Ciprian Chelba, Tomas Mikolov, Mike Schuster, Qi Ge, Thorsten Brants, Phillipp Koehn, and Tony Robinson. “One billion word benchmark for measuring progress in statistical language modeling.” In: arXiv preprint arXiv:1312.3005 (2013). [8] Sitan Chen, Kevin Cong, and Jerry Li. “Optimal inference schedules for masked diffusion mod-els.” In: arXiv preprint arXiv:2511.04647 (2025). [9] Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser, Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, et al. “Training verifiers to solve math word problems.” In: arXiv preprint arXiv:2110.14168 (2021). [10] Arman Cohan, Franck Dernoncourt, Doo Soon Kim, Trung Bui, Seokhwan Kim, Walter Chang, and Nazli Goharian. “A discourse-aware attention model for abstractive summarization of long documents.” In: Proceedings of the 2018 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 2 (Short Papers) . 2018, pp. 615–621. [11] Yifeng Gao, Ziang Ji, Yuxuan Wang, Biqing Qi, Hanlin Xu, and Linfeng Zhang. “Self speculative decoding for diffusion large language models.” In: arXiv preprint arXiv:2510.04147 (2025). [12] Aaron Gokaslan and Vanya Cohen. OpenWebText Corpus . http://Skylion007.github.io/ OpenWebTextCorpus . 2019. [13] Aaron Grattafiori, Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Alex Vaughan, et al. “The llama 3 herd of models.” In: arXiv preprint arXiv:2407.21783 (2024). [14] Michael Gutmann and Aapo Hyvärinen. “Noise-contrastive estimation: A new estimation prin-ciple for unnormalized statistical models.” In: Proceedings of the thirteenth international confer-ence on artificial intelligence and statistics . JMLR Workshop and Conference Proceedings. 2010, pp. 297–304. [15] Tuomas Haarnoja, Haoran Tang, Pieter Abbeel, and Sergey Levine. “Reinforcement learning with deep energy-based policies.” In: International conference on machine learning . PMLR. 2017, pp. 1352–1361. 13 Unified Energy for Invariant and Independent Decoding in Diffusion Language Models [16] John Hammersley. Monte carlo methods . Springer Science & Business Media, 2013. [17] Dan Hendrycks, Collin Burns, Steven Basart, Andy Zou, Mantas Mazeika, Dawn Song, and Jacob Steinhardt. “Measuring massive multitask language understanding.” In: arXiv preprint arXiv:2009.03300 (2020). [18] Dan Hendrycks, Collin Burns, Saurav Kadavath, Akul Arora, Steven Basart, Eric Tang, Dawn Song, and Jacob Steinhardt. “Measuring mathematical problem solving with the math dataset.” In: arXiv preprint arXiv:2103.03874 (2021). [19] Emiel Hoogeboom, Alexey A Gritsenko, Jasmijn Bastings, Ben Poole, Rianne van den Berg, and Tim Salimans. “Autoregressive diffusion models.” In: arXiv preprint arXiv:2110.02037 (2021). [20] Daniel Israel, Guy Van den Broeck, and Aditya Grover. “Accelerating diffusion llms via adaptive parallel decoding.” In: arXiv preprint arXiv:2506.00413 (2025). [21] Naman Jain, King Han, Alex Gu, Wen-Ding Li, Fanjia Yan, Tianjun Zhang, Sida Wang, Ar-mando Solar-Lezama, Koushik Sen, and Ion Stoica. “Livecodebench: Holistic and contamination free evaluation of large language models for code.” In: arXiv preprint arXiv:2403.07974 (2024). [22] Frederick James. “Monte Carlo theory and practice.” In: Reports on progress in Physics 43.9 (1980), pp. 1145–1189. [23] Hugo Lavenant and Giacomo Zanella. “Error Bounds and Optimal Schedules for Masked Diffu-sions with Factorized Approximations.” In: arXiv preprint arXiv:2510.25544 (2025). [24] Yann LeCun, Sumit Chopra, Raia Hadsell, M Ranzato, Fujie Huang, et al. “A tutorial on energy-based learning.” In: Predicting structured data 1.0 (2006). [25] Ian Li, Zilei Shao, Benjie Wang, Rose Yu, Guy Van den Broeck, and Anji Liu. “Breaking the Factorization Barrier in Diffusion Language Models.” In: arXiv preprint arXiv:2603.00045 (2026). [26] Tianyi Li, Mingda Chen, Bowei Guo, and Zhiqiang Shen. “A survey on diffusion language mod-els.” In: arXiv preprint arXiv:2508.10875 (2025). [27] Anji Liu, Oliver Broadrick, Mathias Niepert, and Guy Van den Broeck. “Discrete copula diffu-sion.” In: arXiv preprint arXiv:2410.01949 (2024). [28] Aaron Lou, Chenlin Meng, and Stefano Ermon. “Discrete diffusion modeling by estimating the ratios of the data distribution.” In: arXiv preprint arXiv:2310.16834 (2023). [29] Lizhuo Luo, Zhuoran Shi, Jiajun Luo, Zhi Wang, Shen Ren, Wenya Wang, and Tianwei Zhang. “DAWN: Dependency-Aware Fast Inference for Diffusion LLMs.” In: arXiv preprint arXiv:2602.06953 
+
+(2026). [30] Mitch Marcus, Beatrice Santorini, and Mary Ann Marcinkiewicz. “Building a large annotated corpus of English: The Penn Treebank.” In: Computational linguistics 19.2 (1993), pp. 313–330. [31] Stephen Merity, Caiming Xiong, James Bradbury, and Richard Socher. “Pointer sentinel mixture models.” In: arXiv preprint arXiv:1609.07843 (2016). [32] Shen Nie, Fengqi Zhu, Zebin You, Xiaolu Zhang, Jingyang Ou, Jun Hu, Jun Zhou, Yankai Lin, Ji-Rong Wen, and Chongxuan Li. “Large language diffusion models.” In: arXiv preprint arXiv:2502.09992 (2025). [33] Denis Paperno, Germán Kruszewski, Angeliki Lazaridou, Ngoc-Quan Pham, Raffaella Bernardi, Sandro Pezzelle, Marco Baroni, Gemma Boleda, and Raquel Fernández. “The LAMBADA dataset: Word prediction requiring a broad discourse context.” In: Proceedings of the 54th annual meeting of the association for computational linguistics (volume 1: Long papers) . 2016, pp. 1525–1534. [34] Alec Radford, Jeffrey Wu, Rewon Child, David Luan, Dario Amodei, Ilya Sutskever, et al. “Language models are unsupervised multitask learners.” In: OpenAI blog 1.8 (2019), p. 9. 14 Unified Energy for Invariant and Independent Decoding in Diffusion Language Models [35] Subham Sahoo, Marianne Arriola, Yair Schiff, Aaron Gokaslan, Edgar Marroquin, Justin Chiu, Alexander Rush, and Volodymyr Kuleshov. “Simple and effective masked diffusion language models.” In: Advances in Neural Information Processing Systems 37 (2024), pp. 130136–130184. [36] Subham Sekhar Sahoo, Justin Deschenaux, Aaron Gokaslan, Guanghan Wang, Justin Chiu, and Volodymyr Kuleshov. “The diffusion duality.” In: arXiv preprint arXiv:2506.10892 (2025). [37] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. “Attention is all you need.” In: Advances in neural infor-mation processing systems 30 (2017). [38] Guanghan Wang, Yair Schiff, Subham Sekhar Sahoo, and Volodymyr Kuleshov. “Remasking dis-crete diffusion models with inference-time scaling.” In: arXiv preprint arXiv:2503.00307 (2025). [39] Yinjie Wang, Ling Yang, Bowen Li, Ye Tian, Ke Shen, and Mengdi Wang. “Revolutioniz-ing reinforcement learning framework for diffusion large language models.” In: arXiv preprint arXiv:2509.06949 (2025). [40] Colin White, Samuel Dooley, Manley Roberts, Arka Pal, Ben Feuer, Siddhartha Jain, Ravid Shwartz-Ziv, Neel Jain, Khalid Saifullah, Siddartha Naidu, et al. “Livebench: A challenging, contamination-free llm benchmark.” In: arXiv preprint arXiv:2406.19314 4 (2024), p. 2. [41] Chengyue Wu, Hao Zhang, Shuchen Xue, Zhijian Liu, Shizhe Diao, Ligeng Zhu, Ping Luo, Song Han, and Enze Xie. “Fast-dllm: Training-free acceleration of diffusion llm by enabling kv cache and parallel decoding.” In: arXiv preprint arXiv:2505.22618 (2025). [42] Minkai Xu, Tomas Geffner, Karsten Kreis, Weili Nie, Yilun Xu, Jure Leskovec, Stefano Ermon, and Arash Vahdat. “Energy-based diffusion language models for text generation.” In: arXiv preprint arXiv:2410.21357 (2024). [43] An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, et al. “Qwen3 technical report.” In: arXiv preprint arXiv:2505.09388 (2025). [44] Lin Yao. “Remask, Don’t Replace: Token-to-Mask Refinement in Masked Diffusion Language Models.” In: arXiv preprint arXiv:2604.18738 (2026). [45] Jiacheng Ye, Zhihui Xie, Lin Zheng, Jiahui Gao, Zirui Wu, Xin Jiang, Zhenguo Li, and Lingpeng Kong. “Dream 7b: Diffusion large language models.” In: arXiv preprint arXiv:2508.15487 (2025). [46] Qiuhua Yi, Xiangfan Chen, Chenwei Zhang, Zehai Zhou, Linan Zhu, and Xiangjie Kong. “Dif-fusion models in text generation: a survey.” In: PeerJ Computer Science 10 (2024), e1905. [47] Rowan Zellers, Ari Holtzman, Yonatan Bisk, Ali Farhadi, and Yejin Choi. “Hellaswag: Can a machine really finish your sentence?” In: Proceedings of the 57th annual meeting of the association for computational linguistics . 2019, pp. 4791–4800. [48] Kevin Zhai, Sabbir Mollah, Zhenyi Wang, and Mubarak Shah. “CoRe: Context-Robust Remask-ing for Diffusion Language Models.” In: arXiv preprint arXiv:2602.04096 (2026). [49] Xiang Zhang, Junbo Zhao, and Yann LeCun. “Character-level convolutional networks for text classification.” In: Advances in neural information processing systems 28 (2015). [50] Wayne Xin Zhao, Kun Zhou, Junyi Li, Tianyi Tang, Xiaolei Wang, Yupeng Hou, Yingqian Min, Beichen Zhang, Junjie Zhang, Zican Dong, et al. “A survey of large language models.” In: arXiv preprint arXiv:2303.18223 1.2 (2023), pp. 1–124. [51] Xiao Zhou, Yong Lin, Renjie Pi, Weizhong Zhang, Renzhe Xu, Peng Cui, and Tong Zhang. “Model agnostic sample reweighting for out-of-distribution learning.” In: International conference on machine learning . PMLR. 2022, pp. 27203–27221. 15 Unified Energy for Invariant and Independent Decoding in Diffusion Language Models [52] Hao Zou, Zae Myung Kim, and Dongyeop Kang. “A survey of diffusion models in natural lan-guage processing.” In: arXiv preprint arXiv:2305.14671 (2023). 16 Unified Energy for Invariant and Independent Decoding in Diffusion Language Models 
+
+7. Appendix 
+
+7.1 Training Algorithm 
+
+We provide the NCE training algorithm for our Uni-EDLM in Algorithm 1. 
+
+Algorithm 1 Training Uni-EDLM with Noise Contrastive Estimation (NCE) 
+
+Require: Training dataset D, AR model pAR , diffusion model pθ, learning rate η 
+
+> 1:
+
+Freeze parameters of pAR  
+
+> 2:
+
+while not converged do  
+
+> 3:
+
+Sample clean data x0 ∼ D and diffusion timestep t ∼ U (0 , 1)  
+
+> 4:
+
+Sample xt ∼ q(xt|x0) 
+
+> 5:
+
+Sample s with s < t and xs ∼ q(xs|xt, x0) 
+
+> 6:
+
+Compute energy: 
+
+Eϕ(x0, xs, xt) = log pθ(xs|xt)
+
+pAR (xs|xt) + log pθ(x0|xt)
+
+pAR (x0|xs) 
+
+> 7:
+
+Sample ˆx0 ∼ pθ(x0|xt) 
+
+> 8:
+
+Sample ˆxs ∼ q(xs|xt, ˆx0) 
+
+> 9:
+
+Compute energy: 
+
+Eϕ(ˆ x0, ˆxs, xt) = log pθ(ˆ xs|xt)
+
+pAR (ˆ xs|xt) + log pθ(ˆ x0|xt)
+
+pAR (ˆ x0|xs) 
+
+> 10:
+
+Compute loss: 
+
+LNCE = log (1 + exp (Eϕ(x0, xs, xt))) + log (1 + exp (−Eϕ(ˆ x0, ˆxs, xt)))  
+
+> 11:
+
+Update θ ← θ − η∇θLNCE  
+
+> 12:
+
+end while  
+
+> 13:
+
+return trained parameters θ
+
+7.2 Inference Algorithm 
+
+We provide the inference of Uni-EDLM in Algorithm 2. 
+
+Algorithm 2 Uni-EDLM Inference with Importance Sampling 
+
+Require: Full masked sequence xT1 , diffusion timesteps T1 > T2 > ... > TT , candidate size k, window size w, proxy AR model pAR , diffusion model pθ 
+
+> 1:
+
+for t = T1, T2, . . . , TT do  
+
+> 2:
+
+if t ∈ (1 − w, 1] then  
+
+> 3:
+
+Sample {x10, .., xk 
+
+> 0
+
+} ∼ pθ(x0|xt) and sample timestep s < t  
+
+> 4:
+
+Sample {x1 
+
+> s
+
+, .., xks } ∼ q(xs|xt, x(j)0 ) with j ∈ { 1, 2, .., k } 
+
+> 5:
+
+Compute energy E(j) = Eϕ(x(j)0 , x(j) 
+
+> s
+
+, xt) for each (x(j)0 , x(j) 
+
+> s
+
+) pair  
+
+> 6:
+
+j∗ = arg min j E(j) 
+
+> 7:
+
+˜x0 = x(j∗)0 
+
+> 8:
+
+else  
+
+> 9:
+
+Sample ˜x0 ∼ pθ(x0|xt) 
+
+> 10:
+
+end if  
+
+> 11:
+
+Sample xt−1 ∼ q(xt−1|xt, ˜x0) 
+
+> 12:
+
+end for  
+
+> 13:
+
+return x0
+
+17 Unified Energy for Invariant and Independent Decoding in Diffusion Language Models 
+
+7.3 Inference Algorithm for Diffusion Large Language Models (DLLMs) 
+
+We provide the inference algorithm when integrating with Diffusion Large Language Models (DLLMs) in Algorithm 3. 
+
+Algorithm 3 Energy-Guided Inference for Diffusion Large Language Models (DLLMs) 
+
+Require: Full masked sequence x1 with max length L, candidate size k, number of unmask positions 
+
+m for each step, window size w, DLLM model pθ, AR model pAR  
+
+> 1:
+
+for t = 1 , 1 − mL , 1 − 2mL , ..., 0 do  
+
+> 2:
+
+Obtain token logits from DLLM: pθ(x0|xt) 
+
+> 3:
+
+if t ∈ (1 − w, 1] then  
+
+> 4:
+
+for j = 1 to k do  
+
+> 5:
+
+Sample clean candidate: x(j)0 ∼ pθ(x0|xt) 
+
+> 6:
+
+Compute token-level logits {ℓ(j) 
+
+> i
+
+}Li=1 for x(j)0 
+
+> 7:
+
+Select index set I(j) corresponding to top-m logits  
+
+> 8:
+
+Generate x(j) 
+
+> s
+
+:
+
+x(j) 
+
+> s,i
+
+=
+
+{
+
+x(j)0,i , i ∈ I (j)
+
+[MASK] , otherwise  
+
+> 9:
+
+Compute energy for each (x(j)0 , x(j) 
+
+> s
+
+) pair 
+
+E(j) = log pθ(x(j) 
+
+> s
+
+|xt)
+
+pAR (x(j) 
+
+> s
+
+|xt) + log pθ(x(j)0 |xt)
+
+pAR (x(j)0 |x(j) 
+
+> s
+
+) 
+
+> 10:
+
+end for  
+
+> 11:
+
+j∗ = arg min j E(j) 
+
+> 12:
+
+xt = x(j∗) 
+
+> s
+> 13:
+
+else  
+
+> 14:
+
+Unmask m tokens with highest logits within xt from pθ(x0|xt) 
+
+> 15:
+
+end if  
+
+> 16:
+
+end for  
+
+> 17:
+
+return x0
+
+7.4 Proof of Invariance Divergence Estimation 
+
+Here we give a formal proof to the Lemma 4.1 as follows: 
+
+Proof. According to the invariance defination, we have: 
+
+π(xi
+
+> 0
+
+|xt+1 , xV− 
+
+> i
+> 0
+
+, xZ<t  
+
+> 0
+
+− xV− 
+
+> i
+> 0
+
+) = π(xi
+
+> 0
+
+|xt+1 , xV− 
+
+> i
+> 0
+
+) (18) Then we have: 
+
+π(xi
+
+> 0
+
+, xZ<t  
+
+> 0
+
+− xV− 
+
+> i
+> 0
+
+|xt+1 , xV− 
+
+> i
+> 0
+
+)
+
+π(xZ<t  
+
+> 0
+
+− xV− 
+
+> i
+> 0
+
+|xt+1 , xV− 
+
+> i
+> 0
+
+)= π(xi
+
+> 0
+
+|xt+1 , xV− 
+
+> i
+> 0
+
+) (19) Therefore we have: 
+
+π(xZ<t  
+
+> 0
+
+− xV− 
+
+> i
+> 0
+
+|xi
+
+> 0
+
+, xt+1 , xV− 
+
+> i
+> 0
+
+) = π(xZ<t  
+
+> 0
+
+− xV− 
+
+> i
+> 0
+
+|xt+1 , xV− 
+
+> i
+> 0
+
+) (20) The intuitive understanding is that the i-th token has no influence on the rest tokens beyond invariant ones. Given the invriance part defination: π(xi
+
+> 0
+
+|x0 − xi
+
+> 0
+
+) = π(xi
+
+> 0
+
+|xVi 
+
+> 0
+
+) = π(xi
+
+> 0
+
+|xt+1 , xV− 
+
+> i
+> 0
+
+), we know that π(xV− 
+
+> i
+> 0
+
+|xi
+
+> 0
+
+, xt+1 , xZ<t  
+
+> 0
+
+− xV− 
+
+> i
+> 0
+
+) = π(xV− 
+
+> i
+> 0
+
+|xi
+
+> 0
+
+, xt+1 ), this means the invariant tokens xV− 
+
+> i
+> 0
+
+of xi 
+
+> 0
+
+is also 18 Unified Energy for Invariant and Independent Decoding in Diffusion Language Models invariant to xZ<t  
+
+> 0
+
+− xV− 
+
+> i
+> 0
+
+. This indicate a key insight that the decoding of x i 
+
+> 0
+
+will only influence the invariant tokens and this influence will not passed to the non-invariant parts .
+
+T 1 
+
+> i
+
+T 2 
+
+> i
+
+... T xi T 1 
+
+> n
+
+T 2 
+
+> n
+
+... T yn
+
+Before Decoding p1 p2 ... px g1 g2 ... gy
+
+After Decoding q1 q2 ... qx g1 g2 ... gy
+
+After Sampling q1 q2 ... px g1 g2 ... gy
+
+Table 4: The distribution shift before and after decoding token xi
+
+> 0
+
+Assuming in time step t, we decode a token xi
+
+> 0
+
+, the rest part of x0 distribution before and after decoding is shown as the first two row in Table 4, where T ji denotes the j-th invariant token and T kn
+
+denote the k-th non-invariant token. The decoding has no influence on the non-invariant tokens while the invariant one will have distribution shift from pi to qi. We can easily conclude that: 
+
+log π(xV− 
+
+> i
+> 0
+
+|xt+1 )
+
+π(xV− 
+
+> i
+> 0
+
+|xi, xt+1 )= log π(xZ<t  
+
+> 0
+
+|xt+1 )
+
+π(xZ<t  
+
+> 0
+
+|xi, xt+1 ) =
+
+> x
+
+∑
+
+> i
+
+KL (pi|| qi) + 
+
+> y
+
+∑
+
+> i
+
+KL (gi|| gi) = 
+
+> x
+
+∑
+
+> i
+
+KL (pi|| qi) (21) Therefore if we sample all the Z<t we will have the full esitmation of invariant part distribution. Next we will prove the estimation when sampling. Here we sample r tokens from Z<t and get index Zs,and after sampling the distribution is shown as the third line in Table 4. Suppose we sample the first m invariant and the rest n tokens are non-invariant( m + n = r), the first m distribution will be influenced by xi 
+
+> 0
+
+when calculating estimation, which is qi(i ≤ m) and the remains are the same as the non-decoding xi
+
+> 0
+
+(The ”Before Decoding” line in Table 4). The sampling estimation is: 
+
+log π(xZs 
+
+> 0
+
+|xt+1 )
+
+π(xZs 
+
+> 0
+
+|xi, xt+1 ) =
+
+> m
+
+∑
+
+> i=1
+
+KL (pi|| qi) + 
+
+> x
+
+∑
+
+> i=m+1
+
+KL (pi|| pi) + 
+
+> y
+
+∑
+
+> i=1
+
+KL (gi|| gi) = 
+
+> m
+
+∑
+
+> i
+
+KL (pi|| qi) (22) Therefore, we have: 
+
+log π(xV− 
+
+> i
+> 0
+
+|xt+1 )
+
+π(xV− 
+
+> i
+> 0
+
+|xi, xt+1 )
+
+− log π(xZs 
+
+> 0
+
+|xt+1 )
+
+π(xZs 
+
+> 0
+
+|xi, xt+1 ) =
+
+> x
+
+∑
+
+> i=m+1
+
+KL (pi|| qi) (23) Considering the Equation 23 just describe one specific situation that we select the first m-th invariant tokens, when we traverse all the possible sampling of Zs and calculate the average, it can be deduced easily that the possibility of picking each token is rx+y , leading to the average residual term as: 
+
+EZs
+
+log π(xV− 
+
+> i
+> 0
+
+|xt+1 )
+
+π(xV− 
+
+> i
+> 0
+
+|xi, xt+1 )
+
+− log π(xZs 
+
+> 0
+
+|xt+1 )
+
+π(xZs 
+
+> 0
+
+|xi, xt+1 )
+
+ = (1 − rx + y )
+
+> x
+
+∑
+
+> i=1
+
+KL (pi|| qi) (24) Therefore we have: 
+
+EZs
+
+{
+
+log π(xZs 
+
+> 0
+
+|xt+1 )
+
+π(xZs 
+
+> 0
+
+|xi, xt+1 )
+
+}
+
+= ( rx + y )
+
+> x
+
+∑
+
+> i=1
+
+KL (pi|| qi) = ( rx + y )log π(xV− 
+
+> i
+> 0
+
+|xt+1 )
+
+π(xV− 
+
+> i
+> 0
+
+|xi, xt+1 )
+
+(25) 19 Unified Energy for Invariant and Independent Decoding in Diffusion Language Models So if we use pAR (.) as the proxy, we finally get: 
+
+EZs
+
+{
+
+log pAR (xZs 
+
+> 0
+
+|xt+1 )
+
+pAR (xZs 
+
+> 0
+
+|xi, xt+1 )
+
+}
+
+= ( rx + y )log π(xV− 
+
+> i
+> 0
+
+|xt+1 )
+
+π(xV− 
+
+> i
+> 0
+
+|xi, xt+1 )+ γ (26) Therefore, we prove Lemma 4.1. 
+
+7.5 Proof of Uni-EDLM’s Effectiveness 
+
+Here we give a formal proof to the Lemma 4.2 as follows: 
+
+Proof. Considering all the possible decoding s and t pairs on clean data x0, the average KL Divergence of diffusion language model is defined as: 
+
+KL (π|| pθ) = Ext
+
+∑
+
+> s(s<t )
+
+Ω( xs|xt)log π(xs|xt)
+
+pθ(xs|xt)
+
+ , (27) where the Ω( xs|xt) is the ground truth decoding planner distribution describing the true possibility of decoding position in xs based on xt, the average KL Divergence for Uni-EDLM is: 
+
+KL (π|| pϕ,θ ) = Ext
+
+∑
+
+> s(s<t )
+
+Ω( xs|xt)log π(xs|xt)
+
+pϕ,θ (xs|xt)
+
+ , (28) Now giving specific t, we consider the situation that the decoding positions do not fulfill the indepen-dence or invariance. Supposing such decodings in descendent violation degree are Z1, Z2, ..., Zn(Zn is the most ”independent & invariant” one and Z1 is the most ”non-independent&non-invariant” one), we have: 
+
+Ω( xZ1 
+
+> s
+
+|xt) < Ω( xZ2 
+
+> s
+
+|xt) < ... < Ω( xZn 
+
+> s
+
+|xt), (29) since Ω( .) represents the real possiblity of decoding order. We also assume that the diffusion language model unfortunately can not distinguish them, where: 
+
+pθ(xZ1 
+
+> s
+
+|xt) ≈ pθ(xZ2 
+
+> s
+
+|xt) ≈ ... ≈ pθ(xZn 
+
+> s
+
+|xt), (30) According to the Uni-Energy, it will allocate lower energy to the independent and invariant decodings while allocate higher energy to the non-independent or non-invariant decodings, thus: 
+
+Euni (x0, xZ1 
+
+> s
+
+, xt) > E uni (x0, xZ2 
+
+> s
+
+, xt) > ... > E uni (x0, xZn 
+
+> s
+
+, xt), (31) Thus we have: 
+
+exp (−Euni (x0, xZ1 
+
+> s
+
+, xt)) 
+
+F (xt) pθ(xZ1 
+
+> s
+
+|xt) < exp (−Euni (x0, xZ2 
+
+> s
+
+, xt)) 
+
+F (xt) pθ(xZ2 
+
+> s
+
+|xt)
+
+< ... < exp (−Euni (x0, xZn 
+
+> s
+
+, xt)) 
+
+F (xt) pθ(xZn 
+
+> s
+
+|xt),
+
+(32) We also know that all the possibility are normalized, which means: 
+
+∑
+
+> s,i
+
+exp (−Euni (x0, xZi 
+
+> s
+
+, xt)) 
+
+F (xt) pθ(xZi 
+
+> s
+
+|xt) = 1 , (33) 20 Unified Energy for Invariant and Independent Decoding in Diffusion Language Models and ∑
+
+> s,i
+
+pθ(xZi 
+
+> s
+
+|xt) = 1 , (34) Therefore we have: 
+
+∑
+
+> s,i
+
+Ω( xZi 
+
+> s
+
+|xt)log exp (−Euni (x0, xZi 
+
+> s
+
+, xt)) 
+
+F (xt) pθ(xZi 
+
+> s
+
+|xt) > ∑
+
+> s,i
+
+Ω( xZi 
+
+> s
+
+|xt)logp θ(xZi 
+
+> s
+
+|xt) (35) Therefore, we have: 
+
+KL (π|| pϕ,θ ) < KL (π|| pθ). (36) 
+
+7.6 Settings on Diffusion Language Model Experiments 
+
+7.6.1 Metrics Details 
+
+Perplexity (PPL) is used to evaluate the quality of a language model by measuring how well it predicts a sequence of tokens. Given a sequence x = ( x1, x2, ..., xL) of length L, PPL is calculated as: P P L (x) = 
+
+exp (− 1
+
+> L
+
+∑Li=1 logp θ(xi)) .Generative Perplexity (Gen PPL) evaluates the quality of text generated by a model using a reference language model. Instead of conditioning on ground-truth prefixes, it measures how likely a generated sequence is. Given a generated sequence ˆx = (ˆ x1, ˆx2, ..., ˆxL), Gen PPL is calculated as: 
+
+GenP P L (ˆ x) = exp (− 1
+
+> L
+
+∑Li=1 logp eval (ˆ xi|ˆx<i )) , where peval is the reference model and usually it’s a Large Language Model. 
+
+7.6.2 Baseline Settings 
+
+As for auto-regressive Transformer (AR) [37], SEDD [28], MDLM [35] and EDLM [42], we use the official model and dataset settings. Therefore, we directly report Perplexity (PPL) from [42]. For Generative Perplexity (Gen PPL), we reproduce results with 128 timesteps, while the remaining results are taken from [42]. Duo [36] uses the same dataset settings as ours, and we report its official PPL results. As for Generative Perplexity (Gen PPL), we vary the decoding steps (128, 256, 512, and 1024) and use the official checkpoint, which is trained on the same dataset (OpenWebText). For Block Diffusion [1], we set the block size as 4, following the default setting in the original paper, which generally achieves better performance than larger block sizes (e.g., 8 or 16). For Gen PPL, we use the published checkpoint trained on OpenWebText, and evaluate with decoding timesteps of 128, 256, 512, and 1024 while keeping the block size fixed at 4. For DCD [27], we use GPT-2-small [34] as the AR proxy (copula) model and MDLM [35] as the diffusion backbone. For ReMDM [38], we use MDLM as backbone and set the ReMDM-cap parameter as 0.05 and ReMDM-rescale as 0.5 because it generally leads to better performance in its official report. 
+
+7.7 Comparison with Speculative Decodings 
+
+When integrating with Diffusion Large Language Models (DLLMs), our Uni-E is similar to speculative decoding methods [20, 11], which also use a proxy model to calculate scores or logits to accelerate decoding or improve generation quality. However, the key difference is that existing speculative decoding methods for DLLMs are generally heuristic and integrate the proxy model without guarantees for invariant decoding .Taking APD [20] as an example, it combines the AR proxy model with the DLLM in a linear manner, where the model produces logits as: model _logits = Sof tmax (R ∗ pθ(xt|x<t ) + (1 − R) ∗
+
+21 Unified Energy for Invariant and Independent Decoding in Diffusion Language Models 
+
+pAR (xt|x<t )) , where pθ(.) and pAR (.) are the DLLM and AR proxy model, respectively. This design can model dependencies to some extend, but cannot capture invariance (i.e., future decoding effects). In contrast, is explicitly designed to model both dependency and invariance. Moreover, the formulation of our energy function has a clear theoretical foundation, showing that it can bridge the gap between the ground-truth distribution and the diffusion model distribution (see Eq. 8 and Eq. 12). A comparison between Uni-E and speculative decoding is summarized in Table 5. Table 5: Comparison between Speculative Decoding and Uni-E.             
+
+> Method AR Proxy Dependency Invariance Theoretical Guarantee Speculative Decoding Yes Yes No No Uni-E Yes Yes Yes Yes
+
+7.8 Comparison with Remask Strategies 
+
+To address token relationship issues, several methods [38, 44, 38] have proposed using a remask strategy to correct decoding errors. The basic idea behind these methods is to remask previously unmasked tokens during future decoding steps, allowing errors caused by dependency or invariance issues to be corrected. However, these approaches are generally heuristic and lack a theoretical foundation to guarantee dependency or invariance modeling. The selection of tokens to be corrected is also highly dependent on heuristic strategies or manually designed hyperparameters, without theoretical guarantee. For example, ReMDM [38] uses a hyper-parameter and a scale-score to remask tokens at each step, which view the tokens equally important. Core [38] remask based on neighbor stability test, which only consider the nearby tokens. None of these methods have theoretical guarantee that the remasking can truly fix the dependency and invariance error. In addition, these methods usually require more decoding timesteps to achieve good performance, since remasking and re-predicting tokens introduces additional decoding steps. A detailed comparison between these methods and our Uni-E is summarized in Table 6. Table 6: Comparison between Remask Strategy and Uni-E.                
+
+> Method AR Proxy Dependency Invariance Theoretical Guarantee(Stable) Efficiency Remask No Yes Yes No No Uni-E Yes Yes Yes Yes Yes
+
+7.9 Settings of Baselines on Diffusion Large Language Models (DLLMs) Experiments 
+
+For all the AR models (Qwen2.5-0.5B, Qwen2.5-7B [43], Llama3.1-8B [13]) we use the official model parameters and evaluate them within the TraceRL framework [39]. We adopt a static decoding strategy and, similar to Uni-E, decode 4 tokens at each step. For APD [20], we follow the original paper and use Qwen2.5-0.5B as the proxy model, decoding 4 tokens per step. For DAWN [29], we set the confidence thresholds for graph construction as follows: the high-confidence threshold is 0.9, the low-confidence threshold is 0.7, and the anchor-based threshold is 0.7. For CORE [48], we use their official implementation and adapt the decoding number as 4 at each step (including the decoding for the remasked tokens). 22 Unified Energy for Invariant and Independent Decoding in Diffusion Language Models 
+
+7.10 Hyper-parameter Analysis on Diffusion Large Language Model 
+
+7.10.1 Candidate Size Study 
+
+Table 7: Influence of candidate size k.Accuracy Throughoutput k=2 38.6 40.1 k=3 39.2 38.8 k=4 40.1 35.5 k=5 39.8 31.7 We study the impact of the candidate size k
+
+on model performance. In this experiment, we use MATH500 as the evaluation benchmark and adopt LLaDa-8B as the base diffusion large lan-guage model (DLLM). The results are summa-rized in Table 7. We observe that varying the candidate size has only a marginal effect on per-formance. However, increasing k leads to a no-ticeable reduction in decoding speed. 
+
+7.10.2 Energy-based Decoding Ratio Study 
+
+Table 8: Influence of energy sampling ratio w.Accuracy Throughoutput w=0.1 37.0 43.9 w=0.2 39.2 38.8 w=0.4 41.5 27.4 w=0.8 42.3 11.8 By default, we apply energy-based sampling to the first 20% of the inference steps. To study the effect of this ratio, we vary the energy sampling ratio w and evaluate performance when applying energy sampling to the first 10%, 20%, 40%, and 80% of the steps. We conduct the experiments on MATH500 using LLaDa-8B as the base model. The results are presented in Table 8. We find that increasing the sampling ratio generally improves performance. However, this comes at the cost of significantly reduced decoding efficiency. Therefore, we select w = 0 .2 as a balanced setting between performance and speed. 
+
+7.11 Benchmark Performance of Diffusion Large Language Models (DLLMs) 
+
+We provide the full results for DLLMs in Table 9. Table 9: Several benchmark results. Improvements of applying Uni-Energy to their backbone models are shown in green. † taken from [39]. ‡ taken from [43]. ∗ denotes reproduced results.                                                                                                                               
+
+> Model MATH500 GSM8K MBPP LCB V2 LiveBench MMLU HellaSwag Llama3.1-8B †51.9 84.5 42.4 20.0 19.7 66.6 76.7 Qwen2.5-7B †74.0 89.9 74.9 26.9 31.1 74.2 80.2 Qwen2.5-0.5B ‡33.8 41.6 39.3 10.4 12.1 47.5 52.1 LLaDa-8B ∗35.2 78.1 34.4 5.8 4.1 57.3 68.2 +DAWN ∗38.3 (+3.1) 79.0 (+0.9) 33.6 (-0.8) 5.5 (-0.3) 4.8 (+0.7) 58.6 (+1.3) 68.8 (+0.6) +APD ∗36.8 (+1.6) 77.5 (-0.6) 32.6 (-1.8) 7.1 (+1.3) 6.3 (+2.2) 60.5 (+3.2) 69.6 (+1.4) +CORE ∗35.6 (+0.4) 78.7 (+0.6) 33.9 (-0.5) 4.9 (-0.9) 3.0 (-1.1) 56.5 (-0.8) 68.0 (-0.2) +Ind-Energy 37.6 (+2.4) 79.5 (+1.4) 34.9 (+0.5) 9.2 (+3.4) 8.6 (+4.5) 62.7 (+5.4) 69.9 (+1.7) +Inv-Energy 36.5 (+1.3) 78.7 (+0.6) 35.0 (+0.6) 7.8 (+2.0) 5.7 (+1.6) 59.4 (+2.1) 69.0 (+0.8) +Uni-Energy 39.2 (+4.0) 80.1 (+2.0) 35.2 (+0.8) 10.5 (+4.7) 10.9 (+6.8) 66.5 (+9.2) 71.2 (+3.0) Dream-7B ∗34.4 69.7 55.4 7.5 7.1 61.8 70.6 +DAWN ∗35.8 (+1.4) 70.5 (+0.8) 55.6 (+0.2) 7.1 (-0.4) 7.3 (+0.2) 61.1 (-0.7) 71.9 (+1.3) +APD ∗35.9 (+1.5) 71.4 (+1.7) 55.8 (+0.4) 9.0 (+1.5) 8.2 (+1.1) 61.3 (-0.5) 71.3 (+0.7) +CORE ∗34.6 (+0.2) 70.1 (+0.4) 56.0 (+0.6) 6.3 (-1.2) 6.5 (-0.6) 62.2 (+0.4) 69.8 (-0.8) +Ind-Energy 35.7 (+1.3) 71.3 (+1.6) 56.7 (+1.3) 9.8 (+2.3) 9.3 (+2.2) 62.4 (+0.6) 72.6 (+2.0) +Inv-Energy 35.2 (+0.8) 70.2 (+0.5) 56.3 (+0.9) 8.1 (+0.6) 8.8 (+1.7) 62.7 (+0.9) 71.4 (+0.8) +Uni-Energy 36.4 (+2.0) 71.9 (+2.2) 57.2 (+1.8) 11.1 (+3.6) 9.9 (+2.8) 63.2 (+1.4) 73.7 (+3.1)
+
+23 Unified Energy for Invariant and Independent Decoding in Diffusion Language Models 
+
+7.12 Case Study 
+
+To visualize the influence of invariance and independency to text generation, we conduct a case study. We use Uni-EDLM-AR and MDLM for this study. We find that Uni-E generally capture the invariance and the independency correctly and we provide two cases to demonstrate. Besides, we also provides two cases where DLM fails to model the invariance and the independency thus leads to strange generation. 
+
+Invariance Case : The invariant decoding case of our Uni-E is shown in Figure 5. In this case, the ”sad” can not be fully decided without considering the later context: People ”don’t have opinions” and city is ”not going to pay”, thus the decision can not be carried out, then we can deduce the ”sad”. Uni-E can totally capture the invariance of these tokens and generate the reasonable text. *“I am  sad  about it. The city is just  not going to pay  for it,” she 
+
+said. “I don’t think all the time, the time is up’’ and, “when you can’t 
+
+make the decision, you do it. I wish I could make the decision that 
+
+I made, that I’m very proud of. It’s a decision that’s my decision 
+
+and not my budget.”  And yet, it’s not happening.  “I know we  can’t 
+
+carry that out ,” Bouton said. “It’s not happening. A lot of the council 
+
+members, people  don’t have an opinion …”* 
+
+Case snippet:  
+
+> [4] [2]
+> [1]
+> [3]
+
+Decoding order: 
+
+"dont have an opinion" -> "not going to pay" -> "cant carry out" -> "sad" 
+
+# Invariance Case for Uni-E Decoding 
+
+Figure 5: The invariant decoding case of Uni-E. 
+
+Independency Case : The independent decoding case of our Uni-E is shown in Figure 6. In this case, although the ”not allow” and the ”comply with” are adjacent, these tokens are non-independent (If ”allow it”, then it will ”break against” the rule; If ”not allow it”, then it will ”comply with the rule”). Uni-E can capture the dependency between these tokens and correctly model the relationship that ”not allow it” leads to ”comply with”. 
+
+Non-invariance Case : We give one case where MDLM fails to capture the invariance. The case is shown in Figure 7. We observe that the text generated by MDLM is weird since there is conflict between ”delayed the meeting” and ”had a conversation”, and we check the decoding order and find that the ”delayed the meeting” are decoded before the ”had a conversation when ... met with ...” are decoded, which breaks the invariance that the ”delayed the meeting” can not be decided before considering the later context. This case shows the limitation of DLM in capturing the invariance. 
+
+Non-independent Case : We give one case where MDLM fails to capture the dependency. The case is shown in Figure 8. The generated text is unreasonable because ”keep the wealth” conflicts with ”increase the money lose” and also conflicts with the word ”fails”. We check the decoding order which shows that the ”keep”, the ”increase” and the ”lose” are decoded simultaneously but they are non-independent with each other. Although the model succeeds modeling the invariance between the ”fails” and the ”increase the money lose”, the text is still weird since the ”fail” conflicts with ”keep the wealth”. This case shows the limitation of DLM in capturing the dependency. 24 Unified Energy for Invariant and Independent Decoding in Diffusion Language Models Case snippet: 
+
+“... However, Justice Kirby said, the Government will  not allow  it, 
+
+and will comply with  the ruling that Government’s request.  If that is 
+
+agreed with and the Government would support it, we will not 
+
+proceed and will go forward with that application and without 
+
+regard to any costs or difficulties," said Kirby. ... ”
+
+Decoding order: 
+
+"not allow" -> "will comply with" 
+
+# Dependency Case for Uni-E Decoding 
+
+> Figure 6: The independent decoding case of Uni-E.
+
+# Non-invariance Case for DLM Decoding 
+
+*“The Prime Minister understands that a meeting with Mr Oakes 
+
+had taken place between the president, the Secretary, and the 
+
+Minister in the Oval Office.  The President and Mr Oakes  delayed 
+
+the meeting on Monday, and  had a conversation  when Mr Oakes 
+
+met with the Prime Minister at the Oval Office…”* 
+
+Non-invariant order: 
+
+"delayed the meeting" -> "had a conversation" 
+
+Case snippet: 
+
+> Figure 7: The non-invariant decoding case of MDLM. 25 Unified Energy for Invariant and Independent Decoding in Diffusion Language Models
+
+# Non-independency Case for DLM Decoding 
+
+“If the person  fails  on one point, they will  keep the wealth  but also 
+
+increase the money  lose at the same time, and this is why the 
+
+situation becomes confusing for everyone involved.” 
+
+Non-independent order: 
+
+"keep, increase,  lose " -> "fails" 
+
+Case snippet:
