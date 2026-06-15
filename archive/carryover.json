@@ -1,32 +1,32 @@
 {
-  "generated_at": "2026-06-14T21:43:19.043889+00:00",
-  "updated_date": "20260614",
+  "generated_at": "2026-06-15T23:07:54.031109+00:00",
+  "updated_date": "20260615",
   "carryover_days": 9,
   "tag_states": {
     "eli": {
-      "updated_date": "20260614",
+      "updated_date": "20260615",
       "carryover_days": 9,
       "items": [
         {
-          "id": "2606.08302v1",
+          "id": "2606.12400v1",
           "source": "arxiv",
-          "title": "HACK++: Towards More Effective Head-Aware Key-Value Compression for Efficient Visual Autoregressive Modeling",
-          "abstract": "Visual Autoregressive (VAR) models adopt a next-scale prediction paradigm, offering high-quality generation with substantially fewer decoding steps. However, existing VAR models suffer from significant attention complexity and severe memory overhead due to the accumulation of key-value (KV) caches across scales. In this paper, we tackle this challenge by introducing KV cache compression into the next-scale paradigm. We begin with an in-depth analysis of VAR attention and observe that attention heads can be stably divided into two functionally distinct categories: Contextual Heads focus on maintaining semantic consistency, while Structural Heads preserve spatial coherence. Their functional divergence makes existing one-size-fits-all compression methods perform poorly on VAR models. We further find that the two head types differ markedly in their reliance on historical scales, and that this reliance shifts across layers and generation steps, arguing for an adaptive cache budget allocation. To address these challenges, we propose HACK++, a training-free Head-Aware key-value Compression frameworK for VAR models. From a one-time offline calibration, HACK++ classifies head types and derives head-specific priors. At inference, it decouples attention from cache compression under independent budgets, bounding the current-scale attention cost while compressing the accumulated cache far more aggressively, via pattern-specific strategies and a reliance-aware budget allocation. Extensive experiments on multiple VAR models across text-to-image, class-conditional, and unified understanding-and-generation tasks validate the effectiveness and generalizability of HACK++. For example, on Infinity-2B/8B, HACK++ maintains near-lossless generation with only a 30% attention budget and a 10% cache budget, and remains robust even under a 1% cache budget.",
+          "title": "Doc-to-Atom: Learning to Compile and Compose Memory Atoms",
+          "abstract": "Long input sequences are central to document understanding and multi-step reasoning in Large Language Models, yet the quadratic cost of attention makes inference both memory-intensive and slow. Context distillation mitigates this by compressing contextual information into model parameters, and recent work such as Doc-to-LoRA amortizes context distillation into a single forward pass that generates one LoRA adapter per document. However, producing a single monolithic adapter for all queries leads to irrelevant-query interference, limited compositional recall, and poor scalability to long-document reasoning. To address these challenges, we propose Doc-to-Atom (Doc2Atom), a compositional parametric memory framework that decomposes each document into semantically typed knowledge atoms. Each atom is compiled into an independent micro-LoRA adapter and a provenance retrieval key. At inference time, a lightweight query router selects and assembles only the relevant atoms into a query-specific adapter, which is then injected into a frozen base model. The entire system is trained end-to-end through a multi-objective distillation framework. Experiments on six diverse QA benchmarks demonstrate that Doc2Atom outperforms Doc-to-LoRA baselines while reducing the memory cost of document internalization.",
           "authors": [
-            "Ziran Qin",
-            "Yuchen Jiang",
-            "Mingbao Lin",
-            "Youru Lv",
-            "Hang Guo",
-            "Wen Fei",
-            "Weiyao Lin"
+            "Xingjian Diao",
+            "Wenbo Li",
+            "Yashas Malur Saidutta",
+            "Avinash Amballa",
+            "Lazar Valkov",
+            "Srinivas Chappidi"
           ],
-          "primary_category": "cs.CV",
+          "primary_category": "cs.CL",
           "categories": [
-            "cs.CV"
+            "cs.CL",
+            "cs.IR"
           ],
-          "published": "2026-06-06T18:58:26+00:00",
-          "link": "https://arxiv.org/pdf/2606.08302v1",
+          "published": "2026-06-10T17:58:20+00:00",
+          "link": "https://arxiv.org/pdf/2606.12400v1",
           "tags": [
             "keyword:Compression",
             "keyword:LLM-kernel",
@@ -38,13 +38,13 @@
             "query:mg"
           ],
           "llm_score": 8.0,
-          "llm_evidence_en": "head-aware KV cache compression for visual autoregressive models",
-          "llm_evidence_cn": "面向视觉自回归模型的头部感知 KV 缓存压缩",
-          "llm_evidence": "面向视觉自回归模型的头部感知 KV 缓存压缩",
-          "canonical_evidence": "面向视觉自回归模型的头部感知 KV 缓存压缩",
-          "llm_tldr_en": "Introduces KV cache compression into visual autoregressive (VAR) models with head-aware division into contextual and structural heads to reduce memory overhead.",
-          "llm_tldr_cn": "该论文针对视觉自回归（VAR）模型因跨尺度累积 KV 缓存导致的内存开销问题，将 KV 缓存压缩引入下一尺度预测范式。通过分析注意力头功能，将其分为保持语义一致性的上下文头和保持空间连贯性的结构头，并据此设计头部感知压缩策略。实验证明该方法在减少内存占用的同时保持生成质量。",
-          "llm_tldr": "该论文针对视觉自回归（VAR）模型因跨尺度累积 KV 缓存导致的内存开销问题，将 KV 缓存压缩引入下一尺度预测范式。通过分析注意力头功能，将其分为保持语义一致性的上下文头和保持空间连贯性的结构头，并据此设计头部感知压缩策略。实验证明该方法在减少内存占用的同时保持生成质量。",
+          "llm_evidence_en": "compositional parametric memory framework compressing documents into memory atoms to reduce KV cache",
+          "llm_evidence_cn": "将文档压缩为语义记忆原子以优化KV缓存的组合式参数化记忆框架",
+          "llm_evidence": "将文档压缩为语义记忆原子以优化KV缓存的组合式参数化记忆框架",
+          "canonical_evidence": "将文档压缩为语义记忆原子以优化KV缓存的组合式参数化记忆框架",
+          "llm_tldr_en": "Proposes Doc-to-Atom, a framework that decomposes documents into semantically typed memory atoms, enabling compositional recall and reducing inference memory and computation through parameterized compression.",
+          "llm_tldr_cn": "该论文针对长文档推理中KV缓存开销大的问题，提出Doc-to-Atom组合式参数化记忆框架。将文档分解为语义类型的记忆原子，每个原子通过轻量级适配器编码，从而支持组合式检索和压缩。相比Doc-to-LoRA，该方法避免了查询无关干扰，提升了长文档推理的准确性和效率。实验证明在多项长文档任务上实现了更优的压缩和检索性能。",
+          "llm_tldr": "该论文针对长文档推理中KV缓存开销大的问题，提出Doc-to-Atom组合式参数化记忆框架。将文档分解为语义类型的记忆原子，每个原子通过轻量级适配器编码，从而支持组合式检索和压缩。相比Doc-to-LoRA，该方法避免了查询无关干扰，提升了长文档推理的准确性和效率。实验证明在多项长文档任务上实现了更优的压缩和检索性能。",
           "llm_tags": [
             "query:eli"
           ],
@@ -52,30 +52,30 @@
           "matched_query_text": "KV cache optimization strategies for transformer inference",
           "matched_requirement_id": "req-2",
           "selection_source": "carryover_cache",
-          "paper_id": "2606.08302v1",
+          "paper_id": "2606.12400v1",
           "carry_days": 1
         },
         {
-          "id": "2606.09080v1",
+          "id": "2606.11700v1",
           "source": "arxiv",
-          "title": "Beyond FLOPs: Benchmarking Real Inference Acceleration of LLM Pruning under a GEMM-Centric Taxonomy",
-          "abstract": "Pruning has emerged as a dominant paradigm for accelerating large language model (LLM) inference, spanning a broad spectrum of methods that remove computation across tokens, layers, heads, dimensions, and attention patterns. Despite sharing the same objective, these pruning approaches induce fundamentally different execution behaviors, causing realized speedups to depend heavily on hardware and kernel implementations. Consequently, the practical acceleration benefits of different pruning families remain poorly understood. In this work, we introduce a GEMM-centric taxonomy that reorganizes existing pruning methods according to the logical \\textbf{M}, \\textbf{N}, and \\textbf{K} dimensions of general matrix multiplication (GEMM). Leveraging this abstraction, we build a unified benchmarking framework that enables implementation-consistent comparison across the pruning design space and systematically characterizes the acceleration--quality Pareto frontier. Our results show that static depth pruning remains the strongest Pareto-optimal baseline and stays closest to its theoretical acceleration upper bound in memory-bounded scenarios. During prefill, the frontier transitions from static depth at low quality loss (0\\%--4\\%), to dynamic depth at moderate loss (5\\%--16\\%), and finally to static width pruning at higher loss levels (17\\%--26\\%). These findings establish the first unified view of the practical limits of pruning-based LLM acceleration and provide guidance for future pruning research.\\footnote{Code is available at https://github.com/EIT-NLP/LLM-Pruning/tree/main/PruningInferSim}",
+          "title": "CompRank: Efficient LLM Reranking via Token-Level Compression and Decoding-Free Scoring",
+          "abstract": "Large language model (LLM) rerankers have become an important component of modern retrieval and retrieval-augmented generation pipelines, but their high computational cost limits their applicability to long candidate lists. In this paper, we propose \\textbf{CompRank}, a token-efficient reranking framework that reduces redundant computation by aligning reranker design with the sparsity of ranking signals. CompRank decouples document representations from candidate order and query context, enabling reusable document-side states; applies segment-wise token compression to reduce query--document interaction cost; and introduces a CopyNet-style objective that directly aligns attention-based document scoring with training supervision. Experiments on seven BEIR datasets show that CompRank achieves strong reranking performance while retaining only 10.2\\% of document tokens, reaching an average NDCG@10 of 39.2 compared with 39.7 under full-token attention. Further scaling experiments on TREC-COVID show that CompRank remains stable when evaluated on candidate lists of up to 500 documents after training on 30-document lists, while achieving $4.9\\times$--$9.5\\times$ end-to-end speedup over generation-based listwise reranking and approximately $1.3\\times$ speedup over the full-token CompRank variant. These results suggest that token-level compression and decoding-free attention scoring provide an effective path toward scalable LLM-based reranking.",
           "authors": [
-            "Haozhe Hu",
-            "Hao Wu",
-            "Anhao Zhao",
-            "Longwei Ding",
-            "Peiran Yin",
-            "Yunpu Ma",
+            "Xuan Lu",
+            "Haohang Huang",
+            "Yingqi Fan",
+            "Junlong Tong",
+            "Yuxuan Zhang",
+            "Ping Nie",
+            "Rui Meng",
             "Xiaoyu Shen"
           ],
-          "primary_category": "cs.LG",
+          "primary_category": "cs.IR",
           "categories": [
-            "cs.LG",
-            "cs.CL"
+            "cs.IR"
           ],
-          "published": "2026-06-08T06:26:18+00:00",
-          "link": "https://arxiv.org/pdf/2606.09080v1",
+          "published": "2026-06-10T06:23:46+00:00",
+          "link": "https://arxiv.org/pdf/2606.11700v1",
           "tags": [
             "keyword:Compression",
             "keyword:LLM-kernel",
@@ -87,13 +87,13 @@
             "query:mg"
           ],
           "llm_score": 8.0,
-          "llm_evidence_en": "Benchmarking real inference acceleration of LLM pruning",
-          "llm_evidence_cn": "大语言模型剪枝的实测推理加速基准测试",
-          "llm_evidence": "大语言模型剪枝的实测推理加速基准测试",
-          "canonical_evidence": "大语言模型剪枝的实测推理加速基准测试",
-          "llm_tldr_en": "Introduces a GEMM-centric taxonomy to benchmark pruning methods, revealing hardware-dependent speedups beyond FLOPs.",
-          "llm_tldr_cn": "剪枝是LLM推理加速的主流方法，但不同剪枝方法带来截然不同的执行行为，实际加速高度依赖硬件和内核。本文提出以GEMM为中心的剪枝分类法，按M、N、K维度重新组织现有方法，在多种GPU上实测性能，揭示剪枝加速的真实规律。",
-          "llm_tldr": "剪枝是LLM推理加速的主流方法，但不同剪枝方法带来截然不同的执行行为，实际加速高度依赖硬件和内核。本文提出以GEMM为中心的剪枝分类法，按M、N、K维度重新组织现有方法，在多种GPU上实测性能，揭示剪枝加速的真实规律。",
+          "llm_evidence_en": "token-efficient reranking framework to reduce redundant computation in LLM rerankers",
+          "llm_evidence_cn": "用于减少LLM重排序器冗余计算的令牌高效重排序框架",
+          "llm_evidence": "用于减少LLM重排序器冗余计算的令牌高效重排序框架",
+          "canonical_evidence": "用于减少LLM重排序器冗余计算的令牌高效重排序框架",
+          "llm_tldr_en": "CompRank reduces LLM reranker cost by decoupling document representations, applying segment-wise token compression, and using a CopyNet-style scoring objective, enabling efficient reranking with minimal quality loss.",
+          "llm_tldr_cn": "针对LLM重排序器计算成本高的问题，本文提出CompRank框架：将文档表示与候选顺序和查询上下文解耦以实现重用，通过分段令牌压缩降低交互成本，并引入CopyNet风格目标直接对齐基于注意力的文档评分。实验表明在显著减少令牌使用量的同时保持了重排序质量，为检索增强生成管线的加速提供了实用方案。",
+          "llm_tldr": "针对LLM重排序器计算成本高的问题，本文提出CompRank框架：将文档表示与候选顺序和查询上下文解耦以实现重用，通过分段令牌压缩降低交互成本，并引入CopyNet风格目标直接对齐基于注意力的文档评分。实验表明在显著减少令牌使用量的同时保持了重排序质量，为检索增强生成管线的加速提供了实用方案。",
           "llm_tags": [
             "query:eli"
           ],
@@ -101,27 +101,33 @@
           "matched_query_text": "efficient inference for large language models",
           "matched_requirement_id": "req-5",
           "selection_source": "carryover_cache",
-          "paper_id": "2606.09080v1",
+          "paper_id": "2606.11700v1",
           "carry_days": 1
         },
         {
-          "id": "2606.10671v1",
+          "id": "2606.10650v1",
           "source": "arxiv",
-          "title": "FadeMem: Distance-Aware Memory Consolidation for Autoregressive Video Diffusion",
-          "abstract": "Autoregressive video generators synthesize long videos by generating successive temporal segments, but their historical KV cache grows with video length. Existing bounded-cache methods reduce this cost with local windows, sink tokens, or compressed memory states, yet they usually assign fixed roles to different parts of the history. We propose FadeMem, a distance-aware KV memory consolidation mechanism that organizes historical KV blocks into a temporal hierarchy under a fixed cache budget. This design is motivated by frequency-dependent temporal decay: fine details decorrelate quickly, while coarse scene structure and identity remain useful over longer horizons. During generation, new history is inserted as fine-grained entries, while older adjacent entries are progressively merged under a power-law temporal allocation schedule, yielding a dense-near, sparse-far memory within one cache. Without architectural changes, FadeMem preserves recent context for short-term dynamics and compact long-range anchors for identity and scene coherence. Experiments show improved subject consistency, background stability, and temporal coherence over existing bounded-cache strategies.",
+          "title": "Dynamic Linear Attention",
+          "abstract": "The scalability of Large Language Models (LLMs) to long contexts is fundamentally constrained by the quadratic complexity of standard attention, motivating the adoption of linear attention mechanisms with sub-quadratic cost. To improve representation capacity under long contexts, recent approaches organize memory in a multi-state manner. However, existing multi-state linear attention methods rely on fixed state merging policies that cannot adapt to dynamically varying token importance, irreversibly obscuring critical tokens and causing severe error accumulation over long sequences. To address this limitation, we propose DLA, a dynamic memory modeling framework for multi-state linear attention. DLA introduces (i) Information-Aware Dynamic State Merging, which adaptively determines state boundaries based on token-level information variation, preserving high-resolution representations around semantic transitions while aggressively summarizing stable regions, and (ii) Capacity-Bounded Memory Modeling, which maintains a fixed-size, chronologically ordered state cache by selectively merging adjacent low-information states to control memory growth with minimal information loss. We pre-train DLA on two different linear attention models and evaluate on 16 datasets across three categories. Experimental results demonstrate the superiority of DLA over state-of-the-art.",
           "authors": [
-            "Yu Lu",
-            "Junjie Yang",
-            "Piotr Koniusz",
-            "YuXin Song",
-            "Yi Yang"
+            "Xin Wang",
+            "Hui Shen",
+            "Boyuan Zheng",
+            "Xueshen Liu",
+            "Minkyoung Cho",
+            "Zhongwei Wan",
+            "Zesen Zhao",
+            "Zhuoqing Mao",
+            "Shen Yan",
+            "Mi Zhang"
           ],
-          "primary_category": "cs.CV",
+          "primary_category": "cs.CL",
           "categories": [
-            "cs.CV"
+            "cs.CL",
+            "cs.AI"
           ],
-          "published": "2026-06-09T10:22:18+00:00",
-          "link": "https://arxiv.org/pdf/2606.10671v1",
+          "published": "2026-06-09T09:57:48+00:00",
+          "link": "https://arxiv.org/pdf/2606.10650v1",
           "tags": [
             "keyword:Compression",
             "keyword:LLM-kernel",
@@ -133,70 +139,27 @@
             "query:mg"
           ],
           "llm_score": 8.0,
-          "llm_evidence_en": "Distance-aware KV cache consolidation for autoregressive video diffusion",
-          "llm_evidence_cn": "自回归视频扩散的距离感知KV缓存整合",
-          "llm_evidence": "自回归视频扩散的距离感知KV缓存整合",
-          "canonical_evidence": "自回归视频扩散的距离感知KV缓存整合",
-          "llm_tldr_en": "Proposes FadeMem, a distance-aware KV memory consolidation mechanism with temporal hierarchy under fixed budget for video generation.",
-          "llm_tldr_cn": "自回归视频生成器KV缓存随视频长度增长，现有有界缓存方法分配固定角色。本文提出FadeMem，距离感知KV记忆整合机制，在固定预算下构建时间层次结构，根据频率相关时间衰减将新历史插入细粒度条目，旧历史合并，有效长视频生成。",
-          "llm_tldr": "自回归视频生成器KV缓存随视频长度增长，现有有界缓存方法分配固定角色。本文提出FadeMem，距离感知KV记忆整合机制，在固定预算下构建时间层次结构，根据频率相关时间衰减将新历史插入细粒度条目，旧历史合并，有效长视频生成。",
+          "llm_evidence_en": "dynamic linear attention reduces quadratic complexity for LLM inference",
+          "llm_evidence_cn": "动态线性注意力降低LLM推理二次复杂度",
+          "llm_evidence": "动态线性注意力降低LLM推理二次复杂度",
+          "canonical_evidence": "动态线性注意力降低LLM推理二次复杂度",
+          "llm_tldr_en": "DLA proposes information-aware dynamic state merging for multi-state linear attention, improving long-context efficiency and reducing error accumulation.",
+          "llm_tldr_cn": "针对标准注意力二次复杂度限制，DLA提出信息感知动态状态合并框架，自适应调整状态边界，缓解长序列中关键token被掩盖导致的误差累积，从而提升线性注意力在长上下文下的表示能力与效率。",
+          "llm_tldr": "针对标准注意力二次复杂度限制，DLA提出信息感知动态状态合并框架，自适应调整状态边界，缓解长序列中关键token被掩盖导致的误差累积，从而提升线性注意力在长上下文下的表示能力与效率。",
           "llm_tags": [
             "query:eli"
           ],
           "matched_query_tag": "query:eli",
-          "matched_query_text": "KV cache optimization strategies for transformer inference",
-          "matched_requirement_id": "req-2",
+          "matched_query_text": "efficient inference for large language models",
+          "matched_requirement_id": "req-5",
           "selection_source": "carryover_cache",
-          "paper_id": "2606.10671v1",
-          "carry_days": 1
-        },
-        {
-          "id": "2606.10435v1",
-          "source": "arxiv",
-          "title": "Parallel Causal Associative Fields: Gated Sparse Memory for Long-Context Language Modeling",
-          "abstract": "Transformers achieve strong language modeling performance by providing direct token-to-token communication paths, but causal self-attention scales quadratically with context length. Recurrent and state-space models reduce this cost, yet compress history into sequentially updated fixed-size states. This paper studies a third primitive: a parallel content-addressed memory over causal successor records. The proposed Parallel Causal Associative Field (PCAF) writes local records from a context window into hash buckets, retrieves a bounded candidate set for the current query, forms a sparse cache distribution over successor tokens, and mixes that cache with a parametric local language model through a learned gate. The resulting model maintains sparse long-context access while avoiding a single fixed recurrent state bottleneck. We evaluate PCAF under full autoregressive pretraining on WikiText-103 and PG-19 using a distributed Google Cloud TPU v4-32 pod. At 303M parameters and context length T = 2048, PCAF-semantic reaches 36.31 perplexity on WikiText-103 and 52.45 perplexity on PG-19, compared with 47.49 and 53.84 for a matched dense Transformer. PCAF-semantic simultaneously processes 0.61-0.62M tokens/s across the TPU pod, versus 0.43M tokens/s for dense and local attention baselines. Supporting 41M-parameter multi-seed sweeps and single-GPU component ablations show that the associative cache, retrieval capacity, and learned gate materially affect the speed-quality trade-off.",
-          "authors": [
-            "Muhammad Ahmed"
-          ],
-          "primary_category": "cs.LG",
-          "categories": [
-            "cs.LG",
-            "cs.CL"
-          ],
-          "published": "2026-06-09T05:23:17+00:00",
-          "link": "https://arxiv.org/pdf/2606.10435v1",
-          "tags": [
-            "keyword:Compression",
-            "keyword:LLM-kernel",
-            "keyword:eli",
-            "keyword:mg",
-            "query:Compression",
-            "query:LLM-kernel",
-            "query:eli",
-            "query:mg"
-          ],
-          "llm_score": 8.0,
-          "llm_evidence_en": "sparse memory as KV cache alternative for long-context",
-          "llm_evidence_cn": "稀疏记忆作为长上下文KV缓存替代方案",
-          "llm_evidence": "稀疏记忆作为长上下文KV缓存替代方案",
-          "canonical_evidence": "稀疏记忆作为长上下文KV缓存替代方案",
-          "llm_tldr_en": "PCAF introduces a parallel content-addressable sparse memory that replaces full self-attention, reducing quadratic cost while maintaining modeling quality for long-context language modeling.",
-          "llm_tldr_cn": "Transformer自注意力机制在长上下文时二次成本高，递归模型则压缩历史。本文提出并行因果关联域（PCAF），通过哈希桶写入局部记录形成稀疏缓存分布，与参数化局部语言模型混合。实现近似线性复杂度，在长上下文语言建模上保持竞争力，是一种新颖的稀疏记忆架构。",
-          "llm_tldr": "Transformer自注意力机制在长上下文时二次成本高，递归模型则压缩历史。本文提出并行因果关联域（PCAF），通过哈希桶写入局部记录形成稀疏缓存分布，与参数化局部语言模型混合。实现近似线性复杂度，在长上下文语言建模上保持竞争力，是一种新颖的稀疏记忆架构。",
-          "llm_tags": [
-            "query:eli"
-          ],
-          "matched_query_tag": "query:eli",
-          "matched_query_text": "KV cache optimization strategies for transformer inference",
-          "matched_requirement_id": "req-2",
-          "selection_source": "carryover_cache",
-          "paper_id": "2606.10435v1",
+          "paper_id": "2606.10650v1",
           "carry_days": 1
         }
       ]
     },
     "mg": {
-      "updated_date": "20260614",
+      "updated_date": "20260615",
       "carryover_days": 9,
       "items": [
         {
@@ -230,89 +193,44 @@
             "query:mg"
           ],
           "llm_score": 8.0,
-          "llm_evidence_en": "End-to-end TTS using LLM and diffusion flow-matching",
-          "llm_evidence_cn": "使用LLM和扩散流匹配的端到端文本转语音系统",
-          "llm_evidence": "使用LLM和扩散流匹配的端到端文本转语音系统",
-          "canonical_evidence": "使用LLM和扩散流匹配的端到端文本转语音系统",
-          "llm_tldr_en": "Proposes a fully end-to-end framework unifying speech tokenizer, LLM, flow-matching model, and reward model for TTS.",
-          "llm_tldr_cn": "现有SOTA文本转语音系统采用级联管道，独立训练分词器、LLM、扩散流匹配模型和奖励模型。本文提出端到端优化框架，统一联合训练这些组件，通过多任务目标鼓励离散语音标记捕获声学和语义信息，提升整体性能。",
-          "llm_tldr": "现有SOTA文本转语音系统采用级联管道，独立训练分词器、LLM、扩散流匹配模型和奖励模型。本文提出端到端优化框架，统一联合训练这些组件，通过多任务目标鼓励离散语音标记捕获声学和语义信息，提升整体性能。",
+          "llm_evidence_en": "uses flow-matching model for text-to-speech generation within end-to-end framework",
+          "llm_evidence_cn": "在端到端框架中使用流匹配模型进行文本到语音生成",
+          "llm_evidence": "在端到端框架中使用流匹配模型进行文本到语音生成",
+          "canonical_evidence": "在端到端框架中使用流匹配模型进行文本到语音生成",
+          "llm_tldr_en": "Proposes an end-to-end training framework for discrete token LLM-based TTS, unifying speech tokenizer, LLM, flow-matching model, and reward model.",
+          "llm_tldr_cn": "该论文提出一种端到端优化框架，统一训练语音分词器、自回归大语言模型、基于流匹配的扩散声码器和奖励模型，通过多任务目标联合优化使离散语音令牌空间捕获声学和语义信息，实验显示端到端训练相比级联系统在语音质量和自然度上有显著提升。",
+          "llm_tldr": "该论文提出一种端到端优化框架，统一训练语音分词器、自回归大语言模型、基于流匹配的扩散声码器和奖励模型，通过多任务目标联合优化使离散语音令牌空间捕获声学和语义信息，实验显示端到端训练相比级联系统在语音质量和自然度上有显著提升。",
           "llm_tags": [
             "query:mg"
           ],
           "matched_query_tag": "query:mg",
-          "matched_query_text": "Latest methods for multimodal content creation including text to video and audio generation",
-          "matched_requirement_id": "req-17",
+          "matched_query_text": "flow matching generative models",
+          "matched_requirement_id": "req-15",
           "selection_source": "carryover_cache",
           "paper_id": "2606.09234v1",
           "carry_days": 1
         },
         {
-          "id": "2606.10829v1",
+          "id": "2606.13989v1",
           "source": "arxiv",
-          "title": "Attention-Discounted Adaptive Sampler for Masked Diffusion Language Models",
-          "abstract": "Masked diffusion language models can reduce inference steps by revealing multiple tokens per denoising iteration, but this parallelism is fragile: positions that are individually confident may be unsafe to commit together when their predictions are coupled. Existing training-free samplers such as Top-\\(k\\), Fast-dLLM, and EB-Sampler mainly control how many tokens to reveal, while often ranking candidates by token-wise scores that ignore interactions within the selected set. We propose ADAS, a training-free reranking rule for parallel masked diffusion decoding. ADAS leaves the base sampler's stopping rule unchanged and modifies only subset construction: it greedily discounts a candidate when it attends strongly to already selected positions whose predictions remain uncertain. Unlike graph-constrained methods that turn attention into hard compatibility constraints, ADAS keeps attention continuous and uses it as a soft marginal penalty. Across LLaDA-8B-Base and Dream-7B-Base on GSM8K, MATH500, HumanEval, and MBPP, plugging ADAS into Top-\\(k\\), Fast-dLLM, and EB-Sampler improves low-NFE performance at matched denoiser evaluations by \\(9.11\\) and \\(10.46\\) percentage points on average, respectively, with \\(3.1\\%\\) per-forward runtime overhead. These results show that soft attention-discounted reranking is a simple and modular way to improve quality in highly parallel decoding for masked diffusion language models.",
+          "title": "Mask, Sample, Revise: A Revisable CTMC Inference Stack for Guided Discrete Flow Matching Text-to-Speech",
+          "abstract": "Recent alignment-free non-autoregressive (NAR) text-to-speech (TTS) models formulate synthesis as a conditional infilling task, bypassing explicit duration predictors and external aligners. When speech is represented with neural codec tokens, the infilling problem becomes discrete, making Discrete Flow Matching (DFM), a Continuous-Time Markov Chain (CTMC) framework for discrete generation, a natural fit. However, inference-time control for stable low-step conditional infilling remains underexplored. We propose Mask, Sample, Revise, an inference-time CTMC stack for alignment-free DFM-TTS. The stack combines predictor-free guidance to strengthen text conditioning, prompt-matched conditional coupling to align the probability path with the acoustic prompt, and SC-ReMask, a schedule-constrained remasking mechanism that introduces token-to-mask transitions so early de-masking decisions can be revised. These components require no post-hoc fine-tuning and operate in a single tau-leaping sampler. Controlled ablations show that this stack improves intelligibility and robustness in the low-NFE prompted setting, outperforming unguided and guidance-only samplers with substantially more steps.",
           "authors": [
-            "Yusuf Sahin",
-            "Ahmed Rockey Saikia",
-            "Volkan Cevher",
-            "Paolo Favaro"
-          ],
-          "primary_category": "cs.CL",
-          "categories": [
-            "cs.CL",
-            "cs.AI"
-          ],
-          "published": "2026-06-09T13:17:27+00:00",
-          "link": "https://arxiv.org/pdf/2606.10829v1",
-          "tags": [
-            "keyword:Compression",
-            "keyword:LLM-kernel",
-            "keyword:eli",
-            "keyword:mg",
-            "query:Compression",
-            "query:LLM-kernel",
-            "query:eli",
-            "query:mg"
-          ],
-          "llm_score": 8.0,
-          "llm_evidence_en": "diffusion language model parallel decoding sampler",
-          "llm_evidence_cn": "扩散语言模型并行解码采样器",
-          "llm_evidence": "扩散语言模型并行解码采样器",
-          "canonical_evidence": "扩散语言模型并行解码采样器",
-          "llm_tldr_en": "ADAS is a training-free reranking rule for masked diffusion language models that discounts candidates attending strongly to already-selected positions, improving the safety and quality of parallel token decoding.",
-          "llm_tldr_cn": "针对掩蔽扩散语言模型并行解码中因token预测耦合导致提交不稳健的问题，本文提出ADAS（注意力折扣自适应采样器）。ADAS是一种无需训练的重排序规则，在构建并行解码子集时，若一个候选token与已选位置存在强注意力交互，则降低其优先级。实验表明，ADAS在保持推理速度的同时显著提高了生成质量。该工作为扩散语言模型的加速解码提供了更可靠的方案。",
-          "llm_tldr": "针对掩蔽扩散语言模型并行解码中因token预测耦合导致提交不稳健的问题，本文提出ADAS（注意力折扣自适应采样器）。ADAS是一种无需训练的重排序规则，在构建并行解码子集时，若一个候选token与已选位置存在强注意力交互，则降低其优先级。实验表明，ADAS在保持推理速度的同时显著提高了生成质量。该工作为扩散语言模型的加速解码提供了更可靠的方案。",
-          "llm_tags": [
-            "query:mg"
-          ],
-          "matched_query_tag": "query:mg",
-          "matched_query_text": "diffusion models for generative tasks",
-          "matched_requirement_id": "req-12",
-          "selection_source": "carryover_cache",
-          "paper_id": "2606.10829v1",
-          "carry_days": 1
-        },
-        {
-          "id": "2606.09019v1",
-          "source": "arxiv",
-          "title": "TLDR: Compressing Audio Tokens for Efficient Autoregressive Text-to-Speech",
-          "abstract": "Codec-based autoregressive (AR) speech language models have achieved strong text-to-speech (TTS) quality by modeling speech as sequences of discrete audio tokens with large pretrained backbones. However, this token-level formulation creates a structural efficiency bottleneck: speech-token sequences are much longer than text sequences, requiring the AR backbone to perform causal computation at every token position and maintain a KV cache that grows with the sequence length. We introduce TLDR, a patch-based autoregressive framework that accelerates codec-based AR-TTS by shifting the causal modeling from token-level speech sequences to patch-level sequences. TLDR groups consecutive codec tokens into compact latent patches using a lightweight compressor, models the resulting shorter patch sequence with a frozen pretrained AR-TTS backbone adapted by LoRA, and reconstructs fine-grained speech tokens within each patch using a speaker-conditioned extractor. With a patch size of 4, TLDR achieves a 1.8x inference speedup over the baseline AR-TTS model and reduces global KV-cache memory by up to 75%. Experimental results indicate that patch-level global causal modeling can be a practical way to reduce the inference cost of pretrained codec-based AR-TTS systems without replacing the existing modules.",
-          "authors": [
-            "Yejin Lee",
-            "Junwon Moon",
-            "Hyoeun Kim",
-            "Hyunjin Choi",
-            "Heeseung Kim",
-            "Kyuhong Shim"
+            "Alef Iury Siqueira Ferreira",
+            "Lucas Rafael Stefanel Gris",
+            "Luiz Fernando de Araújo Vidal",
+            "Frederico Santos de Oliveira",
+            "Christopher Dane Shulby",
+            "Anderson da Silva Soares",
+            "Arlindo Rodrigues Galvão Filho"
           ],
           "primary_category": "cs.SD",
           "categories": [
             "cs.SD",
             "cs.AI"
           ],
-          "published": "2026-06-08T04:32:08+00:00",
-          "link": "https://arxiv.org/pdf/2606.09019v1",
+          "published": "2026-06-12T00:13:35+00:00",
+          "link": "https://arxiv.org/pdf/2606.13989v1",
           "tags": [
             "keyword:Compression",
             "keyword:LLM-kernel",
@@ -324,169 +242,79 @@
             "query:mg"
           ],
           "llm_score": 8.0,
-          "llm_evidence_en": "audio token compression for efficient TTS inference",
-          "llm_evidence_cn": "音频令牌压缩用于高效TTS推理",
-          "llm_evidence": "音频令牌压缩用于高效TTS推理",
-          "canonical_evidence": "音频令牌压缩用于高效TTS推理",
-          "llm_tldr_en": "TLDR accelerates codec-based autoregressive TTS by grouping audio tokens into latent patches and shifting causal modeling to patch level, reducing KV cache size and improving throughput.",
-          "llm_tldr_cn": "针对自回归文本到语音合成中因音频令牌序列过长导致的KV缓存膨胀和推理效率低下问题，本文提出TLDR框架。TLDR将连续的代码c令牌分组为紧凑的潜变量补丁，并利用轻量压缩机在补丁级别进行因果建模，从而大幅缩短序列长度。实验表明，TLDR在保持合成质量的同时显著降低了推理延迟和内存占用。该工作为实时TTS应用提供了高效的解决方案。",
-          "llm_tldr": "针对自回归文本到语音合成中因音频令牌序列过长导致的KV缓存膨胀和推理效率低下问题，本文提出TLDR框架。TLDR将连续的代码c令牌分组为紧凑的潜变量补丁，并利用轻量压缩机在补丁级别进行因果建模，从而大幅缩短序列长度。实验表明，TLDR在保持合成质量的同时显著降低了推理延迟和内存占用。该工作为实时TTS应用提供了高效的解决方案。",
+          "llm_evidence_en": "discrete flow matching for text-to-speech",
+          "llm_evidence_cn": "离散流匹配用于文本到语音",
+          "llm_evidence": "离散流匹配用于文本到语音",
+          "canonical_evidence": "离散流匹配用于文本到语音",
+          "llm_tldr_en": "Proposes Mask, Sample, Revise inference stack for discrete flow matching text-to-speech, combining predictor-free guidance and conditional coupling for stable low-step generation.",
+          "llm_tldr_cn": "针对离散流匹配文本到语音生成中低步数条件填充不稳定的问题，本文提出了掩码-采样-修订推理栈。该栈结合无预测器引导和提示匹配条件耦合，加强了文本条件控制。在离散流匹配框架下实现了稳定可控的快速语音合成。",
+          "llm_tldr": "针对离散流匹配文本到语音生成中低步数条件填充不稳定的问题，本文提出了掩码-采样-修订推理栈。该栈结合无预测器引导和提示匹配条件耦合，加强了文本条件控制。在离散流匹配框架下实现了稳定可控的快速语音合成。",
           "llm_tags": [
             "query:mg"
           ],
           "matched_query_tag": "query:mg",
-          "matched_query_text": "Latest methods for multimodal content creation including text to video and audio generation",
-          "matched_requirement_id": "req-17",
+          "matched_query_text": "flow matching generative models",
+          "matched_requirement_id": "req-15",
           "selection_source": "carryover_cache",
-          "paper_id": "2606.09019v1",
+          "paper_id": "2606.13989v1",
           "carry_days": 1
         },
         {
-          "id": "2606.11611v1",
+          "id": "2606.14162v1",
           "source": "arxiv",
-          "title": "SARA: A Dual-Stream VAE for High-Fidelity Speech Generation via Integrating Semantic and Acoustic Representations",
-          "abstract": "Zero-shot text-to-speech (TTS) relies on robust speech representations. However, current speech tokenizers face a fundamental trade-off: acoustic codecs preserve high-fidelity audio but lack linguistic constraints, causing content errors during generation, whereas semantic tokens from self-supervised learning (SSL) models ensure precise text alignment but discard some acoustic information. To bridge this gap, we propose SARA, a dual-stream VAE that directly fuses a frozen SSL semantic anchor with a dedicated residual acoustic encoder. This effectively mitigates the dilemma, creating an efficient and compact latent space without relying on complex regularizers. SARA achieves superior reconstruction quality over strong baselines. Furthermore, in downstream zero-shot TTS tasks, it yields highly natural and expressive synthesis quality, and maintains robust generation performance even under accelerated inference, offering a favorable trade-off between synthesis speed and computational cost.",
+          "title": "VideoWeave: Unlocking Geometric Consistency in Video Generation via Joint Geometry-Video Modeling",
+          "abstract": "Large-scale video diffusion models often fail to preserve 3D structure over time, causing geometric drift and implausible motion under viewpoint changes. Existing methods usually enforce geometric consistency by using explicit geometry reconstructions, such as depth maps, point clouds, or reconstructed 3D structures, to define conditions, supervision, or reward signals, making the generator sensitive to errors from upstream geometry pipelines. We propose VideoWeave, a latent-space post-training framework that uses implicit geometry-model features to constrain the generative distribution, providing a more flexible and non-rigid form of guidance that mitigates the impact of reconstruction errors from geometry models. Specifically, VideoWeave adapts these features into geometry latents and jointly models them with video latents in a shared denoising space, allowing geometry to shape the generative distribution during training. To support this process, we build GeoVid-80K, an 80K-video dataset with paired appearance and geometry representations. Experiments on text-to-video and image-to-video generation show that VideoWeave improves geometric coherence while preserving strong visual quality. VideoWeave project page at https://videoweave.github.io/",
           "authors": [
-            "Peijie Chen",
-            "Wenhao Guan",
-            "Weijie Wu",
-            "Kaidi Wang",
-            "Daiyu Huang",
-            "Zhuanling Zha",
-            "Junbo Li",
-            "Jun Fang",
-            "Qingyang Hong",
-            "Lin Li"
-          ],
-          "primary_category": "cs.SD",
-          "categories": [
-            "cs.SD"
-          ],
-          "published": "2026-06-10T03:23:21+00:00",
-          "link": "https://arxiv.org/pdf/2606.11611v1",
-          "tags": [
-            "keyword:Compression",
-            "keyword:LLM-kernel",
-            "keyword:eli",
-            "keyword:mg",
-            "query:Compression",
-            "query:LLM-kernel",
-            "query:eli",
-            "query:mg"
-          ],
-          "llm_score": 8.0,
-          "llm_evidence_en": "High-fidelity speech generation for zero-shot TTS",
-          "llm_evidence_cn": "用于零样本文本到语音的高保真语音生成",
-          "llm_evidence": "用于零样本文本到语音的高保真语音生成",
-          "canonical_evidence": "用于零样本文本到语音的高保真语音生成",
-          "llm_tldr_en": "SARA proposes a dual-stream VAE that fuses frozen SSL semantic anchor with residual acoustic encoder for zero-shot TTS, achieving superior reconstruction quality over prior codecs.",
-          "llm_tldr_cn": "针对语音分词器在声学保真和语义约束间的权衡问题，本文提出SARA双流VAE，通过将冻结的自监督语义锚点与专用残差声学编码器融合，在不依赖复杂正则化器的情况下创建了高效紧凑的潜在空间。实验表明，SARA在零样本文本到语音任务上实现了优于现有方法的重建质量，有效缓解了传统权衡。该工作为高保真语音生成提供了新框架。",
-          "llm_tldr": "针对语音分词器在声学保真和语义约束间的权衡问题，本文提出SARA双流VAE，通过将冻结的自监督语义锚点与专用残差声学编码器融合，在不依赖复杂正则化器的情况下创建了高效紧凑的潜在空间。实验表明，SARA在零样本文本到语音任务上实现了优于现有方法的重建质量，有效缓解了传统权衡。该工作为高保真语音生成提供了新框架。",
-          "llm_tags": [
-            "query:mg"
-          ],
-          "matched_query_tag": "query:mg",
-          "matched_query_text": "Latest methods for multimodal content creation including text to video and audio generation",
-          "matched_requirement_id": "req-17",
-          "selection_source": "carryover_cache",
-          "paper_id": "2606.11611v1",
-          "carry_days": 1
-        },
-        {
-          "id": "2606.10275v1",
-          "source": "arxiv",
-          "title": "FoA-SR: Faithful or Aesthetic? Profile-Aware Preference Optimization for Real-World Image Super-Resolution",
-          "abstract": "Real-world image super-resolution (SR) is often designed with a single restoration objective, despite the current capacity of generative models to produce multiple high-quality reconstructions for the same input. In this paper, we argue that the best restoration strategy is subject to the specific restoration profile: a Faithful restoration prioritizes reference consistency, structure preservation, and hallucination suppression, whereas an Aesthetic restoration prioritizes visually pleasing and natural-looking details. We propose FoA-SR, a novel preference optimization approach to real-world SR based on profiles. To achieve this goal, FoA-SR starts with our supervised FLUX.2-based SR adapter (Flux2SR) trained with LR latent conditioning, flow matching, and image-space reconstruction losses for paired LR-to-HR image super-resolution. Following the development of the shared supervised super-resolution adapter, FoA-SR generates a shared stochastic candidate pool for each input image and ranks the same candidates using profile-specific Faithful and Aesthetic rewards to mine winner-loser pairs. These pairs are used to fine-tune separate LoRA adapters while keeping the base model frozen. Experiments on RealSR and DIV2K show that FoA-SR can steer the same SR adapter towards distinct restoration objectives: a Faithful adapter improves reference-consistent metrics while an Aesthetic adapter boosts metrics that measure perceptual quality without reference. Our candidate-pool analysis shows that Faithful and Aesthetic rewards frequently select different winners, and a Hybrid-LoRA ablation shows that collapsing both profiles into one reward yields an implicit compromise rather than explicit profile control.",
-          "authors": [
-            "Amjad Mahdi Alqarni",
-            "Peizhong Ju"
+            "Xunzhi Xiang",
+            "Zixuan Duan",
+            "Yabo Chen",
+            "Zhengxuan Wei",
+            "Guiyu Zhang",
+            "Zixiao Gu",
+            "Zhe Gao",
+            "Haibin Huang",
+            "Chi Zhang",
+            "Qi Fan",
+            "Xuelong Li"
           ],
           "primary_category": "cs.CV",
           "categories": [
             "cs.CV"
           ],
-          "published": "2026-06-09T00:44:59+00:00",
-          "link": "https://arxiv.org/pdf/2606.10275v1",
+          "published": "2026-06-12T06:41:13+00:00",
+          "link": "https://arxiv.org/pdf/2606.14162v1",
           "tags": [
             "keyword:LLM-kernel",
-            "keyword:eli",
             "keyword:mg",
-            "query:LLM-kernel",
             "query:mg"
           ],
           "llm_score": 8.0,
-          "llm_evidence_en": "proposes profile-aware preference optimization for real-world image super-resolution",
-          "llm_evidence_cn": "提出面向真实世界图像超分辨率的轮廓感知偏好优化",
-          "llm_evidence": "提出面向真实世界图像超分辨率的轮廓感知偏好优化",
-          "canonical_evidence": "提出面向真实世界图像超分辨率的轮廓感知偏好优化",
-          "llm_tldr_en": "FoA-SR introduces profile-aware preference optimization for real-world SR, using a FLUX.2-based adapter (Flux2SR) to produce faithful or aesthetic restorations based on user preference.",
-          "llm_tldr_cn": "真实世界图像超分辨率通常采用单一复原目标，但不同场景需要忠实或美观的不同偏好。本文提出FoA-SR，一种基于轮廓感知的偏好优化方法。首先训练基于FLUX.2的SR适配器Flux2SR，然后通过偏好学习让模型根据用户指定轮廓（忠实或美观）生成结果。在多个真实世界SR基准上，FoA-SR在忠实度和美观度方面均取得最佳平衡，为个性化超分提供了新范式。",
-          "llm_tldr": "真实世界图像超分辨率通常采用单一复原目标，但不同场景需要忠实或美观的不同偏好。本文提出FoA-SR，一种基于轮廓感知的偏好优化方法。首先训练基于FLUX.2的SR适配器Flux2SR，然后通过偏好学习让模型根据用户指定轮廓（忠实或美观）生成结果。在多个真实世界SR基准上，FoA-SR在忠实度和美观度方面均取得最佳平衡，为个性化超分提供了新范式。",
+          "llm_evidence_en": "video generation with geometric consistency",
+          "llm_evidence_cn": "视频生成中保持几何一致性",
+          "llm_evidence": "视频生成中保持几何一致性",
+          "canonical_evidence": "视频生成中保持几何一致性",
+          "llm_tldr_en": "VideoWeave uses implicit geometry-model features to constrain video diffusion, improving 3D consistency without explicit depth maps.",
+          "llm_tldr_cn": "针对视频扩散模型在视角变化时出现几何漂移的问题，提出VideoWeave后训练框架，利用隐式几何模型特征在潜空间约束生成分布，避免上游几何重建误差，提升视频的3D结构一致性，在多个视频生成基准上达到更优的几何稳定性。",
+          "llm_tldr": "针对视频扩散模型在视角变化时出现几何漂移的问题，提出VideoWeave后训练框架，利用隐式几何模型特征在潜空间约束生成分布，避免上游几何重建误差，提升视频的3D结构一致性，在多个视频生成基准上达到更优的几何稳定性。",
           "llm_tags": [
             "query:mg"
           ],
           "matched_query_tag": "query:mg",
-          "matched_query_text": "image super resolution deep learning",
-          "matched_requirement_id": "req-14",
+          "matched_query_text": "text-to-video generation with transformers",
+          "matched_requirement_id": "req-11",
           "selection_source": "carryover_cache",
-          "paper_id": "2606.10275v1",
-          "carry_days": 1
-        },
-        {
-          "id": "2606.09131v1",
-          "source": "arxiv",
-          "title": "Late-Layer Fusion is Enough: Dual-Path Vision Token Routing for Multimodal Large Language Models under Visual Saturation",
-          "abstract": "Multimodal large language models (MLLMs) commonly inherit the deep, symmetric Transformer backbone designed for unimodal text modeling, and apply the same computation uniformly to image and language tokens. This design overlooks a key modality asymmetry: image and text tokens differ substantially in information density, redundancy, and required reasoning depth. Through a layer-wise analysis of LLaVA-1.5, we observe that vision tokens tend to saturate in the middle layers. Specifically, text-to-image attention decreases from 0.68 at layer 0 to 0.07 by layer 4, and stabilizes near 0.04 after layer 18, whereas text tokens continue to benefit from deep semantic processing. These findings suggest a mismatch between architectural symmetry and depth-asynchronous modality evolution, resulting in redundant visual computation and possible drift in perceptual representations during deep task-specific adaptation. Motivated by this, we propose Dual-Path Vision Token Routing (DPVR), a modality-asymmetric routing framework for efficient MLLMs. Its core instantiation, DPVR-LF (Late-Layer Fusion), routes vision tokens at the saturation point into a one-layer trainable side branch, runs a thirteen-layer text-only forward that skips image positions in the deep stack, and re-fuses the visual and textual streams only at the final layer. With approximately 3% trainable parameters, DPVR-LF preserves competitive multimodal performance on standard benchmarks while reducing visual computation in the deep Transformer stack. The results challenge the conventional assumption that vision tokens must traverse all deep language-model layers, and indicate that a single late fusion layer can be sufficient for maintaining strong perceptual competence in LLaVA-style MLLMs.",
-          "authors": [
-            "Siyuan Liu",
-            "Jinyang Wu"
-          ],
-          "primary_category": "cs.AI",
-          "categories": [
-            "cs.AI",
-            "cs.CL",
-            "cs.CV",
-            "cs.LG"
-          ],
-          "published": "2026-06-08T07:28:14+00:00",
-          "link": "https://arxiv.org/pdf/2606.09131v1",
-          "tags": [
-            "keyword:Compression",
-            "keyword:LLM-kernel",
-            "keyword:eli",
-            "keyword:mg",
-            "query:Compression",
-            "query:LLM-kernel",
-            "query:eli",
-            "query:mg"
-          ],
-          "llm_score": 8.0,
-          "llm_evidence_en": "vision token routing to reduce computation in MLLMs",
-          "llm_evidence_cn": "多模态大模型中视觉token路由减少计算",
-          "llm_evidence": "多模态大模型中视觉token路由减少计算",
-          "canonical_evidence": "多模态大模型中视觉token路由减少计算",
-          "llm_tldr_en": "Observes vision token saturation in MLLMs and proposes dual-path routing that only fuses vision tokens in late layers, reducing computation without performance loss.",
-          "llm_tldr_cn": "通过分析LLaVA-1.5发现视觉token在浅层饱和，深层不再需要与文本融合。提出双路径视觉token路由，让视觉token仅在前几层与文本交互，后期层独立处理，大幅减少计算开销。在多个MLLM基准上验证了该方法在保持性能的同时提升推理效率，为高效多模态模型设计提供了新策略。",
-          "llm_tldr": "通过分析LLaVA-1.5发现视觉token在浅层饱和，深层不再需要与文本融合。提出双路径视觉token路由，让视觉token仅在前几层与文本交互，后期层独立处理，大幅减少计算开销。在多个MLLM基准上验证了该方法在保持性能的同时提升推理效率，为高效多模态模型设计提供了新策略。",
-          "llm_tags": [
-            "query:mg"
-          ],
-          "matched_query_tag": "query:mg",
-          "matched_query_text": "multimodal large language models generation",
-          "matched_requirement_id": "req-13",
-          "selection_source": "carryover_cache",
-          "paper_id": "2606.09131v1",
+          "paper_id": "2606.14162v1",
           "carry_days": 1
         }
       ]
     },
     "LLM-kernel": {
-      "updated_date": "20260614",
+      "updated_date": "20260615",
       "carryover_days": 9,
       "items": []
     },
     "Compression": {
-      "updated_date": "20260614",
+      "updated_date": "20260615",
       "carryover_days": 9,
       "items": []
     }
