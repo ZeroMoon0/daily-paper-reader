@@ -1,32 +1,78 @@
 {
-  "generated_at": "2026-06-15T23:07:54.031109+00:00",
-  "updated_date": "20260615",
+  "generated_at": "2026-06-16T22:52:35.747179+00:00",
+  "updated_date": "20260616",
   "carryover_days": 9,
   "tag_states": {
     "eli": {
-      "updated_date": "20260615",
+      "updated_date": "20260616",
       "carryover_days": 9,
       "items": [
         {
-          "id": "2606.12400v1",
+          "id": "2606.15177v1",
           "source": "arxiv",
-          "title": "Doc-to-Atom: Learning to Compile and Compose Memory Atoms",
-          "abstract": "Long input sequences are central to document understanding and multi-step reasoning in Large Language Models, yet the quadratic cost of attention makes inference both memory-intensive and slow. Context distillation mitigates this by compressing contextual information into model parameters, and recent work such as Doc-to-LoRA amortizes context distillation into a single forward pass that generates one LoRA adapter per document. However, producing a single monolithic adapter for all queries leads to irrelevant-query interference, limited compositional recall, and poor scalability to long-document reasoning. To address these challenges, we propose Doc-to-Atom (Doc2Atom), a compositional parametric memory framework that decomposes each document into semantically typed knowledge atoms. Each atom is compiled into an independent micro-LoRA adapter and a provenance retrieval key. At inference time, a lightweight query router selects and assembles only the relevant atoms into a query-specific adapter, which is then injected into a frozen base model. The entire system is trained end-to-end through a multi-objective distillation framework. Experiments on six diverse QA benchmarks demonstrate that Doc2Atom outperforms Doc-to-LoRA baselines while reducing the memory cost of document internalization.",
+          "title": "Coordinated Scheduling for MoE LLM Serving",
+          "abstract": "Serving Mixture-of-Experts (MoE) large language models (LLMs) is challenging because dynamic request workloads interact with sparse expert routing, creating both data-parallel (DP) engine imbalance and expert-level hotspots. Existing LLM serving systems typically make these decisions in isolation: frontend schedulers route requests using coarse request counters, while backend expert balancers rely mainly on aggregate expert activation counts. This separation prevents the serving system from reacting to fine-grained engine pressure, backend MoE pressure, and source-dependent expert traffic. To address this gap, we propose Gimbal, a coordinated cross-level scheduling system for efficient MoE-based LLM serving. First, Gimbal presents a fine-grained DP-engine scheduler that uses online backend pressure signals, including key-value (KV) cache usage, remaining prefill work, queue pressure, and MoE expert pressure, to dispatch requests away from overloaded engines. Inside each engine, Gimbal further applies a lightweight prefill-aware queue ordering policy with aging to reduce head-of-line blocking without output-length prediction. Second, Gimbal extends expert load balancing with online source-DP-to-expert routing statistics and uses a heuristic guided by a mixed-integer nonlinear program (MINLP) to place experts while jointly considering expert load, source-aware communication, and migration stability. Our evaluation shows that Gimbal reduces average Time To First Token (TTFT) by 42.9% and average Time Per Output Token (TPOT) by 33.3% compared with the state-of-the-art serving system vLLM, while improving high-load request throughput by 3.0%.",
           "authors": [
-            "Xingjian Diao",
-            "Wenbo Li",
-            "Yashas Malur Saidutta",
-            "Avinash Amballa",
-            "Lazar Valkov",
-            "Srinivas Chappidi"
+            "Yifan Sun",
+            "Zhexiang Zhang",
+            "Jiantong Jiang",
+            "Gholamreza Haffari",
+            "Minxian Xu",
+            "Feng Liu",
+            "Rajkumar Buyya",
+            "Adel N. Toosi"
+          ],
+          "primary_category": "cs.DC",
+          "categories": [
+            "cs.DC"
+          ],
+          "published": "2026-06-13T07:52:12+00:00",
+          "link": "https://arxiv.org/pdf/2606.15177v1",
+          "tags": [
+            "keyword:eli",
+            "query:Compression",
+            "query:LLM-kernel",
+            "query:eli"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "coordinated scheduling for MoE LLM serving to improve throughput and latency",
+          "llm_evidence_cn": "针对MoE大语言模型服务的协调调度，提升吞吐量和降低延迟",
+          "llm_evidence": "针对MoE大语言模型服务的协调调度，提升吞吐量和降低延迟",
+          "canonical_evidence": "针对MoE大语言模型服务的协调调度，提升吞吐量和降低延迟",
+          "llm_tldr_en": "Presents Gimbal, a cross-level scheduling system for MoE LLM serving that coordinates frontend and backend to reduce hotspots and improve efficiency.",
+          "llm_tldr_cn": "针对MoE大语言模型服务中数据并行引擎负载不均和专家热点问题，提出Gimbal协调调度系统。它在前端实施细粒度数据并行引擎调度，在后端动态平衡专家负载，通过跨层协调显著提升服务吞吐量并降低延迟。",
+          "llm_tldr": "针对MoE大语言模型服务中数据并行引擎负载不均和专家热点问题，提出Gimbal协调调度系统。它在前端实施细粒度数据并行引擎调度，在后端动态平衡专家负载，通过跨层协调显著提升服务吞吐量并降低延迟。",
+          "llm_tags": [
+            "query:eli"
+          ],
+          "matched_query_tag": "query:eli",
+          "matched_query_text": "high throughput and low latency techniques for LLM serving",
+          "matched_requirement_id": "req-7",
+          "selection_source": "carryover_cache",
+          "paper_id": "2606.15177v1",
+          "carry_days": 1
+        },
+        {
+          "id": "2606.12203v1",
+          "source": "arxiv",
+          "title": "Adaptive Multi-Resolution Procedural Knowledge Compression for Large Language Models",
+          "abstract": "Large language models (LLMs) are widely used to tackle complex tasks with autonomous workflows. Recently, reusable natural language skills have emerged as a popular paradigm to inject procedural knowledge into LLM applications. Since popular skills are often invoked repeatedly, placing their full text in every context significantly increases prefill cost and latency. While text compression techniques have the potential to solve this problem, most existing methods are designed to compress factual knowledge in documents instead of procedural knowledge, making them insufficient for skill compression. In this paper, we argue that an effective skill compression method should: 1) preserve logical dependencies among workflows and tool protocols, 2) enable lightweight, offline compression for frequently updated community skills, and 3) be adaptable to varying complexities across skills. To address this, we present SKIM (SKIll coMpression), an adaptive multi-resolution soft token compression framework for procedural skills. Depending on the complexity of each skill, SKIM creates different numbers of soft tokens that not only improve the efficiency of LLM inference, but also preserve the effectiveness of skill usage. Experiments indicate that SKIM compresses skills to 30 to 60 percent of their original token length while preserving task performance better than existing compression methods.We have released our code at https://github.com/bebr2/SKIM .",
+          "authors": [
+            "Changyue Wang",
+            "Weihang Su",
+            "Qingyao Ai",
+            "Yichen Tang",
+            "Runzhong Qiao",
+            "Xuancheng Li",
+            "Min Zhang",
+            "Yiqun Liu"
           ],
           "primary_category": "cs.CL",
           "categories": [
-            "cs.CL",
-            "cs.IR"
+            "cs.CL"
           ],
-          "published": "2026-06-10T17:58:20+00:00",
-          "link": "https://arxiv.org/pdf/2606.12400v1",
+          "published": "2026-06-10T15:21:18+00:00",
+          "link": "https://arxiv.org/pdf/2606.12203v1",
           "tags": [
             "keyword:Compression",
             "keyword:LLM-kernel",
@@ -38,96 +84,44 @@
             "query:mg"
           ],
           "llm_score": 8.0,
-          "llm_evidence_en": "compositional parametric memory framework compressing documents into memory atoms to reduce KV cache",
-          "llm_evidence_cn": "将文档压缩为语义记忆原子以优化KV缓存的组合式参数化记忆框架",
-          "llm_evidence": "将文档压缩为语义记忆原子以优化KV缓存的组合式参数化记忆框架",
-          "canonical_evidence": "将文档压缩为语义记忆原子以优化KV缓存的组合式参数化记忆框架",
-          "llm_tldr_en": "Proposes Doc-to-Atom, a framework that decomposes documents into semantically typed memory atoms, enabling compositional recall and reducing inference memory and computation through parameterized compression.",
-          "llm_tldr_cn": "该论文针对长文档推理中KV缓存开销大的问题，提出Doc-to-Atom组合式参数化记忆框架。将文档分解为语义类型的记忆原子，每个原子通过轻量级适配器编码，从而支持组合式检索和压缩。相比Doc-to-LoRA，该方法避免了查询无关干扰，提升了长文档推理的准确性和效率。实验证明在多项长文档任务上实现了更优的压缩和检索性能。",
-          "llm_tldr": "该论文针对长文档推理中KV缓存开销大的问题，提出Doc-to-Atom组合式参数化记忆框架。将文档分解为语义类型的记忆原子，每个原子通过轻量级适配器编码，从而支持组合式检索和压缩。相比Doc-to-LoRA，该方法避免了查询无关干扰，提升了长文档推理的准确性和效率。实验证明在多项长文档任务上实现了更优的压缩和检索性能。",
+          "llm_evidence_en": "Compressing procedural knowledge to reduce prefill cost and latency",
+          "llm_evidence_cn": "压缩过程知识以减少预填充成本和延迟",
+          "llm_evidence": "压缩过程知识以减少预填充成本和延迟",
+          "canonical_evidence": "压缩过程知识以减少预填充成本和延迟",
+          "llm_tldr_en": "Proposes adaptive multi-resolution compression of reusable skill text to reduce LLM prefill cost and latency while preserving logical dependencies.",
+          "llm_tldr_cn": "大语言模型中重复使用的技能文本增加了预填充成本和延迟。本文提出自适应多分辨率过程知识压缩方法，保留工作流和工具协议的逻辑依赖，同时显著压缩文本以减少推理延迟。实验表明该方法在降低延迟的同时保持了任务性能。",
+          "llm_tldr": "大语言模型中重复使用的技能文本增加了预填充成本和延迟。本文提出自适应多分辨率过程知识压缩方法，保留工作流和工具协议的逻辑依赖，同时显著压缩文本以减少推理延迟。实验表明该方法在降低延迟的同时保持了任务性能。",
           "llm_tags": [
             "query:eli"
           ],
           "matched_query_tag": "query:eli",
-          "matched_query_text": "KV cache optimization strategies for transformer inference",
-          "matched_requirement_id": "req-2",
+          "matched_query_text": "Low Latency Inference",
+          "matched_requirement_id": "req-1",
           "selection_source": "carryover_cache",
-          "paper_id": "2606.12400v1",
+          "paper_id": "2606.12203v1",
           "carry_days": 1
         },
         {
-          "id": "2606.11700v1",
+          "id": "2606.16847v1",
           "source": "arxiv",
-          "title": "CompRank: Efficient LLM Reranking via Token-Level Compression and Decoding-Free Scoring",
-          "abstract": "Large language model (LLM) rerankers have become an important component of modern retrieval and retrieval-augmented generation pipelines, but their high computational cost limits their applicability to long candidate lists. In this paper, we propose \\textbf{CompRank}, a token-efficient reranking framework that reduces redundant computation by aligning reranker design with the sparsity of ranking signals. CompRank decouples document representations from candidate order and query context, enabling reusable document-side states; applies segment-wise token compression to reduce query--document interaction cost; and introduces a CopyNet-style objective that directly aligns attention-based document scoring with training supervision. Experiments on seven BEIR datasets show that CompRank achieves strong reranking performance while retaining only 10.2\\% of document tokens, reaching an average NDCG@10 of 39.2 compared with 39.7 under full-token attention. Further scaling experiments on TREC-COVID show that CompRank remains stable when evaluated on candidate lists of up to 500 documents after training on 30-document lists, while achieving $4.9\\times$--$9.5\\times$ end-to-end speedup over generation-based listwise reranking and approximately $1.3\\times$ speedup over the full-token CompRank variant. These results suggest that token-level compression and decoding-free attention scoring provide an effective path toward scalable LLM-based reranking.",
+          "title": "Follow the Latent Roadmap: Navigating Revocable Decoding for Diffusion LLMs with Anchor Tokens",
+          "abstract": "Diffusion Large Language Models (dLLMs) offer a promising avenue for parallel generation but face a trade-off between decoding speed and quality. While revocable decoding strategies attempt to mitigate errors by verifying and remasking tokens, they typically operate within a mixed-quality context. This leads to two critical failures: \\textit{Error Propagation}, where new tokens absorb toxic information from erroneous context, and \\textit{Local Error Reinforcement}, where errors mutually reinforce each other to evade detection. To alleviate these challenges, we propose ASRD (Anchor Supervised Revocable Decoding), a training-free framework that operates within the embedding space. ASRD explicitly decouples the decoding context into trusted \\textit{Anchor Tokens}, which are identified via temporal consistency, and uncertain candidates. Leveraging a dynamic Anchor Tokens Cache, we introduce two complementary mechanisms: (1) Anchor-Guided Generation, which injects entropy-weighted anchor signals into masked positions to implicitly rectify attention toward the reliable global skeleton; and (2) Anchor-Perturbed Verification, which applies orthogonal perturbations to uncertain candidate tokens, destabilizing and remasking errors driven by fragile local consensus. Extensive experiments on math and coding benchmarks demonstrate that ASRD outperforms recent remasking baselines, achieving accuracy improvements of up to 6.4\\% while accelerating inference throughput by up to 7.2$\\times$.",
           "authors": [
-            "Xuan Lu",
-            "Haohang Huang",
-            "Yingqi Fan",
-            "Junlong Tong",
-            "Yuxuan Zhang",
-            "Ping Nie",
-            "Rui Meng",
-            "Xiaoyu Shen"
-          ],
-          "primary_category": "cs.IR",
-          "categories": [
-            "cs.IR"
-          ],
-          "published": "2026-06-10T06:23:46+00:00",
-          "link": "https://arxiv.org/pdf/2606.11700v1",
-          "tags": [
-            "keyword:Compression",
-            "keyword:LLM-kernel",
-            "keyword:eli",
-            "keyword:mg",
-            "query:Compression",
-            "query:LLM-kernel",
-            "query:eli",
-            "query:mg"
-          ],
-          "llm_score": 8.0,
-          "llm_evidence_en": "token-efficient reranking framework to reduce redundant computation in LLM rerankers",
-          "llm_evidence_cn": "用于减少LLM重排序器冗余计算的令牌高效重排序框架",
-          "llm_evidence": "用于减少LLM重排序器冗余计算的令牌高效重排序框架",
-          "canonical_evidence": "用于减少LLM重排序器冗余计算的令牌高效重排序框架",
-          "llm_tldr_en": "CompRank reduces LLM reranker cost by decoupling document representations, applying segment-wise token compression, and using a CopyNet-style scoring objective, enabling efficient reranking with minimal quality loss.",
-          "llm_tldr_cn": "针对LLM重排序器计算成本高的问题，本文提出CompRank框架：将文档表示与候选顺序和查询上下文解耦以实现重用，通过分段令牌压缩降低交互成本，并引入CopyNet风格目标直接对齐基于注意力的文档评分。实验表明在显著减少令牌使用量的同时保持了重排序质量，为检索增强生成管线的加速提供了实用方案。",
-          "llm_tldr": "针对LLM重排序器计算成本高的问题，本文提出CompRank框架：将文档表示与候选顺序和查询上下文解耦以实现重用，通过分段令牌压缩降低交互成本，并引入CopyNet风格目标直接对齐基于注意力的文档评分。实验表明在显著减少令牌使用量的同时保持了重排序质量，为检索增强生成管线的加速提供了实用方案。",
-          "llm_tags": [
-            "query:eli"
-          ],
-          "matched_query_tag": "query:eli",
-          "matched_query_text": "efficient inference for large language models",
-          "matched_requirement_id": "req-5",
-          "selection_source": "carryover_cache",
-          "paper_id": "2606.11700v1",
-          "carry_days": 1
-        },
-        {
-          "id": "2606.10650v1",
-          "source": "arxiv",
-          "title": "Dynamic Linear Attention",
-          "abstract": "The scalability of Large Language Models (LLMs) to long contexts is fundamentally constrained by the quadratic complexity of standard attention, motivating the adoption of linear attention mechanisms with sub-quadratic cost. To improve representation capacity under long contexts, recent approaches organize memory in a multi-state manner. However, existing multi-state linear attention methods rely on fixed state merging policies that cannot adapt to dynamically varying token importance, irreversibly obscuring critical tokens and causing severe error accumulation over long sequences. To address this limitation, we propose DLA, a dynamic memory modeling framework for multi-state linear attention. DLA introduces (i) Information-Aware Dynamic State Merging, which adaptively determines state boundaries based on token-level information variation, preserving high-resolution representations around semantic transitions while aggressively summarizing stable regions, and (ii) Capacity-Bounded Memory Modeling, which maintains a fixed-size, chronologically ordered state cache by selectively merging adjacent low-information states to control memory growth with minimal information loss. We pre-train DLA on two different linear attention models and evaluate on 16 datasets across three categories. Experimental results demonstrate the superiority of DLA over state-of-the-art.",
-          "authors": [
-            "Xin Wang",
-            "Hui Shen",
-            "Boyuan Zheng",
-            "Xueshen Liu",
-            "Minkyoung Cho",
-            "Zhongwei Wan",
-            "Zesen Zhao",
-            "Zhuoqing Mao",
-            "Shen Yan",
-            "Mi Zhang"
+            "Yizhen Yao",
+            "Qinglin Zhu",
+            "Runcong Zhao",
+            "Xiangxiang Dai",
+            "Yanzheng Xiang",
+            "Yulan He",
+            "Lin Gui"
           ],
           "primary_category": "cs.CL",
           "categories": [
             "cs.CL",
             "cs.AI"
           ],
-          "published": "2026-06-09T09:57:48+00:00",
-          "link": "https://arxiv.org/pdf/2606.10650v1",
+          "published": "2026-06-15T15:23:47+00:00",
+          "link": "https://arxiv.org/pdf/2606.16847v1",
           "tags": [
             "keyword:Compression",
             "keyword:LLM-kernel",
@@ -139,126 +133,29 @@
             "query:mg"
           ],
           "llm_score": 8.0,
-          "llm_evidence_en": "dynamic linear attention reduces quadratic complexity for LLM inference",
-          "llm_evidence_cn": "动态线性注意力降低LLM推理二次复杂度",
-          "llm_evidence": "动态线性注意力降低LLM推理二次复杂度",
-          "canonical_evidence": "动态线性注意力降低LLM推理二次复杂度",
-          "llm_tldr_en": "DLA proposes information-aware dynamic state merging for multi-state linear attention, improving long-context efficiency and reducing error accumulation.",
-          "llm_tldr_cn": "针对标准注意力二次复杂度限制，DLA提出信息感知动态状态合并框架，自适应调整状态边界，缓解长序列中关键token被掩盖导致的误差累积，从而提升线性注意力在长上下文下的表示能力与效率。",
-          "llm_tldr": "针对标准注意力二次复杂度限制，DLA提出信息感知动态状态合并框架，自适应调整状态边界，缓解长序列中关键token被掩盖导致的误差累积，从而提升线性注意力在长上下文下的表示能力与效率。",
+          "llm_evidence_en": "revocable decoding acceleration for diffusion LLMs",
+          "llm_evidence_cn": "针对扩散大语言模型的可撤销解码加速",
+          "llm_evidence": "针对扩散大语言模型的可撤销解码加速",
+          "canonical_evidence": "针对扩散大语言模型的可撤销解码加速",
+          "llm_tldr_en": "Proposes ASRD, a training-free framework using anchor tokens to decouple decoding context, mitigating error propagation and improving generation speed and quality in diffusion LLMs.",
+          "llm_tldr_cn": "扩散大语言模型（dLLM）在并行生成中面临速度与质量的权衡，可撤销解码虽可纠错，但常因上下文混合质量导致错误传播和局部错误强化。本文提出无训练框架 ASRD，通过锚令牌在嵌入空间显式解耦解码上下文，分离可靠与不可靠区域，引导后续解码。实验表明 ASRD 在保持生成质量的同时显著加速解码，为扩散 LLM 的高效推理提供了新范式。",
+          "llm_tldr": "扩散大语言模型（dLLM）在并行生成中面临速度与质量的权衡，可撤销解码虽可纠错，但常因上下文混合质量导致错误传播和局部错误强化。本文提出无训练框架 ASRD，通过锚令牌在嵌入空间显式解耦解码上下文，分离可靠与不可靠区域，引导后续解码。实验表明 ASRD 在保持生成质量的同时显著加速解码，为扩散 LLM 的高效推理提供了新范式。",
           "llm_tags": [
             "query:eli"
           ],
           "matched_query_tag": "query:eli",
-          "matched_query_text": "efficient inference for large language models",
-          "matched_requirement_id": "req-5",
+          "matched_query_text": "LLM Acceleration",
+          "matched_requirement_id": "req-4",
           "selection_source": "carryover_cache",
-          "paper_id": "2606.10650v1",
+          "paper_id": "2606.16847v1",
           "carry_days": 1
         }
       ]
     },
     "mg": {
-      "updated_date": "20260615",
+      "updated_date": "20260616",
       "carryover_days": 9,
       "items": [
-        {
-          "id": "2606.09234v1",
-          "source": "arxiv",
-          "title": "End-to-End Training for Discrete Token LLM based TTS System",
-          "abstract": "Recent state-of-the-art (SOTA) text-to-speech (TTS) systems typically adopt a cascaded pipeline consisting of a speech tokenizer, an autoregressive large language model (LLM), and a diffusion based flow-matching (FM) model, with these components trained independently. In this paper, we propose a fully end-to-end (E2E) optimization framework that unifies the training of the speech tokenizer, LLM, FM model, and an additional reward model (RM). Specifically, we first jointly optimize the tokenizer using multi-task objectives derived from reconstruction for FM, next-token prediction for LLM, and multi recognition task for RM. This joint training encourages the discrete speech token space to capture acoustically and semantically salient information that is better tailored to TTS. We then further optimize the LLM using downstream reconstruction and recognition by FM and RM, which reduces inference-time mismatch and steers the LLM toward more preferred generations. Experimental results show that our E2E framework consistently outperforms cascaded baselines. On the Seed-TTS-Eval benchmark, our system achieves a word error rate (WER) of 0.78% and 1.56%, a new SOTA result with a 0.6B-parameter LLM and 0.5B-parameter FM model. These results validate that holistic E2E optimization is critical for improving discrete-token-based TTS systems with a much simpler training pipeline.",
-          "authors": [
-            "Changfeng Gao",
-            "Yong Ren",
-            "Jun Yuan",
-            "Ye Bai",
-            "Zhao You",
-            "ShiDong Shang"
-          ],
-          "primary_category": "cs.SD",
-          "categories": [
-            "cs.SD",
-            "cs.AI"
-          ],
-          "published": "2026-06-08T09:07:23+00:00",
-          "link": "https://arxiv.org/pdf/2606.09234v1",
-          "tags": [
-            "keyword:Compression",
-            "keyword:LLM-kernel",
-            "keyword:eli",
-            "keyword:mg",
-            "query:Compression",
-            "query:LLM-kernel",
-            "query:eli",
-            "query:mg"
-          ],
-          "llm_score": 8.0,
-          "llm_evidence_en": "uses flow-matching model for text-to-speech generation within end-to-end framework",
-          "llm_evidence_cn": "在端到端框架中使用流匹配模型进行文本到语音生成",
-          "llm_evidence": "在端到端框架中使用流匹配模型进行文本到语音生成",
-          "canonical_evidence": "在端到端框架中使用流匹配模型进行文本到语音生成",
-          "llm_tldr_en": "Proposes an end-to-end training framework for discrete token LLM-based TTS, unifying speech tokenizer, LLM, flow-matching model, and reward model.",
-          "llm_tldr_cn": "该论文提出一种端到端优化框架，统一训练语音分词器、自回归大语言模型、基于流匹配的扩散声码器和奖励模型，通过多任务目标联合优化使离散语音令牌空间捕获声学和语义信息，实验显示端到端训练相比级联系统在语音质量和自然度上有显著提升。",
-          "llm_tldr": "该论文提出一种端到端优化框架，统一训练语音分词器、自回归大语言模型、基于流匹配的扩散声码器和奖励模型，通过多任务目标联合优化使离散语音令牌空间捕获声学和语义信息，实验显示端到端训练相比级联系统在语音质量和自然度上有显著提升。",
-          "llm_tags": [
-            "query:mg"
-          ],
-          "matched_query_tag": "query:mg",
-          "matched_query_text": "flow matching generative models",
-          "matched_requirement_id": "req-15",
-          "selection_source": "carryover_cache",
-          "paper_id": "2606.09234v1",
-          "carry_days": 1
-        },
-        {
-          "id": "2606.13989v1",
-          "source": "arxiv",
-          "title": "Mask, Sample, Revise: A Revisable CTMC Inference Stack for Guided Discrete Flow Matching Text-to-Speech",
-          "abstract": "Recent alignment-free non-autoregressive (NAR) text-to-speech (TTS) models formulate synthesis as a conditional infilling task, bypassing explicit duration predictors and external aligners. When speech is represented with neural codec tokens, the infilling problem becomes discrete, making Discrete Flow Matching (DFM), a Continuous-Time Markov Chain (CTMC) framework for discrete generation, a natural fit. However, inference-time control for stable low-step conditional infilling remains underexplored. We propose Mask, Sample, Revise, an inference-time CTMC stack for alignment-free DFM-TTS. The stack combines predictor-free guidance to strengthen text conditioning, prompt-matched conditional coupling to align the probability path with the acoustic prompt, and SC-ReMask, a schedule-constrained remasking mechanism that introduces token-to-mask transitions so early de-masking decisions can be revised. These components require no post-hoc fine-tuning and operate in a single tau-leaping sampler. Controlled ablations show that this stack improves intelligibility and robustness in the low-NFE prompted setting, outperforming unguided and guidance-only samplers with substantially more steps.",
-          "authors": [
-            "Alef Iury Siqueira Ferreira",
-            "Lucas Rafael Stefanel Gris",
-            "Luiz Fernando de Araújo Vidal",
-            "Frederico Santos de Oliveira",
-            "Christopher Dane Shulby",
-            "Anderson da Silva Soares",
-            "Arlindo Rodrigues Galvão Filho"
-          ],
-          "primary_category": "cs.SD",
-          "categories": [
-            "cs.SD",
-            "cs.AI"
-          ],
-          "published": "2026-06-12T00:13:35+00:00",
-          "link": "https://arxiv.org/pdf/2606.13989v1",
-          "tags": [
-            "keyword:Compression",
-            "keyword:LLM-kernel",
-            "keyword:eli",
-            "keyword:mg",
-            "query:Compression",
-            "query:LLM-kernel",
-            "query:eli",
-            "query:mg"
-          ],
-          "llm_score": 8.0,
-          "llm_evidence_en": "discrete flow matching for text-to-speech",
-          "llm_evidence_cn": "离散流匹配用于文本到语音",
-          "llm_evidence": "离散流匹配用于文本到语音",
-          "canonical_evidence": "离散流匹配用于文本到语音",
-          "llm_tldr_en": "Proposes Mask, Sample, Revise inference stack for discrete flow matching text-to-speech, combining predictor-free guidance and conditional coupling for stable low-step generation.",
-          "llm_tldr_cn": "针对离散流匹配文本到语音生成中低步数条件填充不稳定的问题，本文提出了掩码-采样-修订推理栈。该栈结合无预测器引导和提示匹配条件耦合，加强了文本条件控制。在离散流匹配框架下实现了稳定可控的快速语音合成。",
-          "llm_tldr": "针对离散流匹配文本到语音生成中低步数条件填充不稳定的问题，本文提出了掩码-采样-修订推理栈。该栈结合无预测器引导和提示匹配条件耦合，加强了文本条件控制。在离散流匹配框架下实现了稳定可控的快速语音合成。",
-          "llm_tags": [
-            "query:mg"
-          ],
-          "matched_query_tag": "query:mg",
-          "matched_query_text": "flow matching generative models",
-          "matched_requirement_id": "req-15",
-          "selection_source": "carryover_cache",
-          "paper_id": "2606.13989v1",
-          "carry_days": 1
-        },
         {
           "id": "2606.14162v1",
           "source": "arxiv",
@@ -304,17 +201,153 @@
           "matched_requirement_id": "req-11",
           "selection_source": "carryover_cache",
           "paper_id": "2606.14162v1",
+          "carry_days": 2
+        },
+        {
+          "id": "2606.16435v1",
+          "source": "arxiv",
+          "title": "Unified Audio Generation and Editing via Joint Condition Modeling and Progressive Training",
+          "abstract": "With the growing focus on audio in multimedia applications, numerous advanced works on audio generation have emerged. Existing studies typically treat text-to-audio (TTA) and other related audio generation tasks, such as instruction-based audio editing, as independent challenges, adopting task-specific architectures or modules. This absence of a unified modeling paradigm substantially increases the overhead and complexity of building a system for both audio generation and editing, while also leading to limited scalability. To address this issue, we introduce AudioWeave, a unified model for TTA and audio editing without additional task-specific components. Specifically, we propose a joint condition modeling approach with a factorized position embedding, enabling the diffusion transformer backbone to operate under heterogeneous inputs of TTA and audio editing. We further propose a progressive multistage training strategy to mitigate task competition and catastrophic forgetting caused by interference among multiple tasks. This in turn helps maintain the performance of each individual task and may even lead to improvements in certain aspects. Experimental results on TTA task and six audio editing tasks show that our unified model achieves competitive performance with task-specific models, laying a groundwork for further exploration of unified audio generation models.",
+          "authors": [
+            "Haocheng Dong",
+            "Yuheng Lu",
+            "Cheng Gong",
+            "Shansong Liu",
+            "Xiao-Lei Zhang",
+            "Xuelong Li"
+          ],
+          "primary_category": "eess.AS",
+          "categories": [
+            "eess.AS",
+            "cs.SD"
+          ],
+          "published": "2026-06-15T09:06:38+00:00",
+          "link": "https://arxiv.org/pdf/2606.16435v1",
+          "tags": [
+            "keyword:Compression",
+            "keyword:mg",
+            "query:Compression",
+            "query:LLM-kernel",
+            "query:mg"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "unified audio generation and editing",
+          "llm_evidence_cn": "统一音频生成与编辑",
+          "llm_evidence": "统一音频生成与编辑",
+          "canonical_evidence": "统一音频生成与编辑",
+          "llm_tldr_en": "AudioWeave unifies text-to-audio generation and instruction-based audio editing under a single model via joint condition modeling and progressive training, eliminating task-specific modules.",
+          "llm_tldr_cn": "现有音频生成与编辑任务通常采用独立架构，导致系统复杂且可扩展性差。AudioWeave 通过联合条件建模与渐进式训练，提出统一的文本到音频生成与指令式音频编辑模型，无需额外任务特定组件。实验证明该方法在多种音频任务上均达到先进性能，大幅降低了多模态内容创作系统的构建开销。",
+          "llm_tldr": "现有音频生成与编辑任务通常采用独立架构，导致系统复杂且可扩展性差。AudioWeave 通过联合条件建模与渐进式训练，提出统一的文本到音频生成与指令式音频编辑模型，无需额外任务特定组件。实验证明该方法在多种音频任务上均达到先进性能，大幅降低了多模态内容创作系统的构建开销。",
+          "llm_tags": [
+            "query:mg"
+          ],
+          "matched_query_tag": "query:mg",
+          "matched_query_text": "Latest methods for multimodal content creation including text to video and audio generation",
+          "matched_requirement_id": "req-17",
+          "selection_source": "carryover_cache",
+          "paper_id": "2606.16435v1",
+          "carry_days": 1
+        },
+        {
+          "id": "2606.15158v1",
+          "source": "arxiv",
+          "title": "RefGC-SR$^2$: Reference-guided Generated Content Super-Resolution and Refinement",
+          "abstract": "Reference-guided generation (e.g., object compositing, customization) has progressed rapidly, yet current pipelines share a fundamental limitation: the object-centric high-resolution reference image (HRRI) provided by users is downsampled to a fixed low-resolution (LR) before being fed into the model, so the fine-grained details are discarded before the output is even produced. In addition, the generation step then introduces its own artifacts (e.g., identity distortion) on top of this loss. Existing reference-guided generated content refinement (RefGCR) methods can correct some of these artifacts but still operate in the LR domain; reference-guided super-resolution (RefSR) methods recover resolution but assume natural-image degradations and ignore the artifact distribution of generative pipelines. To address both gaps in a single formulation, we introduce a new task: reference-guided generated content super-resolution-refinement (RefGC-SR$^2$), where the original HRRI is reused at the post-processing stage to recover lost details, refine generative artifacts, and upscale the output simultaneously. We construct the first real-world triplet data generation pipeline for this RefGC-SR$^2$ task, training a diptych-conditioned generator to synthesize paired low-quality anchors that public pretrained models cannot provide. We further present a frequency-aware diffusion transformer model for RefGC-SR$^2$ that selectively injects fine details from the HRRI while removing generative artifacts. Extensive experiments demonstrate that our RefGC-SR$^2$ model successfully (i) refines the object identity faithfully with respect to the reference, and (ii) recovers high-resolution details, so that the final result is significantly higher quality and practically more usable compared to existing RefGCR and RefSR baselines.",
+          "authors": [
+            "Jeahun Sung",
+            "Dahyeon Kye",
+            "Soo Ye Kim",
+            "Jihyong Oh"
+          ],
+          "primary_category": "cs.CV",
+          "categories": [
+            "cs.CV"
+          ],
+          "published": "2026-06-13T07:04:36+00:00",
+          "link": "https://arxiv.org/pdf/2606.15158v1",
+          "tags": [
+            "keyword:LLM-kernel",
+            "keyword:mg",
+            "query:LLM-kernel",
+            "query:mg"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "super-resolution for generated content with reference guidance",
+          "llm_evidence_cn": "参考引导的生成内容超分辨率",
+          "llm_evidence": "参考引导的生成内容超分辨率",
+          "canonical_evidence": "参考引导的生成内容超分辨率",
+          "llm_tldr_en": "Proposes a method for super-resolving and refining generated content using a high-resolution reference image, addressing detail loss in generation pipelines.",
+          "llm_tldr_cn": "针对参考引导生成管线中高分辨率参考图被降采样导致细节丢失以及生成伪影问题，提出RefGC-SR$^2$方法，结合参考引导超分辨率和内容精炼，在保持身份一致性的同时恢复高分辨率细节，显著提升生成图像质量。",
+          "llm_tldr": "针对参考引导生成管线中高分辨率参考图被降采样导致细节丢失以及生成伪影问题，提出RefGC-SR$^2$方法，结合参考引导超分辨率和内容精炼，在保持身份一致性的同时恢复高分辨率细节，显著提升生成图像质量。",
+          "llm_tags": [
+            "query:mg"
+          ],
+          "matched_query_tag": "query:mg",
+          "matched_query_text": "image super resolution deep learning",
+          "matched_requirement_id": "req-14",
+          "selection_source": "carryover_cache",
+          "paper_id": "2606.15158v1",
+          "carry_days": 1
+        },
+        {
+          "id": "2606.15162v1",
+          "source": "arxiv",
+          "title": "GeoStream: Toward Precise Camera Controlled Streaming Video Generation",
+          "abstract": "Accurate interactive camera control is essential for video-based world models, but most existing approaches learn camera motion implicitly, leading to inaccurate control under out-of-distribution trajectories. Explicit geometric conditioning improves controllability, but existing methods are non-autoregressive and rely on a static 3D cache built from an initial frame, which becomes ineffective once the viewpoint moves beyond the original frustum. We propose GeoStream, a framework that enables precise metric-scale camera control in autoregressive streaming video generation. Our method maintains a self-refreshing 3D cache that is periodically updated online from the model's own outputs: we estimate depth from the most recently generated frame, unproject to 3D, and reproject into the target view to produce point reprojections as geometric conditioning for subsequent synthesis. By the same principle, the conditioning seen during training is also rendered from the student's own generated frames, yielding a fully on-policy distillation that naturally aligns the train and inference conditioning distributions. Unlike prior work that uses off-policy condition noising, our approach trains the model against the exact error distribution it encounters at inference, mitigating both standard autoregressive drift and the second-order geometric feedback loop that arises when the cache itself is derived from generated outputs. Quantitative and qualitative results show that our approach substantially improves camera controllability.",
+          "authors": [
+            "Yizhou Zhao",
+            "Yifan Wang",
+            "Xiaoyuan Wang",
+            "Yushu Wu",
+            "Hao Zhang",
+            "Moayed Haji-Ali",
+            "Rameen Abdal",
+            "Ashkan Mirzaei",
+            "Yanyu Li",
+            "Willi Menapace",
+            "Laszlo Jeni",
+            "Sergey Tulyakov",
+            "Peter Wonka",
+            "Chaoyang Wang"
+          ],
+          "primary_category": "cs.CV",
+          "categories": [
+            "cs.CV"
+          ],
+          "published": "2026-06-13T07:18:04+00:00",
+          "link": "https://arxiv.org/pdf/2606.15162v1",
+          "tags": [
+            "keyword:LLM-kernel",
+            "keyword:mg",
+            "query:mg"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "camera-controlled streaming video generation framework",
+          "llm_evidence_cn": "相机控制的流式视频生成框架",
+          "llm_evidence": "相机控制的流式视频生成框架",
+          "canonical_evidence": "相机控制的流式视频生成框架",
+          "llm_tldr_en": "GeoStream enables precise metric-scale camera control in autoregressive streaming video generation with a self-refreshing 3D cache.",
+          "llm_tldr_cn": "现有视频生成方法缺乏精确相机控制，且静态3D缓存无法处理视点移动。本文提出GeoStream，在自回归流式视频生成中维护一个自刷新3D缓存，利用最新帧深度估计动态更新缓存，实现高精度相机控制。实验证明该方法在多种轨迹下均能保持准确性，推进了交互式视频生成与世界模型的应用。",
+          "llm_tldr": "现有视频生成方法缺乏精确相机控制，且静态3D缓存无法处理视点移动。本文提出GeoStream，在自回归流式视频生成中维护一个自刷新3D缓存，利用最新帧深度估计动态更新缓存，实现高精度相机控制。实验证明该方法在多种轨迹下均能保持准确性，推进了交互式视频生成与世界模型的应用。",
+          "llm_tags": [
+            "query:mg"
+          ],
+          "matched_query_tag": "query:mg",
+          "matched_query_text": "text-to-video generation with transformers",
+          "matched_requirement_id": "req-11",
+          "selection_source": "carryover_cache",
+          "paper_id": "2606.15162v1",
           "carry_days": 1
         }
       ]
     },
     "LLM-kernel": {
-      "updated_date": "20260615",
+      "updated_date": "20260616",
       "carryover_days": 9,
       "items": []
     },
     "Compression": {
-      "updated_date": "20260615",
+      "updated_date": "20260616",
       "carryover_days": 9,
       "items": []
     }

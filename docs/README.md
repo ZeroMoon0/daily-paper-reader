@@ -6,104 +6,122 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-15
-- 运行时间：2026-06-15 23:21:48 UTC
+- 最新运行日期：2026-06-16
+- 运行时间：2026-06-16 23:15:19 UTC
 - 运行状态：成功
-- 本次总论文数：28
-- 精读区：14
+- 本次总论文数：34
+- 精读区：20
 - 速读区：14
 
 ### 今日简报（AI）
-今日日报聚焦LLM剪枝基准和视频时间编辑两大前沿突破。最值得关注《Beyond FLOPs》提出基于GEMM的剪枝加速基准和《Making Time Editable》实现视频扩散模型的时间控制。建议优先精读这两篇，速读可选KV压缩与视觉自回归模型优化。
-- 详情：[/202606/15/README](/202606/15/README)
+今日共处理34篇论文，精读重点推荐两项9分工作：音频条件扩散模型在语音识别与翻译中展现优异性能，并行因果关联场门控稀疏记忆有效提升长上下文语言建模效率。后续可关注离散token TTS端到端训练与资源感知训练运行时在大模型异构部署中的潜力。
+- 详情：[/202606/16/README](/202606/16/README)
 
 ### 精读区论文标签
-1. [Beyond FLOPs: Benchmarking Real Inference Acceleration of LLM Pruning under a GEMM-Centric Taxonomy](/202606/15/2606.09080v1-beyond-flops-benchmarking-real-inference-acceleration-of-llm-pruning-under-a-gemm-centric-taxonomy)  
+1. [Speech Meets ELF: Audio Conditional Continuous-Target Diffusion for Speech Recognition and Translation](/202606/16/2606.10368v1-speech-meets-elf-audio-conditional-continuous-target-diffusion-for-speech-recognition-and-translation)  
+   标签：评分：9.0/10、query:mg
+   evidence：基于流匹配的语音识别生成模型
+2. [Parallel Causal Associative Fields: Gated Sparse Memory for Long-Context Language Modeling](/202606/16/2606.10435v1-parallel-causal-associative-fields-gated-sparse-memory-for-long-context-language-modeling)  
+   标签：评分：9.0/10、query:eli
+   evidence：并行内容寻址记忆作为长上下文建模的稀疏缓存
+3. [PathRelax: Parallel-Path Relaxed Speculative Jacobi Decoding for Accelerating Auto-Regressive Text-to-Image Generation](/202606/16/2606.10492v1-pathrelax-parallel-path-relaxed-speculative-jacobi-decoding-for-accelerating-auto-regressive-text-to-image-generation)  
+   标签：评分：9.0/10、query:eli
+   evidence：并行路径投机雅可比解码加速自回归图像生成
+4. [Dynamic Linear Attention](/202606/16/2606.10650v1-dynamic-linear-attention)  
+   标签：评分：9.0/10、query:eli
+   evidence：针对线性注意力的动态记忆建模，提升大语言模型效率
+5. [Squeeze-Release: Iterative Pruning with Exact Structural Minimization](/202606/16/2606.14346v1-squeeze-release-iterative-pruning-with-exact-structural-minimization)  
    标签：评分：9.0/10、query:compression
-   evidence：LLM剪枝，推理加速基准测试，以GEMM为中心的分类法
-2. [Making Time Editable in Video Diffusion Transformers](/202606/15/2606.10183v1-making-time-editable-in-video-diffusion-transformers)  
+   evidence：迭代剪枝与精确结构最小化的模型压缩方法
+6. [Last But Not Least: Boundary Attention CalibratiON for Multimodal KV Cache Compression](/202606/16/2606.14782v1-last-but-not-least-boundary-attention-calibration-for-multimodal-kv-cache-compression)  
+   标签：评分：9.0/10、query:eli
+   evidence：基于边界注意力校准的多模态KV缓存压缩
+7. [Nemotron 3 Ultra: Open, Efficient Mixture-of-Experts Hybrid Mamba-Transformer Model for Agentic Reasoning](/202606/16/2606.15007v1-nemotron-3-ultra-open-efficient-mixture-of-experts-hybrid-mamba-transformer-model-for-agentic-reasoning)  
+   标签：评分：9.0/10、query:eli
+   evidence：混合专家Mamba-Transformer模型，推理吞吐量提升6倍
+8. [PolyKV: Heterogeneous Retention and Allocation for KV Cache Compression](/202606/16/2606.15157v1-polykv-heterogeneous-retention-and-allocation-for-kv-cache-compression)  
+   标签：评分：9.0/10、query:eli
+   evidence：逐层KV缓存压缩，异质保留和分配
+9. [A Spatio-Temporal Expert Prefetching Framework for Efficient MoE-based LLM Inference](/202606/16/2606.15453v1-a-spatio-temporal-expert-prefetching-framework-for-efficient-moe-based-llm-inference)  
+   标签：评分：9.0/10、query:eli
+   evidence：MoE LLM推理中的专家预取
+10. [MosaicQuant: Inlier-Outlier Disaggregation for Unified 4-Bit LLM Quantization](/202606/16/2606.15652v1-mosaicquant-inlier-outlier-disaggregation-for-unified-4-bit-llm-quantization)  
+   标签：评分：9.0/10、query:compression
+   evidence：提出MosaicQuant，通过异常值-正常值分离实现统一4-bit大语言模型量化
+11. [ReQAT: Achieving Full-Precision Reasoning Accuracy with 4-bit Floating-Point Quantization-Aware Training](/202606/16/2606.15682v1-reqat-achieving-full-precision-reasoning-accuracy-with-4-bit-floating-point-quantization-aware-training)  
+   标签：评分：9.0/10、query:compression
+   evidence：面向LLM的FP4量化感知训练，解决KV缓存与推理精度
+12. [Approaching Shannon Bound with Lossless LLM Weight Compression](/202606/16/2606.15789v1-approaching-shannon-bound-with-lossless-llm-weight-compression)  
+   标签：评分：9.0/10、query:compression
+   evidence：基于熵研究的无损大语言模型权重压缩
+13. [Mean-Field Parallel Decoding for Discrete Diffusion Language Models](/202606/16/2606.15805v1-mean-field-parallel-decoding-for-discrete-diffusion-language-models)  
+   标签：评分：9.0/10、query:eli
+   evidence：带协调的并行解码用于离散扩散语言模型，实现低延迟生成
+14. [Stepwise Token Selection for Efficient Multimodal Large Language Models](/202606/16/2606.16067v1-stepwise-token-selection-for-efficient-multimodal-large-language-models)  
    标签：评分：9.0/10、query:mg
-   evidence：带时间编辑的视频扩散Transformer
-3. [FoA-SR: Faithful or Aesthetic? Profile-Aware Preference Optimization for Real-World Image Super-Resolution](/202606/15/2606.10275v1-foa-sr-faithful-or-aesthetic-profile-aware-preference-optimization-for-real-world-image-super-resolution)  
+   evidence：通过视觉令牌缩减提升多模态大模型推理效率
+15. [SwiftCache: Efficient LLM Serving for Multi-turn Conversations with Heterogeneous KV Cache Sharing](/202606/16/2606.16135v1-swiftcache-efficient-llm-serving-for-multi-turn-conversations-with-heterogeneous-kv-cache-sharing)  
+   标签：评分：9.0/10、query:eli
+   evidence：KV缓存共享与延迟优化
+16. [teasr: training-efficient any-step diffusion transformer for real-world image super-resolution](/202606/16/2606.16188v1-teasr-training-efficient-any-step-diffusion-transformer-for-real-world-image-super-resolution)  
    标签：评分：9.0/10、query:mg
-   evidence：基于扩散模型和轮廓感知偏好优化的真实世界图像超分辨率
-4. [Exploring the Design Space of Reward Backpropagation for Flow Matching](/202606/15/2606.11075v1-exploring-the-design-space-of-reward-backpropagation-for-flow-matching)  
+   evidence：训练高效任意步扩散Transformer用于真实世界图像超分辨率
+17. [QK-Normed MLA: QK normalization without full key caching](/202606/16/2606.16310v1-qk-normed-mla-qk-normalization-without-full-key-caching)  
+   标签：评分：9.0/10、query:eli
+   evidence：通过避免MLA中完整键缓存来优化KV缓存
+18. [SMEPilot: Characterizing and Optimizing LLM Inference with Scalable Matrix Extensions](/202606/16/2606.16332v1-smepilot-characterizing-and-optimizing-llm-inference-with-scalable-matrix-extensions)  
+   标签：评分：9.0/10、query:eli
+   evidence：使用SME优化LLM推理以降低延迟
+19. [MMDiff: Extending Diffusion Transformers for Multi-Modal Generation](/202606/16/2606.16673v1-mmdiff-extending-diffusion-transformers-for-multi-modal-generation)  
    标签：评分：9.0/10、query:mg
-   evidence：文本到图像生成中的流匹配模型对齐
-5. [Piper: A Programmable Distributed Training System](/202606/15/2606.11169v1-piper-a-programmable-distributed-training-system)  
+   evidence：基于扩散Transformer的文本到图像生成
+20. [Tangram: Hiding GPU Heterogeneity for Efficient LLM Parallelization](/202606/16/2606.16907v1-tangram-hiding-gpu-heterogeneity-for-efficient-llm-parallelization)  
    标签：评分：9.0/10、query:llm-kernel
-   evidence：可编程的大模型分布式训练系统，支持多种并行策略
-6. [DynamicPTQ: Mitigating Activation Quantization Collapse via Residual-Stream Dynamics](/202606/15/2606.12487v1-dynamicptq-mitigating-activation-quantization-collapse-via-residual-stream-dynamics)  
-   标签：评分：9.0/10、query:compression
-   evidence：面向大语言模型的后训练量化，通过残差流动态解决激活量化崩溃问题
-7. [Multi-Bitwidth Quantization for LLMs Using Additive Codebooks](/202606/15/2606.12876v1-multi-bitwidth-quantization-for-llms-using-additive-codebooks)  
-   标签：评分：9.0/10、query:compression
-   evidence：大语言模型多比特宽度后训练量化
-8. [TWLA: Achieving Ternary Weights and Low-Bit Activations for LLMs via Post-Training Quantization](/202606/15/2606.13054v2-twla-achieving-ternary-weights-and-low-bit-activations-for-llms-via-post-training-quantization)  
-   标签：评分：9.0/10、query:compression
-   evidence：面向大语言模型的三值权重和低比特激活后训练量化
-9. [MiniMax Sparse Attention](/202606/15/2606.13392v1-minimax-sparse-attention)  
-   标签：评分：9.0/10、query:eli
-   evidence：基于KV块的块稀疏注意力，减少KV缓存使用和计算量
-10. [MiniMax Sparse Attention](/202606/15/2606.13392v2-minimax-sparse-attention)  
-   标签：评分：9.0/10、query:eli
-   evidence：基于KV块的块稀疏注意力，减少KV缓存使用和计算量
-11. [Efficient On-Device Diffusion LLM Inference with Mobile NPU](/202606/15/2606.13740v1-efficient-on-device-diffusion-llm-inference-with-mobile-npu)  
-   标签：评分：9.0/10、query:eli
-   evidence：设备端扩散LLM推理，移动NPU，低延迟
-12. [FoleyGenEx: Unified Video-to-Audio Generation with Multi-Modal Control, Temporal Alignment, and Semantic Precision](/202606/15/2606.14049v1-foleygenex-unified-video-to-audio-generation-with-multi-modal-control-temporal-alignment-and-semantic-precision)  
-   标签：评分：9.0/10、query:mg
-   evidence：统一视频到音频生成框架
-13. [Improving Lunar Topography with Deep Learning Schrödinger Bridges](/202606/15/2606.14638v1-improving-lunar-topography-with-deep-learning-schrdinger-bridges)  
-   标签：评分：9.0/10、query:mg
-   evidence：扩散模型用于月球地形超分辨率
-14. [RepFusion: Leveraging Multimodal Priors for Denoising in Representation Space](/202606/15/2606.14700v1-repfusion-leveraging-multimodal-priors-for-denoising-in-representation-space)  
-   标签：评分：9.0/10、query:mg
-   evidence：利用多模态大模型先验进行文本到图像扩散生成
+   evidence：大语言模型分布式训练并行化
 
 ### 速读区论文标签
-1. [HACK++: Towards More Effective Head-Aware Key-Value Compression for Efficient Visual Autoregressive Modeling](/202606/15/2606.08302v1-hack-towards-more-effective-head-aware-key-value-compression-for-efficient-visual-autoregressive-modeling)  
+1. [End-to-End Training for Discrete Token LLM based TTS System](/202606/16/2606.09234v1-end-to-end-training-for-discrete-token-llm-based-tts-system)  
+   标签：评分：8.0/10、query:mg
+   evidence：在端到端框架中使用流匹配模型进行文本到语音生成
+2. [RATrain: A Resource-Aware Training Runtime for Large Language Models on Bandwidth-Constrained Heterogeneous Supercomputing Platforms](/202606/16/2606.10415v1-ratrain-a-resource-aware-training-runtime-for-large-language-models-on-bandwidth-constrained-heterogeneous-supercomputing-platforms)  
+   标签：评分：8.0/10、query:llm-kernel
+   evidence：面向异构平台的大模型资源感知训练运行时，解决分布式训练问题
+3. [Continual LLM Upcycling: A Predictor-Gated Bank-Wise Sparsity Training Recipe for Dense-to-Sparse LLMs](/202606/16/2606.10722v1-continual-llm-upcycling-a-predictor-gated-bank-wise-sparsity-training-recipe-for-dense-to-sparse-llms)  
+   标签：评分：8.0/10、query:compression
+   evidence：面向LLM的通道稀疏训练
+4. [CompRank: Efficient LLM Reranking via Token-Level Compression and Decoding-Free Scoring](/202606/16/2606.11700v1-comprank-efficient-llm-reranking-via-token-level-compression-and-decoding-free-scoring)  
    标签：评分：8.0/10、query:eli
-   evidence：面向视觉自回归模型的头部感知 KV 缓存压缩
-2. [Q-Delta: Beyond Key-Value Associative State Evolution](/202606/15/2606.08804v1-q-delta-beyond-key-value-associative-state-evolution)  
-   标签：评分：8.0/10、query:eli
-   evidence：查询感知的delta规则改进线性注意力状态演化，提升KV缓存效率
-3. [CSFlow: Aligning Flow Matching with Human Contrast Sensitivity](/202606/15/2606.08833v1-csflow-aligning-flow-matching-with-human-contrast-sensitivity)  
-   标签：评分：8.0/10、query:mg
-   evidence：将流匹配去噪步骤与人类对比敏感度对齐以改善图像生成
-4. [HoliDubber: Holistic Video Dubbing for Complex Acoustic Scenes via Text-Guided Audio Synthesis](/202606/15/2606.09098v1-holidubber-holistic-video-dubbing-for-complex-acoustic-scenes-via-text-guided-audio-synthesis)  
-   标签：评分：8.0/10、query:mg
-   evidence：使用扩散Transformer的联合语音与音效合成实现全景视频配音
-5. [Late-Layer Fusion is Enough: Dual-Path Vision Token Routing for Multimodal Large Language Models under Visual Saturation](/202606/15/2606.09131v1-late-layer-fusion-is-enough-dual-path-vision-token-routing-for-multimodal-large-language-models-under-visual-saturation)  
-   标签：评分：8.0/10、query:mg
-   evidence：通过视觉令牌路由解决多模态大模型推理中的计算冗余
-6. [FlashCP: Load-Balanced Communication-Efficient Context Parallelism for LLM Training](/202606/15/2606.08476v1-flashcp-load-balanced-communication-efficient-context-parallelism-for-llm-training)  
+   evidence：用于减少LLM重排序器冗余计算的令牌高效重排序框架
+5. [Making Locality-aware GEMM Compatible with Page-Granularity Placement on Chiplet GPUs](/202606/16/2606.11718v2-making-locality-aware-gemm-compatible-with-page-granularity-placement-on-chiplet-gpus)  
+   标签：评分：8.0/10、query:llm-kernel
+   evidence：针对多芯片GPU上GEMM的局部感知数据布局优化
+6. [Resource-aware Computation-Communication Overlap for multi-GPU ML Workloads](/202606/16/2606.09200v1-resource-aware-computation-communication-overlap-for-multi-gpu-ml-workloads)  
    标签：评分：7.0/10、query:llm-kernel
-   evidence：使用上下文并行训练大语言模型，优化KV通信
-7. [BLM-SGAN: Bidirectional Language Modeling for Semantic-Spatial Text-to-Image Generation](/202606/15/2606.08847v1-blm-sgan-bidirectional-language-modeling-for-semantic-spatial-text-to-image-generation)  
-   标签：评分：7.0/10、query:mg
-   evidence：基于GAN的双向语言建模文本到图像生成
-8. [TLDR: Compressing Audio Tokens for Efficient Autoregressive Text-to-Speech](/202606/15/2606.09019v1-tldr-compressing-audio-tokens-for-efficient-autoregressive-text-to-speech)  
-   标签：评分：7.0/10、query:mg
-   evidence：压缩音频令牌以实现高效自回归文本到语音
-9. [LiteVSR: Lightweight Adaptation of Frozen Diffusion Transformers for Video Super-Resolution](/202606/15/2606.09250v1-litevsr-lightweight-adaptation-of-frozen-diffusion-transformers-for-video-super-resolution)  
-   标签：评分：7.0/10、query:mg
-   evidence：使用冻结扩散Transformer的轻量级视频超分
-10. [Sigma-Branch: Hierarchical Single-Path Network Reconstruction for Dynamic Inference with Reduced Active Parameters](/202606/15/2606.09924v1-sigma-branch-hierarchical-single-path-network-reconstruction-for-dynamic-inference-with-reduced-active-parameters)  
-   标签：评分：7.0/10、query:compression
-   evidence：通过层次化网络重构实现动态推理，减少活跃参数，用于模型压缩
-11. [Cross-Modal Knowledge Distillation without Paired Data: Theoretical Foundation and Algorithm](/202606/15/2606.10504v1-cross-modal-knowledge-distillation-without-paired-data-theoretical-foundation-and-algorithm)  
+   evidence：多GPU分布式训练中的计算通信重叠方法
+7. [Unifying Data, Memory, and Compute Efficiency in LLM training: A Survey](/202606/16/2606.10706v1-unifying-data-memory-and-compute-efficiency-in-llm-training-a-survey)  
+   标签：评分：7.0/10、query:llm-kernel
+   evidence：LLM训练中的数据、内存和计算效率综述
+8. [Unifying Local Communications and Local Updates for LLM Pretraining](/202606/16/2606.11081v1-unifying-local-communications-and-local-updates-for-llm-pretraining)  
+   标签：评分：7.0/10、query:llm-kernel
+   evidence：去中心化预训练算法提升通信效率
+9. [Doc-to-Atom: Learning to Compile and Compose Memory Atoms](/202606/16/2606.12400v1-doc-to-atom-learning-to-compile-and-compose-memory-atoms)  
+   标签：评分：7.0/10、query:eli
+   evidence：用于长文档推理的组合参数化记忆
+10. [Context-Driven Incremental Compression for Multi-Turn Dialogue Generation](/202606/16/2606.12411v1-context-driven-incremental-compression-for-multi-turn-dialogue-generation)  
+   标签：评分：7.0/10、query:eli
+   evidence：对话历史的增量上下文压缩
+11. [Speech Encoder Fusion for LLM-based Automatic Speech Recognition](/202606/16/2606.10853v1-speech-encoder-fusion-for-llm-based-automatic-speech-recognition)  
+   标签：评分：6.0/10、query:llm-kernel
+   evidence：基于LLM的语音识别中编码器融合，与多模态大模型相关
+12. [NSVQ: Mitigating Codebook Collapse by Stabilizing Encoder Drift in Vector Quantization](/202606/16/2606.11363v1-nsvq-mitigating-codebook-collapse-by-stabilizing-encoder-drift-in-vector-quantization)  
+   标签：评分：6.0/10、query:mg
+   evidence：生成模型中的向量量化
+13. [Beyond Fully Random Masking: Attention-Guided Denoising and Optimization for Diffusion Language Models](/202606/16/2606.12273v1-beyond-fully-random-masking-attention-guided-denoising-and-optimization-for-diffusion-language-models)  
+   标签：评分：6.0/10、query:mg
+   evidence：扩散模型用于文本生成
+14. [A theoretical model for task routing in mixture-of-expert transformers](/202606/16/2606.14398v1-a-theoretical-model-for-task-routing-in-mixture-of-expert-transformers)  
    标签：评分：6.0/10、query:compression
-   evidence：无配对数据的跨模态知识蒸馏用于模型压缩
-12. [Attention-Discounted Adaptive Sampler for Masked Diffusion Language Models](/202606/15/2606.10829v1-attention-discounted-adaptive-sampler-for-masked-diffusion-language-models)  
-   标签：评分：6.0/10、query:mg
-   evidence：面向掩码扩散语言模型的训练自由自适应采样器
-13. [G-Long: Graph-Enhanced Memory Management for Efficient Long-Term Dialogue Agents](/202606/15/2606.13115v1-g-long-graph-enhanced-memory-management-for-efficient-long-term-dialogue-agents)  
-   标签：评分：6.0/10、query:eli
-   evidence：通过图记忆和轻量模型降低延迟
-14. [Enhanced Low-Density Region Exploration in Classifier-Guided Diffusion Models Through Modified Reverse Diffusion Sampling](/202606/15/2606.13347v1-enhanced-low-density-region-exploration-in-classifier-guided-diffusion-models-through-modified-reverse-diffusion-sampling)  
-   标签：评分：6.0/10、query:mg
-   evidence：修改反向扩散采样以改进分类器引导扩散模型中的低密度区域探索
+   evidence：专家混合变压器中任务路由的理论模型
 
 
 <div class="dpr-home-promo-card">
