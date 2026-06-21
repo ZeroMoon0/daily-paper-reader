@@ -1,0 +1,504 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-21T20:51:54.115915+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 4,
+    "deep_divecandidates": 11,
+    "deep_cap": 9,
+    "deep_selected": 9,
+    "quick_candidates": 2,
+    "quick_skim_target": 14,
+    "quick_selected": 2
+  },
+  "deep_dive": [
+    {
+      "id": "2606.15177v1",
+      "source": "arxiv",
+      "title": "Coordinated Scheduling for MoE LLM Serving",
+      "abstract": "Serving Mixture-of-Experts (MoE) large language models (LLMs) is challenging because dynamic request workloads interact with sparse expert routing, creating both data-parallel (DP) engine imbalance and expert-level hotspots. Existing LLM serving systems typically make these decisions in isolation: frontend schedulers route requests using coarse request counters, while backend expert balancers rely mainly on aggregate expert activation counts. This separation prevents the serving system from reacting to fine-grained engine pressure, backend MoE pressure, and source-dependent expert traffic. To address this gap, we propose Gimbal, a coordinated cross-level scheduling system for efficient MoE-based LLM serving. First, Gimbal presents a fine-grained DP-engine scheduler that uses online backend pressure signals, including key-value (KV) cache usage, remaining prefill work, queue pressure, and MoE expert pressure, to dispatch requests away from overloaded engines. Inside each engine, Gimbal further applies a lightweight prefill-aware queue ordering policy with aging to reduce head-of-line blocking without output-length prediction. Second, Gimbal extends expert load balancing with online source-DP-to-expert routing statistics and uses a heuristic guided by a mixed-integer nonlinear program (MINLP) to place experts while jointly considering expert load, source-aware communication, and migration stability. Our evaluation shows that Gimbal reduces average Time To First Token (TTFT) by 42.9% and average Time Per Output Token (TPOT) by 33.3% compared with the state-of-the-art serving system vLLM, while improving high-load request throughput by 3.0%.",
+      "authors": [
+        "Yifan Sun",
+        "Zhexiang Zhang",
+        "Jiantong Jiang",
+        "Gholamreza Haffari",
+        "Minxian Xu",
+        "Feng Liu",
+        "Rajkumar Buyya",
+        "Adel N. Toosi"
+      ],
+      "primary_category": "cs.DC",
+      "categories": [
+        "cs.DC"
+      ],
+      "published": "2026-06-13T07:52:12+00:00",
+      "link": "https://arxiv.org/pdf/2606.15177v1",
+      "tags": [
+        "keyword:eli",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "coordinated scheduling for MoE LLM serving to improve throughput and latency",
+      "llm_evidence_cn": "针对MoE大语言模型服务的协调调度，提升吞吐量和降低延迟",
+      "llm_evidence": "针对MoE大语言模型服务的协调调度，提升吞吐量和降低延迟",
+      "canonical_evidence": "针对MoE大语言模型服务的协调调度，提升吞吐量和降低延迟",
+      "llm_tldr_en": "Presents Gimbal, a cross-level scheduling system for MoE LLM serving that coordinates frontend and backend to reduce hotspots and improve efficiency.",
+      "llm_tldr_cn": "针对MoE大语言模型服务中数据并行引擎负载不均和专家热点问题，提出Gimbal协调调度系统。它在前端实施细粒度数据并行引擎调度，在后端动态平衡专家负载，通过跨层协调显著提升服务吞吐量并降低延迟。",
+      "llm_tldr": "针对MoE大语言模型服务中数据并行引擎负载不均和专家热点问题，提出Gimbal协调调度系统。它在前端实施细粒度数据并行引擎调度，在后端动态平衡专家负载，通过跨层协调显著提升服务吞吐量并降低延迟。",
+      "llm_tags": [
+        "query:eli"
+      ],
+      "matched_query_tag": "query:eli",
+      "matched_query_text": "high throughput and low latency techniques for LLM serving",
+      "matched_requirement_id": "req-7",
+      "selection_source": "carryover_cache",
+      "paper_id": "2606.15177v1"
+    },
+    {
+      "id": "2606.15867v1",
+      "source": "arxiv",
+      "title": "CogCanvas: A Benchmark for Evaluating Multi-Subject Reference-Based Image Generation",
+      "abstract": "Multi-subject reference-based image generation requires jointly preserving multiple human identities, binding per-person objects and fashion items, and respecting a specified background scene, a regime where current diffusion models remain brittle. Existing benchmarks evaluate only one axis at a time and none jointly captures multi-identity composition with human-object interaction, background grounding, and spatial plausibility. We introduce CogCanvas, a benchmark of 1,952 curated reference images spanning 100 celebrity identities, 115 distinctive objects and fashion items, and 29 real-world background scenes including landmarks, from which we construct 1,361 compositional prompts covering 2-5 person group sizes. The curation pipeline combines DINOv2-based deduplication, two-stage aesthetic filtering, and automated derivation of structured interaction and position graphs that serve as ground-truth supervision. CogCanvas supports three tasks, reference-based multi-human-object generation (primary), text-to-image compositional generation, and reference retrieval, under a unified six-axis evaluation protocol. We introduce two metrics tailored to the multi-reference setting: BG-Sim, which scores background fidelity on SAM 3-masked regions via DINOv3 feature similarity, and Attr-VQA, which uses a multimodal LLM to verify per-subject attribute binding and inter-person interactions against the structured graphs. Benchmarking five SOTA methods reveals that every model degrades substantially as group size grows from 2 to 5, with near-complete failure on object/fashion binding beyond three subjects.",
+      "authors": [
+        "Long-Bao Nguyen",
+        "Quang-Khai Tran",
+        "Tam V. Nguyen",
+        "Minh-Triet Tran",
+        "Trung-Nghia Le"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-06-14T15:38:24+00:00",
+      "link": "https://arxiv.org/pdf/2606.15867v1",
+      "tags": [
+        "keyword:mg",
+        "query:mg"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Benchmark for multi-subject reference-based image generation with diffusion models",
+      "llm_evidence_cn": "基于扩散模型的多主体参考图像生成基准测试",
+      "llm_evidence": "基于扩散模型的多主体参考图像生成基准测试",
+      "canonical_evidence": "基于扩散模型的多主体参考图像生成基准测试",
+      "llm_tldr_en": "CogCanvas provides a comprehensive benchmark for evaluating multi-subject reference-based image generation, covering identity preservation, object binding, and background grounding.",
+      "llm_tldr_cn": "当前扩散模型在多主体参考图像生成中表现脆弱，而现有基准仅评估单一维度。本文提出CogCanvas基准，包含1952张参考图像、1361个组合提示，覆盖多身份保持、物体绑定和背景场景。通过系统评估揭示了现有模型的不足，为推动多主体图像生成研究提供了标准化测试平台。",
+      "llm_tldr": "当前扩散模型在多主体参考图像生成中表现脆弱，而现有基准仅评估单一维度。本文提出CogCanvas基准，包含1952张参考图像、1361个组合提示，覆盖多身份保持、物体绑定和背景场景。通过系统评估揭示了现有模型的不足，为推动多主体图像生成研究提供了标准化测试平台。",
+      "llm_tags": [
+        "query:mg"
+      ],
+      "matched_query_tag": "query:mg",
+      "matched_query_text": "text-to-image generation using diffusion models",
+      "matched_requirement_id": "req-10",
+      "selection_source": "carryover_cache",
+      "paper_id": "2606.15867v1"
+    },
+    {
+      "id": "2606.16352v1",
+      "source": "arxiv",
+      "title": "Communication-Efficient Verifiable Attention for LLM Inference",
+      "abstract": "Computation integrity of remote large language model (LLM) serving can be questionable. For conventional deep neural networks (DNNs), the existing TEE-shielded DNN partitioning (TSDP) approach uses Trusted Execution Environment (TEE) to compute non-linear components and verify the integrity of linear components offloaded to an untrusted GPU. However, directly applying TSDP to Transformer-based LLMs incurs significant TEE computation and TEE-GPU communication overhead. This paper presents Communication-efficient TEE-GPU Attention (\\textsc{VeriAttn}) for accelerating verifiable LLM inference. \\textsc{VeriAttn} offloads both linear and non-linear computations of attention to the GPU, while TEE performs verification. Moreover, for prefill, \\textsc{VeriAttn} uses a two-level pipeline to overlap data movement, TEE pre-/post-processing, and GPU computation. For decoding, when the key-value cache exceeds available GPU memory, \\textsc{VeriAttn} partitions attention across TEE and GPU to reduce repeated key-value transfers. Evaluation on an Intel TDX platform shows that \\textsc{VeriAttn} achieves 2.60-3.38$\\times$ and 3.86-5.42$\\times$ acceleration over TSDP for 6k-token prompts and 10k-token outputs during prefill and decoding, respectively.",
+      "authors": [
+        "Ziqun Chen",
+        "Ming Wu",
+        "Michael Heinrich",
+        "Jason Zeng",
+        "Huiying Lan",
+        "Tianwei Zhang",
+        "Rui Tan"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-15T07:50:15+00:00",
+      "link": "https://arxiv.org/pdf/2606.16352v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Communication-efficient attention for verifiable LLM inference",
+      "llm_evidence_cn": "通信高效的注意力机制加速可验证大语言模型推理",
+      "llm_evidence": "通信高效的注意力机制加速可验证大语言模型推理",
+      "canonical_evidence": "通信高效的注意力机制加速可验证大语言模型推理",
+      "llm_tldr_en": "VeriAttn offloads both linear and non-linear attention computations to GPU with TEE verification, reducing TEE-GPU communication overhead and accelerating verifiable LLM inference.",
+      "llm_tldr_cn": "针对远程大语言模型推理的完整性验证问题，现有TEE-GPU方法通信开销大。本文提出VeriAttn，将注意力层的线性和非线性计算都卸载到GPU，TEE仅进行验证。通过优化预填充阶段的通信，显著降低TEE-GPU交互延迟。实验表明该方法在保证计算完整性的同时提升了推理速度，为安全LLM提供服务提供了高效方案。",
+      "llm_tldr": "针对远程大语言模型推理的完整性验证问题，现有TEE-GPU方法通信开销大。本文提出VeriAttn，将注意力层的线性和非线性计算都卸载到GPU，TEE仅进行验证。通过优化预填充阶段的通信，显著降低TEE-GPU交互延迟。实验表明该方法在保证计算完整性的同时提升了推理速度，为安全LLM提供服务提供了高效方案。",
+      "llm_tags": [
+        "query:eli"
+      ],
+      "matched_query_tag": "query:eli",
+      "matched_query_text": "Low Latency Inference",
+      "matched_requirement_id": "req-1",
+      "selection_source": "carryover_cache",
+      "paper_id": "2606.16352v1"
+    },
+    {
+      "id": "2606.16435v1",
+      "source": "arxiv",
+      "title": "Unified Audio Generation and Editing via Joint Condition Modeling and Progressive Training",
+      "abstract": "With the growing focus on audio in multimedia applications, numerous advanced works on audio generation have emerged. Existing studies typically treat text-to-audio (TTA) and other related audio generation tasks, such as instruction-based audio editing, as independent challenges, adopting task-specific architectures or modules. This absence of a unified modeling paradigm substantially increases the overhead and complexity of building a system for both audio generation and editing, while also leading to limited scalability. To address this issue, we introduce AudioWeave, a unified model for TTA and audio editing without additional task-specific components. Specifically, we propose a joint condition modeling approach with a factorized position embedding, enabling the diffusion transformer backbone to operate under heterogeneous inputs of TTA and audio editing. We further propose a progressive multistage training strategy to mitigate task competition and catastrophic forgetting caused by interference among multiple tasks. This in turn helps maintain the performance of each individual task and may even lead to improvements in certain aspects. Experimental results on TTA task and six audio editing tasks show that our unified model achieves competitive performance with task-specific models, laying a groundwork for further exploration of unified audio generation models.",
+      "authors": [
+        "Haocheng Dong",
+        "Yuheng Lu",
+        "Cheng Gong",
+        "Shansong Liu",
+        "Xiao-Lei Zhang",
+        "Xuelong Li"
+      ],
+      "primary_category": "eess.AS",
+      "categories": [
+        "eess.AS",
+        "cs.SD"
+      ],
+      "published": "2026-06-15T09:06:38+00:00",
+      "link": "https://arxiv.org/pdf/2606.16435v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:mg",
+        "query:Compression",
+        "query:mg"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "unified audio generation and editing with joint condition modeling",
+      "llm_evidence_cn": "统一的音频生成与编辑，采用联合条件建模",
+      "llm_evidence": "统一的音频生成与编辑，采用联合条件建模",
+      "canonical_evidence": "统一的音频生成与编辑，采用联合条件建模",
+      "llm_tldr_en": "AudioWeave unifies text-to-audio generation and instruction-based audio editing via joint condition modeling and progressive training.",
+      "llm_tldr_cn": "该论文提出AudioWeave统一模型，同时支持文本到音频生成和指令式音频编辑。通过联合条件建模因式分解条件表示，并使用渐进式训练策略，在多个任务上达到先进性能，降低了多任务系统的复杂度。",
+      "llm_tldr": "该论文提出AudioWeave统一模型，同时支持文本到音频生成和指令式音频编辑。通过联合条件建模因式分解条件表示，并使用渐进式训练策略，在多个任务上达到先进性能，降低了多任务系统的复杂度。",
+      "llm_tags": [
+        "query:mg"
+      ],
+      "matched_query_tag": "query:mg",
+      "matched_query_text": "Latest methods for multimodal content creation including text to video and audio generation",
+      "matched_requirement_id": "req-17",
+      "selection_source": "carryover_cache",
+      "paper_id": "2606.16435v1"
+    },
+    {
+      "id": "2606.16825v1",
+      "source": "arxiv",
+      "title": "Tying the Loop -- Tied Expert Layers in Mixture-of-Experts Language Models",
+      "abstract": "Mixture-of-Experts (MoE) architectures efficiently scale Large Language Models (LLMs) by activating only a small fraction of their experts per token, yet the full parameter count - dominated by the expert parameters - must be held in training and inference memory. To address this, we introduce Expert Tying, an architectural modification that shares expert parameters across consecutive transformer layers while preserving independent, layer-wise routing and attention.   We evaluate this approach across common, state-of-the-art architectures, including OLMoE, Qwen3, and DeepSeek-style MoEs. Our pretraining experiments demonstrate that tying experts can reduce memory footprint by almost 2x at virtually no degradation in perplexity or downstream quality. By exploiting the parameter redundancy inherent in MoE pathways, our method provides a highly favorable compute-to-memory trade-off, advancing efficient training and scaling of next-generation LLMs.",
+      "authors": [
+        "Martin Jaggi"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-06-15T15:08:09+00:00",
+      "link": "https://arxiv.org/pdf/2606.16825v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Memory reduction via tied expert layers in MoE LLMs",
+      "llm_evidence_cn": "通过绑定专家层减少混合专家大语言模型内存占用",
+      "llm_evidence": "通过绑定专家层减少混合专家大语言模型内存占用",
+      "canonical_evidence": "通过绑定专家层减少混合专家大语言模型内存占用",
+      "llm_tldr_en": "Introduces Expert Tying that shares expert parameters across layers in MoE LLMs, reducing memory by almost 2x with minimal quality loss.",
+      "llm_tldr_cn": "针对MoE大语言模型专家参数占用大量内存的问题，本文提出专家绑定（Expert Tying）架构，在相邻层间共享专家参数，同时保留独立的路由和注意力机制。在OLMoE、Qwen3等主流架构上的预训练实验表明，该方法几乎无损地将内存占用降低近一半，显著提升了大模型推理效率。",
+      "llm_tldr": "针对MoE大语言模型专家参数占用大量内存的问题，本文提出专家绑定（Expert Tying）架构，在相邻层间共享专家参数，同时保留独立的路由和注意力机制。在OLMoE、Qwen3等主流架构上的预训练实验表明，该方法几乎无损地将内存占用降低近一半，显著提升了大模型推理效率。",
+      "llm_tags": [
+        "query:eli"
+      ],
+      "matched_query_tag": "query:eli",
+      "matched_query_text": "efficient inference for large language models",
+      "matched_requirement_id": "req-5",
+      "selection_source": "carryover_cache",
+      "paper_id": "2606.16825v1"
+    },
+    {
+      "id": "2606.16847v1",
+      "source": "arxiv",
+      "title": "Follow the Latent Roadmap: Navigating Revocable Decoding for Diffusion LLMs with Anchor Tokens",
+      "abstract": "Diffusion Large Language Models (dLLMs) offer a promising avenue for parallel generation but face a trade-off between decoding speed and quality. While revocable decoding strategies attempt to mitigate errors by verifying and remasking tokens, they typically operate within a mixed-quality context. This leads to two critical failures: \\textit{Error Propagation}, where new tokens absorb toxic information from erroneous context, and \\textit{Local Error Reinforcement}, where errors mutually reinforce each other to evade detection. To alleviate these challenges, we propose ASRD (Anchor Supervised Revocable Decoding), a training-free framework that operates within the embedding space. ASRD explicitly decouples the decoding context into trusted \\textit{Anchor Tokens}, which are identified via temporal consistency, and uncertain candidates. Leveraging a dynamic Anchor Tokens Cache, we introduce two complementary mechanisms: (1) Anchor-Guided Generation, which injects entropy-weighted anchor signals into masked positions to implicitly rectify attention toward the reliable global skeleton; and (2) Anchor-Perturbed Verification, which applies orthogonal perturbations to uncertain candidate tokens, destabilizing and remasking errors driven by fragile local consensus. Extensive experiments on math and coding benchmarks demonstrate that ASRD outperforms recent remasking baselines, achieving accuracy improvements of up to 6.4\\% while accelerating inference throughput by up to 7.2$\\times$.",
+      "authors": [
+        "Yizhen Yao",
+        "Qinglin Zhu",
+        "Runcong Zhao",
+        "Xiangxiang Dai",
+        "Yanzheng Xiang",
+        "Yulan He",
+        "Lin Gui"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published": "2026-06-15T15:23:47+00:00",
+      "link": "https://arxiv.org/pdf/2606.16847v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "diffusion LLM decoding acceleration",
+      "llm_evidence_cn": "扩散语言模型解码加速",
+      "llm_evidence": "扩散语言模型解码加速",
+      "canonical_evidence": "扩散语言模型解码加速",
+      "llm_tldr_en": "Proposes ASRD, a training-free revocable decoding framework for diffusion LLMs that decouples decoding context with anchor tokens to mitigate error propagation and local error reinforcement, improving generation speed and quality without additional training.",
+      "llm_tldr_cn": "扩散语言模型在并行生成中面临解码速度与质量的权衡，现有可撤销解码策略存在错误传播与局部错误强化问题。本文提出ASRD框架，利用锚点令牌在嵌入空间解耦解码上下文，无需额外训练即可有效抑制错误传播。实验表明，ASRD显著提升生成速度同时保持生成质量，为扩散语言模型的高效推理提供了新范式。",
+      "llm_tldr": "扩散语言模型在并行生成中面临解码速度与质量的权衡，现有可撤销解码策略存在错误传播与局部错误强化问题。本文提出ASRD框架，利用锚点令牌在嵌入空间解耦解码上下文，无需额外训练即可有效抑制错误传播。实验表明，ASRD显著提升生成速度同时保持生成质量，为扩散语言模型的高效推理提供了新范式。",
+      "llm_tags": [
+        "query:eli"
+      ],
+      "matched_query_tag": "query:eli",
+      "matched_query_text": "efficient inference for large language models",
+      "matched_requirement_id": "req-5",
+      "selection_source": "carryover_cache",
+      "paper_id": "2606.16847v1"
+    },
+    {
+      "id": "2606.17787v1",
+      "source": "arxiv",
+      "title": "LUMEN: Coordinated Failure Recovery for Distributed LLM Serving",
+      "abstract": "Modern large language model (LLM) serving clusters distribute inference requests across multiple worker processes on different GPUs, but failures are prevalent at scale. When a worker fails, the cluster simultaneously loses the failed worker's GPU-resident key-value (KV) caches and serving capacity, leaving surviving workers to absorb the redirected traffic while re-running interrupted requests from scratch. Existing fault-tolerant systems either restart interrupted requests from scratch or restore KV caches from checkpoints stored on a fixed neighboring worker, but both approaches route recovery work without considering current cluster load and leave the recovering worker idle during model reload. We present LUMEN, a fault-tolerant LLM serving system that treats recovery as a load-aware coordination problem across three decision points: checkpoint placement before failures, interrupted-request distribution at failure time, and serving capacity restoration during model reload. We evaluate LUMEN using both prototype experiments and large-scale simulations and demonstrate significant improvements in serving and recovery times.",
+      "authors": [
+        "Zhang Cao",
+        "Shujie Han",
+        "Juncheng Zhang",
+        "Yuanming Ren",
+        "Yongkun Li",
+        "Patrick P. C. Lee"
+      ],
+      "primary_category": "cs.DC",
+      "categories": [
+        "cs.DC"
+      ],
+      "published": "2026-06-16T11:02:20+00:00",
+      "link": "https://arxiv.org/pdf/2606.17787v1",
+      "tags": [
+        "keyword:eli",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "KV cache recovery in distributed LLM serving",
+      "llm_evidence_cn": "分布式LLM服务中的KV缓存恢复",
+      "llm_evidence": "分布式LLM服务中的KV缓存恢复",
+      "canonical_evidence": "分布式LLM服务中的KV缓存恢复",
+      "llm_tldr_en": "LUMEN coordinates failure recovery for distributed LLM serving by leveraging KV cache restoration with load-aware scheduling, reducing recovery latency.",
+      "llm_tldr_cn": "该论文针对分布式LLM服务中的节点故障，提出LUMEN系统协调恢复。通过考虑当前集群负载动态分配恢复任务，并恢复故障节点的KV缓存，避免从头重新计算，显著降低了故障恢复延迟。实验表明该方法在保持服务质量的同时提高了系统吞吐量。",
+      "llm_tldr": "该论文针对分布式LLM服务中的节点故障，提出LUMEN系统协调恢复。通过考虑当前集群负载动态分配恢复任务，并恢复故障节点的KV缓存，避免从头重新计算，显著降低了故障恢复延迟。实验表明该方法在保持服务质量的同时提高了系统吞吐量。",
+      "llm_tags": [
+        "query:eli"
+      ],
+      "matched_query_tag": "query:eli",
+      "matched_query_text": "KV cache optimization strategies for transformer inference",
+      "matched_requirement_id": "req-2",
+      "selection_source": "carryover_cache",
+      "paper_id": "2606.17787v1"
+    },
+    {
+      "id": "2606.17952v1",
+      "source": "arxiv",
+      "title": "SoftMoE: Soft Differentiable Routing for Mixture-of-Experts in LLMs",
+      "abstract": "Sparse Mixture-of-Experts (MoE) architectures enable scaling LLM parameters under a fixed inference budget by activating only a small subset of experts via top-$k$ routing. While this preserves causality and suits autoregressive language models, the discrete top-$k$ operator is not differentiable, forcing a fixed number of active experts per input and resulting in inefficient use of computation. We propose SoftMoE, which replaces discrete routing with a truncated soft top-$k$ LapSum relaxation, allowing gradient-based optimization of expert routing. We further parameterize the mean number of active experts per layer and impose a global budget constraint, enabling the model to learn how to allocate expert capacity across layers. SoftMoE remains fully compatible with autoregressive modeling and achieves performance comparable to or better than sparse MoE on language modeling and downstream tasks, while activating significantly fewer experts. Notably, the learned allocation is highly non-uniform, with later layers activating more experts. The source code is publicly available$^\\dagger$.",
+      "authors": [
+        "Mikołaj Zasada",
+        "Łukasz Struski",
+        "Jacek Tabor",
+        "Marcin Kurdziel"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-16T14:05:41+00:00",
+      "link": "https://arxiv.org/pdf/2606.17952v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Soft differentiable MoE routing for efficient expert allocation in LLMs",
+      "llm_evidence_cn": "软可微分MoE路由，实现LLM专家高效分配",
+      "llm_evidence": "软可微分MoE路由，实现LLM专家高效分配",
+      "canonical_evidence": "软可微分MoE路由，实现LLM专家高效分配",
+      "llm_tldr_en": "SoftMoE replaces hard top-k routing with a differentiable soft routing, enabling learned expert capacity allocation and improved computational efficiency for LLM inference.",
+      "llm_tldr_cn": "SoftMoE通过可微分的软路由替代离散top-k路由，允许模型自动学习每层专家数量分配，在保持因果性的同时提升计算效率，适用于自回归语言模型的推理加速。",
+      "llm_tldr": "SoftMoE通过可微分的软路由替代离散top-k路由，允许模型自动学习每层专家数量分配，在保持因果性的同时提升计算效率，适用于自回归语言模型的推理加速。",
+      "llm_tags": [
+        "query:eli"
+      ],
+      "matched_query_tag": "query:eli",
+      "matched_query_text": "LLM Acceleration",
+      "matched_requirement_id": "req-4",
+      "selection_source": "carryover_cache",
+      "paper_id": "2606.17952v1"
+    },
+    {
+      "id": "2606.18042v1",
+      "source": "arxiv",
+      "title": "Latency Prediction for LLM Inference on NPU Systems",
+      "abstract": "Deploying Large Language Models (LLMs) requires exploring a large configuration space spanning parallelization strategies, batching techniques, and scheduling policies. Exhaustive measurement across this space is impractical, making latency prediction essential for system optimization. While NPUs have emerged as accelerators designed for LLM inference, no prediction methodology has been established for them. Specifically, applying prior work to LLM inference latency prediction on NPUs faces three challenges: undisclosed microarchitecture of commercial NPUs, unpredictable compiler optimizations, and latency non-linearity induced by bucketing.   We present LENS, a latency estimator that predicts NPU inference latency without information on the microarchitecture or compiler, and captures the non-linear latency induced by bucketing. LENS profiles each bucket with two end-to-end (E2E) measurements and composes the results to predict latency for arbitrary input-output length combinations. We validate LENS across NPUs from multiple vendors, several LLMs, and diverse workloads, achieving a mean prediction error of 2.15\\%. We further compare LENS against two methodologically related baselines, confirming the validity of its approach.",
+      "authors": [
+        "Juhyun Park",
+        "Seungwoo Jeong",
+        "Jingyu Lee",
+        "Kyungyong Lee"
+      ],
+      "primary_category": "cs.DC",
+      "categories": [
+        "cs.DC"
+      ],
+      "published": "2026-06-16T15:18:53+00:00",
+      "link": "https://arxiv.org/pdf/2606.18042v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "LLM latency prediction on NPU systems for low latency inference",
+      "llm_evidence_cn": "NPU系统上LLM延迟预测助力低延迟推理",
+      "llm_evidence": "NPU系统上LLM延迟预测助力低延迟推理",
+      "canonical_evidence": "NPU系统上LLM延迟预测助力低延迟推理",
+      "llm_tldr_en": "LENS predicts LLM inference latency on NPUs without microarchitecture info, enabling system optimization for low latency.",
+      "llm_tldr_cn": "大语言模型在NPU系统上部署时配置空间巨大，实测耗时不现实。本文提出LENS延迟预测器，无需已知NPU微架构或编译器信息即可准确预测推理延迟。该方法解决了非公开架构、编译器优化不可预测和延迟非线性三大挑战。实验表明LENS能有效指导并行化、批处理等配置选择，助力低延迟推理。",
+      "llm_tldr": "大语言模型在NPU系统上部署时配置空间巨大，实测耗时不现实。本文提出LENS延迟预测器，无需已知NPU微架构或编译器信息即可准确预测推理延迟。该方法解决了非公开架构、编译器优化不可预测和延迟非线性三大挑战。实验表明LENS能有效指导并行化、批处理等配置选择，助力低延迟推理。",
+      "llm_tags": [
+        "query:eli"
+      ],
+      "matched_query_tag": "query:eli",
+      "matched_query_text": "Low Latency Inference",
+      "matched_requirement_id": "req-1",
+      "selection_source": "carryover_cache",
+      "paper_id": "2606.18042v1"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.18042v2",
+      "source": "arxiv",
+      "title": "Latency Prediction for LLM Inference on NPU Systems",
+      "abstract": "Deploying Large Language Models (LLMs) requires exploring a large configuration space spanning parallelization strategies, batching techniques, and scheduling policies. Exhaustive measurement across this space is impractical, making latency prediction essential for system optimization. While NPUs have emerged as accelerators designed for LLM inference, no prediction methodology has been established for them. Specifically, applying prior work to LLM inference latency prediction on NPUs faces three challenges: undisclosed microarchitecture of commercial NPUs, unpredictable compiler optimizations, and latency non-linearity induced by bucketing.   We present LENS, a latency estimator that predicts NPU inference latency without information on the microarchitecture or compiler, and captures the non-linear latency induced by bucketing. LENS profiles each bucket with two end-to-end (E2E) measurements and composes the results to predict latency for arbitrary input-output length combinations. We validate LENS across NPUs from multiple vendors, several LLMs, and diverse workloads, achieving a mean prediction error of 2.15\\%. We further compare LENS against two methodologically related baselines, confirming the validity of its approach.",
+      "authors": [
+        "Juhyun Park",
+        "Seungwoo Jeong",
+        "Jingyu Lee",
+        "Kyungyong Lee"
+      ],
+      "primary_category": "cs.DC",
+      "categories": [
+        "cs.DC"
+      ],
+      "published": "2026-06-16T15:18:53+00:00",
+      "link": "https://arxiv.org/pdf/2606.18042v2",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "LLM latency prediction on NPU systems for low latency inference",
+      "llm_evidence_cn": "NPU系统上LLM延迟预测助力低延迟推理",
+      "llm_evidence": "NPU系统上LLM延迟预测助力低延迟推理",
+      "canonical_evidence": "NPU系统上LLM延迟预测助力低延迟推理",
+      "llm_tldr_en": "LENS predicts LLM inference latency on NPUs without microarchitecture info, enabling system optimization for low latency.",
+      "llm_tldr_cn": "大语言模型在NPU系统上部署时配置空间巨大，实测耗时不现实。本文提出LENS延迟预测器，无需已知NPU微架构或编译器信息即可准确预测推理延迟。该方法解决了非公开架构、编译器优化不可预测和延迟非线性三大挑战。实验表明LENS能有效指导并行化、批处理等配置选择，助力低延迟推理。",
+      "llm_tldr": "大语言模型在NPU系统上部署时配置空间巨大，实测耗时不现实。本文提出LENS延迟预测器，无需已知NPU微架构或编译器信息即可准确预测推理延迟。该方法解决了非公开架构、编译器优化不可预测和延迟非线性三大挑战。实验表明LENS能有效指导并行化、批处理等配置选择，助力低延迟推理。",
+      "llm_tags": [
+        "query:eli"
+      ],
+      "matched_query_tag": "query:eli",
+      "matched_query_text": "Low Latency Inference",
+      "matched_requirement_id": "req-1",
+      "selection_source": "carryover_cache",
+      "paper_id": "2606.18042v2",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2606.18056v1",
+      "source": "arxiv",
+      "title": "ConSA: Controllable Sparsity in Hybrid Attention via Learnable Allocation",
+      "abstract": "Hybrid architectures combining full attention (FA) and sliding-window attention (SWA) are a promising paradigm for efficient LLM inference. However, existing methods typically rely on hand-crafted rules or simple post-hoc heuristics for FA/SWA allocation and offer limited analysis of the attention behaviors underlying these designs. We propose Controllable Sparsity in Hybrid Attention (ConSA), a framework that learns optimal FA/SWA assignment under a user-specified sparsity target. ConSA employs L0 regularization to learn binary masks selecting between FA and SWA for each attention unit, while an augmented Lagrangian constraint enforces the target sparsity at either layer or KV-head granularity. We evaluate ConSA on two LLMs at the 0.6B and 1.7B scales. Learned allocations consistently outperform rule-based baselines, with KV-head-wise allocation yielding clear gains over layer-wise allocation. The learned patterns place SWA in the bottom layers and concentrate FA into contiguous middle-layer blocks, diverging from evenly interleaved patterns in rule-based methods. This structure persists across model scales, sparsity levels, and allocation granularities, revealing a fine-grained spectrum of intrinsic attention behaviors that underlies the learned allocation.",
+      "authors": [
+        "Yao Chen",
+        "Yinqi Yang",
+        "Junyuan Shang",
+        "Xiangzhao Hao",
+        "Simeng Zhang",
+        "Yilong Chen",
+        "Tingwen Liu",
+        "Shuohuan Wang",
+        "Dianhai Yu"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-06-16T15:33:49+00:00",
+      "link": "https://arxiv.org/pdf/2606.18056v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "learnable FA/SWA allocation for hybrid attention in LLM inference",
+      "llm_evidence_cn": "可学习的全注意力/滑动窗口注意力分配以优化LLM推理",
+      "llm_evidence": "可学习的全注意力/滑动窗口注意力分配以优化LLM推理",
+      "canonical_evidence": "可学习的全注意力/滑动窗口注意力分配以优化LLM推理",
+      "llm_tldr_en": "Proposes ConSA, a framework that learns optimal hybrid attention allocation via L0 regularization and augmented Lagrangian, enabling controllable sparsity for efficient LLM inference.",
+      "llm_tldr_cn": "针对混合注意力架构中全注意力与滑动窗口注意力的分配依赖手工规则的问题，提出ConSA框架，使用L0正则化学习二值掩码选择注意力类型，并用增广拉格朗日约束实现层或KV头粒度下的目标稀疏度，在0.6B和1.7B规模LLM上验证了可控稀疏性对推理效率的提升。",
+      "llm_tldr": "针对混合注意力架构中全注意力与滑动窗口注意力的分配依赖手工规则的问题，提出ConSA框架，使用L0正则化学习二值掩码选择注意力类型，并用增广拉格朗日约束实现层或KV头粒度下的目标稀疏度，在0.6B和1.7B规模LLM上验证了可控稀疏性对推理效率的提升。",
+      "llm_tags": [
+        "query:eli"
+      ],
+      "matched_query_tag": "query:eli",
+      "matched_query_text": "KV cache optimization methods for LLM inference",
+      "matched_requirement_id": "req-8",
+      "selection_source": "carryover_cache",
+      "paper_id": "2606.18056v1",
+      "quick_tier": "8plus"
+    }
+  ]
+}
