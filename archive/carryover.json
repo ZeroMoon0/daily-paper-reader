@@ -1,25 +1,208 @@
 {
-  "generated_at": "2026-06-21T20:51:54.117482+00:00",
-  "updated_date": "20260621",
+  "generated_at": "2026-06-22T22:57:32.959100+00:00",
+  "updated_date": "20260622",
   "carryover_days": 9,
   "tag_states": {
     "eli": {
-      "updated_date": "20260621",
+      "updated_date": "20260622",
       "carryover_days": 9,
-      "items": []
+      "items": [
+        {
+          "id": "2606.19719v1",
+          "source": "arxiv",
+          "title": "Closing the Calibration Gap in Semantic Caching",
+          "abstract": "Semantic caching cuts LLM inference costs by serving a cached response to semantically similar queries. Standard practice evaluates these systems using PR-AUC, a metric that only measures how well scores rank and ignores whether they are usable at a fixed threshold. We show this mismatch leads to systematically poor deployment choices, as models with the highest PR-AUC are often the worst in operation. We introduce Precision-Cache Hit Ratio (P-CHR) AUC, a cache-aware metric that measures precision across cache utilization levels, and Calibration Retention Rate (CRR), which captures how much offline ranking quality survives at deployment. We decompose the operational gap between offline and deployed quality into a recoverable calibration component and an irreducible structural component fixed by the dataset's positive rate. Our experiments show that the calibration gap is governed by the training objective rather than data scale, and post-hoc calibration only partially closes it. Ultimately, model selection for semantic caching is a calibration problem, not a ranking one, and measuring it is the first step to closing the gap.",
+          "authors": [
+            "Aditeya Baral",
+            "Radoslav Ralev",
+            "Iliya Sotirov Zhechev",
+            "Srijith Rajamohan",
+            "Jen Agarwal"
+          ],
+          "primary_category": "cs.IR",
+          "categories": [
+            "cs.IR",
+            "cs.CL",
+            "cs.LG"
+          ],
+          "published": "2026-06-18T02:34:33+00:00",
+          "link": "https://arxiv.org/pdf/2606.19719v1",
+          "tags": [
+            "keyword:Compression",
+            "keyword:LLM-kernel",
+            "keyword:eli",
+            "keyword:mg",
+            "query:Compression",
+            "query:LLM-kernel",
+            "query:eli",
+            "query:mg"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "Semantic caching for LLM inference cost reduction",
+          "llm_evidence_cn": "语义缓存降低LLM推理成本",
+          "llm_evidence": "语义缓存降低LLM推理成本",
+          "canonical_evidence": "语义缓存降低LLM推理成本",
+          "llm_tldr_en": "Introduces Precision-Cache Hit Ratio (P-CHR) AUC and Calibration Retention Rate (CRR) to evaluate semantic caching, bridging the gap between offline and deployed quality for LLM inference.",
+          "llm_tldr_cn": "现有语义缓存系统使用PR-AUC评估，但该指标忽略了部署时的固定阈值可用性。提出P-CHR AUC和CRR两个新指标，分别衡量缓存利用率下的精度和校准保持率，有效弥补了离线评估与部署质量之间的差距，为LLM推理成本优化提供了更可靠的评估方法。",
+          "llm_tldr": "现有语义缓存系统使用PR-AUC评估，但该指标忽略了部署时的固定阈值可用性。提出P-CHR AUC和CRR两个新指标，分别衡量缓存利用率下的精度和校准保持率，有效弥补了离线评估与部署质量之间的差距，为LLM推理成本优化提供了更可靠的评估方法。",
+          "llm_tags": [
+            "query:eli"
+          ],
+          "matched_query_tag": "query:eli",
+          "matched_query_text": "high throughput and low latency techniques for LLM serving",
+          "matched_requirement_id": "req-7",
+          "selection_source": "carryover_cache",
+          "paper_id": "2606.19719v1",
+          "carry_days": 1
+        },
+        {
+          "id": "2606.18246v1",
+          "source": "arxiv",
+          "title": "Variable-Width Transformers",
+          "abstract": "Scaling model size, specifically depth and width, has driven significant progress in transformer-based language models. However, most architectures maintain a constant width across all layers, allocating a fixed parameter and computation budget evenly despite different layers potentially playing distinct computational roles. In this work, we empirically investigate nonuniform capacity allocation across network depth by proposing a $\\times$-shaped > <former architecture. This design maintains wider early and late layers while narrowing the middle layers, utilizing a parameter-free residual resizing mechanism. Across decoder-only language models ranging from 200M to 2B parameters (dense) and 3B parameters (MoE), our > <former consistently outperforms parameter-matched uniform baselines on language modeling loss. By reducing the average layer width, this architecture also requires fewer overall FLOPs (22% reduction under fitted loss-matched scaling curves) and smaller KV cache memory and I/O cost (15% reduction). In analysis, we show that this bottleneck structure results in qualitatively different representations in residual streams. Overall, our results demonstrate that nonuniform width allocation can result in more resource-optimal scaling of language models.",
+          "authors": [
+            "Zhaofeng Wu",
+            "Oliver Sieberling",
+            "Shawn Tan",
+            "Rameswar Panda",
+            "Yury Polyanskiy",
+            "Yoon Kim"
+          ],
+          "primary_category": "cs.CL",
+          "categories": [
+            "cs.CL"
+          ],
+          "published": "2026-06-16T17:59:03+00:00",
+          "link": "https://arxiv.org/pdf/2606.18246v1",
+          "tags": [
+            "keyword:Compression",
+            "keyword:LLM-kernel",
+            "keyword:eli",
+            "keyword:mg",
+            "query:Compression",
+            "query:LLM-kernel",
+            "query:eli",
+            "query:mg"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "Variable-width transformer for efficient language modeling",
+          "llm_evidence_cn": "变宽Transformer用于高效语言建模",
+          "llm_evidence": "变宽Transformer用于高效语言建模",
+          "canonical_evidence": "变宽Transformer用于高效语言建模",
+          "llm_tldr_en": "X-shaped transformer with nonuniform width across layers consistently outperforms uniform-width baselines in efficiency.",
+          "llm_tldr_cn": "本文提出X形变宽Transformer架构，在深浅层保持较宽宽度而中间层较窄，使用无参数残差调整机制。在200M至2B的密集和3B MoE语言模型上，该架构在相同参数量下持续超越均匀宽度基线，证明了非均匀容量分配的有效性。",
+          "llm_tldr": "本文提出X形变宽Transformer架构，在深浅层保持较宽宽度而中间层较窄，使用无参数残差调整机制。在200M至2B的密集和3B MoE语言模型上，该架构在相同参数量下持续超越均匀宽度基线，证明了非均匀容量分配的有效性。",
+          "llm_tags": [
+            "query:eli"
+          ],
+          "matched_query_tag": "query:eli",
+          "matched_query_text": "LLM Acceleration",
+          "matched_requirement_id": "req-4",
+          "selection_source": "carryover_cache",
+          "paper_id": "2606.18246v1",
+          "carry_days": 1
+        }
+      ]
     },
     "mg": {
-      "updated_date": "20260621",
+      "updated_date": "20260622",
       "carryover_days": 9,
-      "items": []
+      "items": [
+        {
+          "id": "2606.20518v1",
+          "source": "arxiv",
+          "title": "FlowEdit: Associative Memory for Lifelong Pronunciation Adaptation in Flow-Matching TTS",
+          "abstract": "Flow-matching text-to-speech systems achieve remarkable zero-shot quality but remain static after deployment: pronunciation errors on out-of-vocabulary proper nouns persist unless the model is retrained. We introduce FlowEdit, a life-long adaptation framework for frozen flow-matching TTS that learns pronunciation corrections as latent conditioning edits rather than weight updates. When corrective feedback is provided, FlowEdit optimizes a token-level perturbation in the text embedding space, then stores the correction in a Modern Hopfield Network serving as content-addressable episodic memory. At inference, corrections are retrieved via soft attention with a similarity gate, enabling fuzzy morphological matching. On our curated benchmark of 312 multilingual proper nouns across 18 language families, FlowEdit reduces target-word Phoneme Error Rate by 92.7% relative to the zero-shot baseline while maintaining identical general-speech quality. Corrections complete in approximately 15 seconds on a single GPU.",
+          "authors": [
+            "Harshit Singh",
+            "Ayush Pratap Singh",
+            "Nityanand Mathur"
+          ],
+          "primary_category": "cs.AI",
+          "categories": [
+            "cs.AI"
+          ],
+          "published": "2026-06-18T17:36:02+00:00",
+          "link": "https://arxiv.org/pdf/2606.20518v1",
+          "tags": [
+            "keyword:Compression",
+            "keyword:LLM-kernel",
+            "keyword:eli",
+            "keyword:mg",
+            "query:Compression",
+            "query:LLM-kernel",
+            "query:eli",
+            "query:mg"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "flow-matching TTS pronunciation adaptation",
+          "llm_evidence_cn": "流匹配语音合成中的发音适应",
+          "llm_evidence": "流匹配语音合成中的发音适应",
+          "canonical_evidence": "流匹配语音合成中的发音适应",
+          "llm_tldr_en": "FlowEdit adapts frozen flow-matching TTS for lifelong pronunciation correction using latent conditioning edits stored in a Hopfield network. It enables fuzzy morphological matching at inference without retraining.",
+          "llm_tldr_cn": "FlowEdit提出终身发音适应框架，通过优化文本嵌入空间的token级扰动并用Hopfield网络存储校正，无需重训即可修正冻结流匹配TTS系统中的发音错误。其软注意力和相似性门控实现模糊形态匹配，在基准测试上显著提升生僻词发音准确性。该工作为流匹配生成模型的持续学习提供了新思路。",
+          "llm_tldr": "FlowEdit提出终身发音适应框架，通过优化文本嵌入空间的token级扰动并用Hopfield网络存储校正，无需重训即可修正冻结流匹配TTS系统中的发音错误。其软注意力和相似性门控实现模糊形态匹配，在基准测试上显著提升生僻词发音准确性。该工作为流匹配生成模型的持续学习提供了新思路。",
+          "llm_tags": [
+            "query:mg"
+          ],
+          "matched_query_tag": "query:mg",
+          "matched_query_text": "flow matching generative models",
+          "matched_requirement_id": "req-15",
+          "selection_source": "carryover_cache",
+          "paper_id": "2606.20518v1",
+          "carry_days": 1
+        },
+        {
+          "id": "2606.19901v1",
+          "source": "arxiv",
+          "title": "Linear Recurrent Unit with Semantic Modulation for Image Super-Resolution",
+          "abstract": "Linear recurrent unit (LRU), designed with a principled formulation for stable linear recurrence, has demonstrated promising accuracy and robustness on long-range dependency tasks. However, its static parameterization and single-scan method limits its applicability to 2D vision tasks. In this study, we propose a LRU-based restoration network with a semantic modulating unit (SMU) to achieve a harmonious balance between performance and efficiency in single-image super-resolution. The SMU plays three key roles: LRU modulation, spatial categorization, and feature enhancement through learned prototype. Extensive experiments demonstrate that our method quantitatively and qualitatively surpasses recent state-of-the-art methods. Notably, our approach achieves superior performance with computational complexity on par with existing methods. The source code and models are available at https://github.com/MingyuChoi-run/LSM",
+          "authors": [
+            "Mingyu Choi",
+            "Woo Kyoung Han",
+            "Sunghoon Im",
+            "Kyong Hwan Jin"
+          ],
+          "primary_category": "cs.CV",
+          "categories": [
+            "cs.CV"
+          ],
+          "published": "2026-06-18T07:56:28+00:00",
+          "link": "https://arxiv.org/pdf/2606.19901v1",
+          "tags": [
+            "keyword:Compression",
+            "keyword:LLM-kernel",
+            "keyword:mg",
+            "query:Compression",
+            "query:mg"
+          ],
+          "llm_score": 8.0,
+          "llm_evidence_en": "Image super-resolution using deep learning",
+          "llm_evidence_cn": "图像超分辨率深度学习",
+          "llm_evidence": "图像超分辨率深度学习",
+          "canonical_evidence": "图像超分辨率深度学习",
+          "llm_tldr_en": "Proposes an LRU-based restoration network with a semantic modulating unit (SMU) for single-image super-resolution, achieving state-of-the-art performance and efficiency.",
+          "llm_tldr_cn": "针对线性循环单元(LRU)在2D视觉任务中的局限性，提出一种结合语义调制单元(SMU)的LRU超分辨率网络，SMU通过原型学习实现LRU调制、空间分类和特征增强。实验表明，该方法在定量和定性上均超越现有最先进方法，在性能和效率之间取得良好平衡。",
+          "llm_tldr": "针对线性循环单元(LRU)在2D视觉任务中的局限性，提出一种结合语义调制单元(SMU)的LRU超分辨率网络，SMU通过原型学习实现LRU调制、空间分类和特征增强。实验表明，该方法在定量和定性上均超越现有最先进方法，在性能和效率之间取得良好平衡。",
+          "llm_tags": [
+            "query:mg"
+          ],
+          "matched_query_tag": "query:mg",
+          "matched_query_text": "image super resolution deep learning",
+          "matched_requirement_id": "req-14",
+          "selection_source": "carryover_cache",
+          "paper_id": "2606.19901v1",
+          "carry_days": 1
+        }
+      ]
     },
     "LLM-kernel": {
-      "updated_date": "20260621",
+      "updated_date": "20260622",
       "carryover_days": 9,
       "items": []
     },
     "Compression": {
-      "updated_date": "20260621",
+      "updated_date": "20260622",
       "carryover_days": 9,
       "items": []
     }

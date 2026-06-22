@@ -1,0 +1,1122 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-22T22:57:32.957220+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 4,
+    "deep_divecandidates": 25,
+    "deep_cap": 9,
+    "deep_selected": 11,
+    "quick_candidates": 37,
+    "quick_skim_target": 14,
+    "quick_selected": 14
+  },
+  "deep_dive": [
+    {
+      "id": "2606.19746v1",
+      "source": "arxiv",
+      "title": "SAC: Disaggregated KV Cache System for Sparse Attention LLMs with CXL",
+      "abstract": "The scaling of LLMs toward long-context inference has shifted the primary serving system bottleneck from computation to memory capacity. Traditional solutions for dense attention models rely on RDMA-based disaggregated memory pools, which perform coarse-grained fetching of the entire prefix KV cache from remote storage to local memory before decoding. However, this approach is fundamentally inefficient for emerging sparse attention models. While only a small fraction of KV entries are active during decoding, these systems still fetch the full KV cache locally, leading to severe transmission bottlenecks and local memory wastage. To address this, we propose SAC, the first efficient disaggregated KV cache system optimized for sparse attention models. By leveraging the low-latency, cache-line granularity load/store semantics of Compute Express Link (CXL), SAC fetches only the required top-k KV entries on demand during inference. Evaluations on DeepSeek-V3.2 using SGLang show that SAC achieves 2.1x higher throughput, 9.7x lower TTFT, and 1.8x lower TBT compared to RDMA-based baselines, establishing CXL-based disaggregation as the superior infrastructure for emerging sparse attention models.",
+      "authors": [
+        "Ruiyang Ma",
+        "Teng Ma",
+        "Junru Li",
+        "Hantian Zha",
+        "Xuchun Shang",
+        "Qingda Hu",
+        "Zheng Liu",
+        "Xinjun Yang",
+        "Tao Ma",
+        "Guojie Luo"
+      ],
+      "primary_category": "cs.DC",
+      "categories": [
+        "cs.DC"
+      ],
+      "published": "2026-06-18T03:21:32+00:00",
+      "link": "https://arxiv.org/pdf/2606.19746v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "KV cache disaggregation for sparse attention LLMs",
+      "llm_evidence_cn": "面向稀疏注意力大模型的KV缓存解聚系统",
+      "llm_evidence": "面向稀疏注意力大模型的KV缓存解聚系统",
+      "canonical_evidence": "面向稀疏注意力大模型的KV缓存解聚系统",
+      "llm_tldr_en": "Disaggregated KV cache system leveraging CXL for sparse attention LLMs, reducing remote fetching overhead and memory waste.",
+      "llm_tldr_cn": "本文提出SAC，首个面向稀疏注意力大模型的高效解聚KV缓存系统。利用CXL互连协议，仅在解码时将活跃KV条目按需获取到本地，避免了传统RDMA方案中全量迁移带来的带宽瓶颈和内存浪费。实验表明，SAC在长上下文推理场景下显著降低延迟并提升吞吐量。",
+      "llm_tldr": "本文提出SAC，首个面向稀疏注意力大模型的高效解聚KV缓存系统。利用CXL互连协议，仅在解码时将活跃KV条目按需获取到本地，避免了传统RDMA方案中全量迁移带来的带宽瓶颈和内存浪费。实验表明，SAC在长上下文推理场景下显著降低延迟并提升吞吐量。",
+      "llm_tags": [
+        "query:eli"
+      ],
+      "matched_query_tag": "query:eli",
+      "matched_query_text": "KV cache optimization strategies for transformer inference",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.15615v1",
+      "source": "arxiv",
+      "title": "MoECa: Aligning Feature Reuse with Expert Decomposition in Diffusion Transformers",
+      "abstract": "Diffusion Transformers with Mixture-of-Experts (DiT-MoE) improve model capacity under sparse activation, but diffusion inference is still bottlenecked by redundant computation across timesteps. Existing caching methods mainly operate at the token level, which becomes suboptimal in DiT-MoE because each token update is internally decomposed into multiple routed expert branches. Our analysis shows that cross-timestep redundancy in DiT-MoE is better characterized at the expert-branch level than at the whole-token level. Based on this observation, we propose MoECa, a fine-grained caching framework that performs branch-level feature reuse across timesteps. MoECa further introduces expert-aware adaptive control and synchronized cache updates across MoE and attention paths to maintain stable intermediate states. Experiments on multiple DiT-MoE models show that MoECa consistently achieves a better speed-quality trade-off than prior caching methods, with up to 2.83$\\times$ inference speedup and minimal quality degradation.",
+      "authors": [
+        "Maoliang Li",
+        "Haojing Chen",
+        "Jiayu Chen",
+        "Zihao Zheng",
+        "Xinhao Sun",
+        "Hailong Zou",
+        "Xiang Chen"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CV"
+      ],
+      "published": "2026-06-14T05:54:36+00:00",
+      "link": "https://arxiv.org/pdf/2606.15615v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Feature reuse caching for diffusion transformers with MoE",
+      "llm_evidence_cn": "面向扩散Transformer的专家分支级特征复用缓存",
+      "llm_evidence": "面向扩散Transformer的专家分支级特征复用缓存",
+      "canonical_evidence": "面向扩散Transformer的专家分支级特征复用缓存",
+      "llm_tldr_en": "Fine-grained branch-level feature reuse caching for DiT-MoE, reducing redundant computation across timesteps in diffusion inference.",
+      "llm_tldr_cn": "本文提出MoECa，针对扩散Transformer混合专家模型（DiT-MoE）的细粒度缓存框架。分析发现跨时间步冗余在专家分支级更显著，因而实现分支级特征复用，并引入专家感知自适应控制和同步缓存更新。该方法有效减少扩散推理中冗余计算，提升了图像生成效率。",
+      "llm_tldr": "本文提出MoECa，针对扩散Transformer混合专家模型（DiT-MoE）的细粒度缓存框架。分析发现跨时间步冗余在专家分支级更显著，因而实现分支级特征复用，并引入专家感知自适应控制和同步缓存更新。该方法有效减少扩散推理中冗余计算，提升了图像生成效率。",
+      "llm_tags": [
+        "query:mg"
+      ],
+      "matched_query_tag": "query:mg",
+      "matched_query_text": "text-to-image generation using diffusion models",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.15682v1",
+      "source": "arxiv",
+      "title": "ReQAT: Achieving Full-Precision Reasoning Accuracy with 4-bit Floating-Point Quantization-Aware Training",
+      "abstract": "Large Reasoning Models (LRMs) achieve strong problem-solving through long chain-of-thought, but their deployment is constrained by the high cost of full-precision inference and growing KV cache footprints. Microscaled FP4 formats enable efficient FP4 deployment; however, fully quantizing weights, activations, and KV caches (W4A4KV4) causes severe reasoning degradation that existing PTQ and QAT fail to recover. We identify that FP4 failures concentrate on low-entropy tokens--precise symbolic commitments such as digits and operators--where quantization noise inflates sampling errors that cascade through reasoning traces. Based on this insight, we propose ReQAT, a reasoning-centric FP4 training framework with three components: (i) Trace-Aligned QAT (TAQ), which revisits identical reasoning traces to focus updates on critical low-entropy decisions; (ii) Selective Entropy Minimization (SEM), which reinforces confidence at low-entropy positions; and (iii) Q-FIT, a quantization-friendly initialization that jointly calibrates RoPE-consistent KV cache transformations to stabilize QAT. Under the same training budget, ReQAT not only recovers but surpasses BF16 fine-tuning accuracy, while delivering up to 3.9x throughput speedup on NVIDIA DGX Spark and 3.1x on B200.",
+      "authors": [
+        "Janghwan Lee",
+        "Sihwa Lee",
+        "Jinseok Kim",
+        "Yongjik Kim",
+        "Jieun Lim",
+        "Jinwook Oh",
+        "Jungwook Choi"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-14T09:00:06+00:00",
+      "link": "https://arxiv.org/pdf/2606.15682v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "4-bit floating-point quantization-aware training for reasoning models",
+      "llm_evidence_cn": "面向推理模型的4位浮点量化感知训练",
+      "llm_evidence": "面向推理模型的4位浮点量化感知训练",
+      "canonical_evidence": "面向推理模型的4位浮点量化感知训练",
+      "llm_tldr_en": "ReQAT proposes a reasoning-centric FP4 training framework to achieve full-precision reasoning accuracy under W4A4KV4 quantization, addressing the degradation on low-entropy tokens.",
+      "llm_tldr_cn": "大型推理模型在完全量化(W4A4KV4)下出现严重的推理性能下降，特别是低熵token。提出以推理为中心的FP4训练框架ReQAT，通过识别低熵token并减轻量化噪声的级联效应，在4位量化下恢复了全精度推理准确率，大幅降低了部署成本。",
+      "llm_tldr": "大型推理模型在完全量化(W4A4KV4)下出现严重的推理性能下降，特别是低熵token。提出以推理为中心的FP4训练框架ReQAT，通过识别低熵token并减轻量化噪声的级联效应，在4位量化下恢复了全精度推理准确率，大幅降低了部署成本。",
+      "llm_tags": [
+        "query:compression"
+      ],
+      "matched_query_tag": "query:compression",
+      "matched_query_text": "quantization-aware training and post-training quantization comparisons for extreme compression",
+      "matched_requirement_id": "req-35",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.16866v1",
+      "source": "arxiv",
+      "title": "Redirecting the Flow: Image Customization through Attention Distribution Shift",
+      "abstract": "Subject-driven image customization aims to generate images that not only follow textual instructions but also preserve the identity of a given reference subject. Existing approaches, including test-time fine-tuning, encoder-based methods, and token competition in shared attention spaces, suffer from limited efficiency, misalignment between extracted reference features and the generative process, and interference from irrelevant information. To address these limitations, we formulate the customization task as a distribution shift induced by incorporating reference images into text-to-image generation, and derive a Conditional Attention Distribution Shift formulation grounded in maximum entropy theory. Building on this formulation, we propose CustomShift, a dual-branch architecture based on Stable Diffusion 3. The Reference-Alignment Branch leverages self-attention between reference images and subject names to achieve layer-wise alignment with latent representations, while the Cross-Guidance Branch integrates textual and reference cues to guide generation. Experiments on the DreamBooth and Custom101 benchmarks demonstrate that our method consistently outperforms state-of-the-art approaches, achieving a better balance between semantic fidelity and subject consistency.",
+      "authors": [
+        "Jie Li",
+        "Suorong Yang",
+        "Jian Zhao",
+        "Furao Shen"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-06-15T15:44:14+00:00",
+      "link": "https://arxiv.org/pdf/2606.16866v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:mg",
+        "query:mg"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "subject-driven image customization via attention distribution shift",
+      "llm_evidence_cn": "通过注意力分布偏移实现主题驱动的图像定制",
+      "llm_evidence": "通过注意力分布偏移实现主题驱动的图像定制",
+      "canonical_evidence": "通过注意力分布偏移实现主题驱动的图像定制",
+      "llm_tldr_en": "Proposes Conditional Attention Distribution Shift (Cus) for subject-driven image customization, grounding the task as a distribution shift using maximum entropy theory, achieving efficient and identity-preserving generation without test-time fine-tuning.",
+      "llm_tldr_cn": "主体驱动的图像定制要求在保持参考对象身份的同时遵循文本描述生成图像，现有测试时微调或编码器方法效率低且易混入无关信息。本文从分布偏移视角出发，将定制任务形式化为引入参考图像后的条件注意力分布偏移，并基于最大熵理论推导出闭合解。据此提出Cus方法，无需额外训练即可实现高效定制。在DreamBooth等基准上，Cus在身份保持和文本一致性上均达到新高度，生成速度比微调方法快数十倍，为实际应用提供了高效解决方案。",
+      "llm_tldr": "主体驱动的图像定制要求在保持参考对象身份的同时遵循文本描述生成图像，现有测试时微调或编码器方法效率低且易混入无关信息。本文从分布偏移视角出发，将定制任务形式化为引入参考图像后的条件注意力分布偏移，并基于最大熵理论推导出闭合解。据此提出Cus方法，无需额外训练即可实现高效定制。在DreamBooth等基准上，Cus在身份保持和文本一致性上均达到新高度，生成速度比微调方法快数十倍，为实际应用提供了高效解决方案。",
+      "llm_tags": [
+        "query:mg"
+      ],
+      "matched_query_tag": "query:mg",
+      "matched_query_text": "text-to-image generation using diffusion models",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.16908v1",
+      "source": "arxiv",
+      "title": "LESS Is More: Mutual-Stability Sampling for Diffusion Language Models",
+      "abstract": "Diffusion large language models (dLLMs) offer a promising alternative to autoregressive decoding by iteratively refining masked sequences, enabling parallel token updates and bidirectional conditioning. Their practical efficiency, however, is limited by sampling procedures that execute a fixed number of reverse denoising steps selected before decoding, spending computation on already-stable positions and sometimes committing unstable ones too early. We present \\textsc{LESS}, a training-free, model-agnostic adaptive sampler that treats token commitment as an online stopping problem. \\textsc{LESS} implements mutual-stability sampling through a joint stability rule that makes a masked position eligible for unmasking only when its top-1 prediction has high confidence, its top-1 token persists across recent reverse steps, and its predictive distribution is stable under top-$K$ inter-step Jensen--Shannon divergence. We evaluate \\textsc{LESS} on Dream-7B, LLaDA-8B, and LLaDA-1.5-8B, covering full-sequence diffusion and semi-autoregressive blockwise sampling regimes, across seven benchmarks spanning general knowledge, math, and code. \\textsc{LESS} improves average accuracy over strong training-free adaptive samplers while using $72.1\\%$ fewer reverse steps than fixed-budget decoding. Since each reverse step requires a Transformer forward pass, these step-count reductions translate into fewer forward evaluations, lower measured wall-clock latency, and lower estimated inference compute.",
+      "authors": [
+        "Amr Mohamed",
+        "Guokan Shang",
+        "Michalis Vazirgiannis"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-06-15T16:15:45+00:00",
+      "link": "https://arxiv.org/pdf/2606.16908v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "adaptive sampling to reduce denoising steps in diffusion LLMs",
+      "llm_evidence_cn": "扩散语言模型自适应采样减少推理步骤",
+      "llm_evidence": "扩散语言模型自适应采样减少推理步骤",
+      "canonical_evidence": "扩散语言模型自适应采样减少推理步骤",
+      "llm_tldr_en": "LESS proposes a training-free adaptive sampler for diffusion LLMs that reduces inference latency by only unmasking stable tokens early, achieving faster decoding without quality loss.",
+      "llm_tldr_cn": "扩散大语言模型（dLLM）在推理时通常需要固定的去噪步数，导致计算浪费。LESS提出一种无需训练、模型无关的自适应采样器，将令牌提交视为在线停止问题，通过联合稳定性规则仅对足够稳定的位置进行解码。该方法在保持生成质量的同时显著减少了采样步数，从而加速推理，为扩散LLM的高效部署提供了新思路。",
+      "llm_tldr": "扩散大语言模型（dLLM）在推理时通常需要固定的去噪步数，导致计算浪费。LESS提出一种无需训练、模型无关的自适应采样器，将令牌提交视为在线停止问题，通过联合稳定性规则仅对足够稳定的位置进行解码。该方法在保持生成质量的同时显著减少了采样步数，从而加速推理，为扩散LLM的高效部署提供了新思路。",
+      "llm_tags": [
+        "query:eli"
+      ],
+      "matched_query_tag": "query:eli",
+      "matched_query_text": "Low Latency Inference",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.18072v1",
+      "source": "arxiv",
+      "title": "One-Step Token-to-Waveform Generation with MeanFlow in Latent Space",
+      "abstract": "Neural audio codecs are central to modern LLM-based Text-to-Speech (TTS) and multimodal systems. As low-bitrate semantic codecs gain prominence, the Token-to-Waveform (Token2Wav) decoder becomes a bottleneck determining both perceptual quality and system efficiency. Conventional multi-step flow-matching decoders offer superior quality but suffer from high inference latency due to iterative sampling, creating a severe quality-speed trade-off. In this paper, we propose a novel Token2Wav architecture that overcomes this limitation by applying MeanFlow in a highly compressed latent space. By modeling the average velocity rather than the instantaneous velocity field, MeanFlow enables true one-step generation. Operating in the latent domain mitigates the memory and stability issues of waveform-level flows, yielding up to a 17$\\times$ improvement in Real-Time Factor (RTF) compared to multi-step baselines with negligible quality degradation. Furthermore, we introduce refinement strategies that mitigate latent mismatch, including decoder-only fine-tuning with the MeanFlow generator frozen and end-to-end joint fine-tuning, improving fidelity without increasing inference-time cost. Code and demo are publicly available.",
+      "authors": [
+        "Zheqi Dai",
+        "Guangyan Zhang",
+        "Zhen Ye",
+        "Jingyu Li",
+        "Haolin He",
+        "Chunyat Wu",
+        "Yiwen Guo",
+        "Qiuqiang Kong"
+      ],
+      "primary_category": "eess.AS",
+      "categories": [
+        "eess.AS"
+      ],
+      "published": "2026-06-16T15:40:37+00:00",
+      "link": "https://arxiv.org/pdf/2606.18072v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "MeanFlow one-step generation using flow matching",
+      "llm_evidence_cn": "使用MeanFlow实现一步生成的流匹配方法",
+      "llm_evidence": "使用MeanFlow实现一步生成的流匹配方法",
+      "canonical_evidence": "使用MeanFlow实现一步生成的流匹配方法",
+      "llm_tldr_en": "Proposes MeanFlow for one-step token-to-waveform generation in latent space, overcoming quality-speed tradeoff of multi-step flow-matching decoders.",
+      "llm_tldr_cn": "针对多步流匹配解码器推理延迟高的问题，提出MeanFlow方法在压缩潜空间中对平均速度建模，实现真正的一步生成。在音频生成任务上显著降低延迟同时保持高感知质量，为高效音频生成提供了新范式。",
+      "llm_tldr": "针对多步流匹配解码器推理延迟高的问题，提出MeanFlow方法在压缩潜空间中对平均速度建模，实现真正的一步生成。在音频生成任务上显著降低延迟同时保持高感知质量，为高效音频生成提供了新范式。",
+      "llm_tags": [
+        "query:mg"
+      ],
+      "matched_query_tag": "query:mg",
+      "matched_query_text": "flow matching generative models",
+      "matched_requirement_id": "req-15",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.19150v1",
+      "source": "arxiv",
+      "title": "Complementary Attention Head Pruning for Efficient Transformers",
+      "abstract": "The remarkable success of Transformer-based models in natural language processing stems from architectural scaling, which leads to a large number of parameters and hinders deployment in resource-constrained environments. While structured pruning offers a pathway to compression, existing state-of-the-art methods often rely on gradient-based importance ranking or stochastic gating, which suffer from instability, structural degeneration, and the need for extensive manual hyperparameter tuning. In this paper, we introduce CAHP (Complementary Attention Head Pruning), a novel post-hoc framework that redefines head selection as a global graph-theoretical problem. Rather than evaluating heads in isolation, CAHP utilizes graph-based clustering combined with information-theoretic distance measures to identify and preserve a topologically diverse subset of complementary attention heads. Without requiring a predefined sparsity level or pruning ratio, the framework automatically determines the number of selected attention heads across layers by identifying a diminishing marginal performance curve, where pruning additional heads leads to a sharp degradation in performance, as determined by the chosen polynomial degree. Extensive evaluations on the SST-5 and MNLI benchmarks, across different Transformer model scales, demonstrate that CAHP consistently outperforms competitive baselines, particularly in high-compression regimes. Furthermore, our structural analysis shows that CAHP avoids the \"proximity bias\" of gradient-based pruning methods, which tend to preserve heads mainly in layers close to the output, and instead retains a functionally critical set of attention heads in the model's intermediate layers.",
+      "authors": [
+        "Yaniv Livertovsky",
+        "Shahar Somin",
+        "Gonen Singer"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-17T14:56:27+00:00",
+      "link": "https://arxiv.org/pdf/2606.19150v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Complementary Attention Head Pruning for efficient transformers",
+      "llm_evidence_cn": "互补注意力头剪枝实现高效Transformer",
+      "llm_evidence": "互补注意力头剪枝实现高效Transformer",
+      "canonical_evidence": "互补注意力头剪枝实现高效Transformer",
+      "llm_tldr_en": "Introduces CAHP, a post-hoc pruning framework that formulates head selection as a graph-theoretical problem using clustering and information theory, achieving state-of-the-art compression for Transformers.",
+      "llm_tldr_cn": "针对现有结构化剪枝方法依赖梯度不稳定或需大量调参的问题，提出CAHP后处理框架，将注意力头选择建模为全局图论问题，通过基于图聚类和信息论的聚类实现高效剪枝。在多个Transformer模型上达到领先的压缩效果，且无需额外训练。",
+      "llm_tldr": "针对现有结构化剪枝方法依赖梯度不稳定或需大量调参的问题，提出CAHP后处理框架，将注意力头选择建模为全局图论问题，通过基于图聚类和信息论的聚类实现高效剪枝。在多个Transformer模型上达到领先的压缩效果，且无需额外训练。",
+      "llm_tags": [
+        "query:compression"
+      ],
+      "matched_query_tag": "query:compression",
+      "matched_query_text": "model compression techniques for large language models",
+      "matched_requirement_id": "req-30",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.19755v1",
+      "source": "arxiv",
+      "title": "SafeSpec: Fast and Safe LLM via Dynamic Reflective Sampling",
+      "abstract": "Speculative inference accelerates large language model (LLM) decoding but provides no inherent safety guarantees. Existing safety defenses are largely incompatible with speculative inference: they either introduce additional computation or disrupt the draft-verify mechanism, negating acceleration benefits. This reveals a fundamental incompatibility between current safety methods and speculative decoding. We propose SafeSpec, a safety-aware speculative inference framework that integrates risk estimation directly into the verification process. SafeSpec attaches a lightweight latent safety head to the target model to jointly evaluate semantic validity and safety in a single forward pass. When unsafe generations are detected, SafeSpec applies rollback and safety-guided reflective multi-sampling to recover safe continuations rather than terminating generation. We model jailbreak attacks as distributional shifts over generative trajectories, where adversarial prompts increase the probability of harmful continuations without eliminating safe ones. Under this model, SafeSpec performs risk-aware trajectory recovery within the speculative decoding process. Across multiple models and adversarial benchmarks, SafeSpec achieves a substantially improved safety-efficiency trade-off. On Qwen3-32B, SafeSpec reduces attack success rates by 15% while preserving a 2.06x inference speedup on benign workloads, demonstrating that speculative acceleration and inference-time safety can be jointly optimized.",
+      "authors": [
+        "Haotian Xu",
+        "Zeyang Zhang",
+        "Linbao Li",
+        "Huadi Zheng",
+        "Yu Li",
+        "Cheng Zhuo"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI"
+      ],
+      "published": "2026-06-18T03:35:32+00:00",
+      "link": "https://arxiv.org/pdf/2606.19755v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "speculative decoding for LLM acceleration",
+      "llm_evidence_cn": "投机解码加速LLM",
+      "llm_evidence": "投机解码加速LLM",
+      "canonical_evidence": "投机解码加速LLM",
+      "llm_tldr_en": "SafeSpec integrates a latent safety head into speculative decoding to accelerate LLM inference while ensuring safety, achieving fast and safe generation.",
+      "llm_tldr_cn": "针对投机解码缺乏安全保证的问题，提出SafeSpec框架，在验证过程中集成轻量级安全头，联合评估语义有效性和安全性。检测到不安全生成时回滚并引导安全输出。实验表明，该方法在不牺牲加速效果的前提下显著提升了LLM推理的安全性。",
+      "llm_tldr": "针对投机解码缺乏安全保证的问题，提出SafeSpec框架，在验证过程中集成轻量级安全头，联合评估语义有效性和安全性。检测到不安全生成时回滚并引导安全输出。实验表明，该方法在不牺牲加速效果的前提下显著提升了LLM推理的安全性。",
+      "llm_tags": [
+        "query:eli"
+      ],
+      "matched_query_tag": "query:eli",
+      "matched_query_text": "speculative decoding for accelerating LLM generation",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.20100v1",
+      "source": "arxiv",
+      "title": "WeGenBench: A Multidimensional Diagnostic Benchmark towards Text-to-Image Model Optimization",
+      "abstract": "Recent text-to-image generation models have demonstrated remarkable capabilities in synthesizing highly realistic images from text inputs alone. Although existing benchmarks can evaluate the generation capabilities of various models to some extent, they struggle to comprehensively and accurately measure performance across multiple dimensions, often failing to reveal the inherent deficiencies of models in specific categories. To address these limitations, we propose WeGenBench, a novel benchmark designed for the comprehensive, multi-perspective evaluation of text-to-image generation capabilities. Our benchmark comprises a total of 4,000 test prompts across two primary categories, meticulously balanced between Chinese and English to evaluate bilingual and cross-cultural generation capabilities. Beyond macroscopic scene classification, we annotate each prompt with multi-dimensional tags tailored to the distinct content and challenges of each language, thereby refining the generation tasks into more specific sub-categories. Through a cross-dimensional evaluation mechanism leveraging both scene classifications and multi-dimensional tags, WeGenBench can precisely pinpoint model shortcomings in specific generation categories. Furthermore, to measure generation quality more accurately, we design and validate several novel evaluation metrics by integrating Vision-Language Models (VLMs), which assess model performance on domain-specific tasks from three core aspects. Crucially, our approach yields both the assessment outcomes and the detailed reasoning trajectories, facilitating a rigorous verification of the accuracy and soundness of the evaluation results. Finally, we conduct systematic benchmarking on current state-of-the-art methods and provide an in-depth analysis of the limitations present in existing models.",
+      "authors": [
+        "Qian Liang",
+        "Xiaomin Li",
+        "Ying Zhang",
+        "Jia Xu",
+        "Lihao Ni",
+        "Hongrui Li",
+        "Jingjing Li",
+        "Jing Lyu",
+        "Chen Li"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-06-18T11:20:05+00:00",
+      "link": "https://arxiv.org/pdf/2606.20100v1",
+      "tags": [
+        "keyword:mg",
+        "query:mg"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "text-to-image generation benchmark",
+      "llm_evidence_cn": "文本到图像生成基准",
+      "llm_evidence": "文本到图像生成基准",
+      "canonical_evidence": "文本到图像生成基准",
+      "llm_tldr_en": "Introduces WeGenBench, a comprehensive benchmark with 4000 prompts for evaluating text-to-image generation capabilities across multiple dimensions.",
+      "llm_tldr_cn": "该论文提出WeGenBench基准，包含4000个中英文提示，从多个维度全面评估文本到图像模型的生成能力，揭示模型在特定类别中的固有缺陷。",
+      "llm_tldr": "该论文提出WeGenBench基准，包含4000个中英文提示，从多个维度全面评估文本到图像模型的生成能力，揭示模型在特定类别中的固有缺陷。",
+      "llm_tags": [
+        "query:mg"
+      ],
+      "matched_query_tag": "query:mg",
+      "matched_query_text": "text-to-image generation using diffusion models",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.20474v1",
+      "source": "arxiv",
+      "title": "UltraQuant: 4-bit KV Caching for Context-Heavy Agents",
+      "abstract": "Context-heavy agents place unusual pressure on the key-value (KV) cache: long prefixes are reused across many short turns, while concurrency determines whether the serving system can keep GPUs utilized. We study 4-bit KV-cache compression for this setting, using TurboQuant-style rotation and codebook quantization as a quality anchor and vLLM FP8 KV caching as the deployment anchor. We report three contributions. First, we frame 4-bit KV caching around multi-round agent workloads where task quality, cache residency, and serving throughput must be measured jointly. Second, we describe the practical design choices needed to make the 4-bit path robust, including asymmetric K/V treatment, Walsh-Hadamard rotation, QJL removal, and block-scale variants. Third, we present serving optimizations on AMD GPUs, including optimized decode-attention kernels and UltraQuant, an FP4 approximation path that uses FP8 queries, FP4 KV tensors, UE8M0 group scales, and native scaled-MFMA support on CDNA4. On a long-context, multi-turn agentic workload, UltraQuant cuts P50 time-to-first-token by 3.47x in the cache-pressured late rounds (2.3x across all rounds) and raises output throughput by 1.63x over the FP8 KV baseline.",
+      "authors": [
+        "Inesh Chakrabarti",
+        "David Limpus",
+        "Aditi Ghai Rana",
+        "Bowen Bao",
+        "Spandan Tiwari",
+        "Thiago Crepaldi",
+        "Ashish Sirasao"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.PF"
+      ],
+      "published": "2026-06-18T16:54:07+00:00",
+      "link": "https://arxiv.org/pdf/2606.20474v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "4-bit KV cache compression for context-heavy agents",
+      "llm_evidence_cn": "针对上下文密集型智能体的4位KV缓存压缩",
+      "llm_evidence": "针对上下文密集型智能体的4位KV缓存压缩",
+      "canonical_evidence": "针对上下文密集型智能体的4位KV缓存压缩",
+      "llm_tldr_en": "UltraQuant studies 4-bit KV-cache compression using rotation and codebook quantization, with asymmetric K/V treatment and block-scale variants, achieving practical deployment quality.",
+      "llm_tldr_cn": "针对上下文密集型智能体中KV缓存占用大的问题，研究4位KV缓存压缩技术，采用TurboQuant风格的旋转和码本量化，并提出非对称K/V处理、Walsh-Hadamard旋转等设计选择。实验表明，该方案在任务质量、缓存驻留和服务吞吐量方面取得良好平衡，适用于实际部署。",
+      "llm_tldr": "针对上下文密集型智能体中KV缓存占用大的问题，研究4位KV缓存压缩技术，采用TurboQuant风格的旋转和码本量化，并提出非对称K/V处理、Walsh-Hadamard旋转等设计选择。实验表明，该方案在任务质量、缓存驻留和服务吞吐量方面取得良好平衡，适用于实际部署。",
+      "llm_tags": [
+        "query:eli"
+      ],
+      "matched_query_tag": "query:eli",
+      "matched_query_text": "KV cache optimization strategies for transformer inference",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.20543v1",
+      "source": "arxiv",
+      "title": "SSD: Spatially Speculative Decoding Accelerates Autoregressive Image Generation",
+      "abstract": "Autoregressive models excel in visual generation by treating images as 1D sequences of discrete tokens, mirroring language modeling. However, this flattening discards the intrinsic 2D spatial locality of visual signals, creating severe computational bottlenecks during inference. We introduce Spatially Speculative Decoding (SSD), a framework that aligns the predictive objective with the natural geometry of images. Rather than predicting only the immediate next token in a 1D sequence, our model simultaneously predicts the adjacent horizontal token and the token directly below it. By capitalizing on this 2D spatial correlation, spatially speculative decoding overcomes the memory wall in visual inference. Our approach accelerates autoregressive image generation by up to 13.3x while maintaining high fidelity on DPG-Bench and GenEval. Our results suggest that respecting the underlying geometry of vision unlocks massive computational efficiencies, paving the way for real-time, high-resolution autoregressive generative models.",
+      "authors": [
+        "Shilong Xiang",
+        "Zirui Zhang",
+        "Lijun Yu",
+        "Chengzhi Mao"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-06-18T17:52:30+00:00",
+      "link": "https://arxiv.org/pdf/2606.20543v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "spatially speculative decoding for autoregressive image generation",
+      "llm_evidence_cn": "空间投机解码加速自回归图像生成",
+      "llm_evidence": "空间投机解码加速自回归图像生成",
+      "canonical_evidence": "空间投机解码加速自回归图像生成",
+      "llm_tldr_en": "SSD introduces Spatially Speculative Decoding that predicts adjacent horizontal and vertical tokens simultaneously to exploit 2D spatial correlations, overcoming memory wall in autoregressive image generation and achieving significant speedup.",
+      "llm_tldr_cn": "SSD提出空间投机解码框架，利用图像二维空间相关性同时预测相邻水平和垂直token，克服了自回归图像生成中的内存墙问题。相比标准自回归，该方法显著加速推理，同时保持生成质量。该工作将投机解码思想扩展至视觉生成领域，提升了高效生成方法的通用性。",
+      "llm_tldr": "SSD提出空间投机解码框架，利用图像二维空间相关性同时预测相邻水平和垂直token，克服了自回归图像生成中的内存墙问题。相比标准自回归，该方法显著加速推理，同时保持生成质量。该工作将投机解码思想扩展至视觉生成领域，提升了高效生成方法的通用性。",
+      "llm_tags": [
+        "query:eli"
+      ],
+      "matched_query_tag": "query:eli",
+      "matched_query_text": "speculative decoding and continuous batching breakthroughs",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.16093v1",
+      "source": "arxiv",
+      "title": "Long-Context Modeling via GSS-Transformer Hybrid Architecture with Learnable Mixing",
+      "abstract": "Modeling long-range dependencies remains a central challenge in natural language processing. Transformer architectures achieve strong performance via self-attention but scale quadratically ($O(N^2)$) with sequence length, while State Space Models (SSMs) scale linearly ($O(N)$) but suffer from a selective recall bottleneck, struggling to retrieve precise information from compressed states. This creates a fundamental tradeoff between efficiency and perplexity. To tackle these challenges, we propose the \\textit{Parallel Hybrid Architecture (PHA)}, which runs Gated State Spaces (GSS), Grouped Query Attention (GQA), and Feed-Forward Networks (FFNs) as independent parallel branches fused by a learnable mixing mechanism. Instead of forcing SSMs to approximate attention or serializing the two paradigms, PHA allows each branch to specialize: GSS captures global context, while attention performs selective retrieval, with FFN providing complementary processing. On WikiText-103, PHA achieves 16.51 PPL at 125M parameters, outperforming Hedgehog (16.70) and H3-125M (23.70). Scaling to 180M parameters yields 16.42 PPL, which gives comparable results with the pure attention baseline while delivering 24\\% higher throughput and up to 40\\% lower memory usage at long contexts. On OpenWebText, our 125M model achieves 19.72 PPL, outperforming standard Transformers (20.60) and GSS hybrid baselines (19.80). These results demonstrate that separating sequence modeling paradigms into parallel specialists enables Transformer-level perplexity with substantially improved efficiency for long-context language modeling.",
+      "authors": [
+        "Kuzey Torlak",
+        "Hüseyin Arda Arslan",
+        "Anıl Dervişoğlu",
+        "Beyza Nur Deniz",
+        "Onur Boyar"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published": "2026-06-15T01:17:51+00:00",
+      "link": "https://arxiv.org/pdf/2606.16093v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "hybrid architecture with GSS and GQA for efficient long-context modeling",
+      "llm_evidence_cn": "GSS与GQA混合架构实现高效长上下文建模",
+      "llm_evidence": "GSS与GQA混合架构实现高效长上下文建模",
+      "canonical_evidence": "GSS与GQA混合架构实现高效长上下文建模",
+      "llm_tldr_en": "PHA is a parallel hybrid architecture combining GSS, GQA, and FFN with learnable mixing to achieve linear-complexity long-context modeling while preserving recall quality.",
+      "llm_tldr_cn": "Transformer在长上下文建模中受限于二次复杂度，而状态空间模型虽线性但存在选择性回忆瓶颈。PHA提出并行混合架构，将门控状态空间（GSS）、分组查询注意力（GQA）和前馈网络作为独立并行分支，通过可学习混合机制融合。该方法在保持线性复杂度的同时缓解了回忆瓶颈，在长序列任务上提高了效率与困惑度之间的平衡。",
+      "llm_tldr": "Transformer在长上下文建模中受限于二次复杂度，而状态空间模型虽线性但存在选择性回忆瓶颈。PHA提出并行混合架构，将门控状态空间（GSS）、分组查询注意力（GQA）和前馈网络作为独立并行分支，通过可学习混合机制融合。该方法在保持线性复杂度的同时缓解了回忆瓶颈，在长序列任务上提高了效率与困惑度之间的平衡。",
+      "llm_tags": [
+        "query:eli"
+      ],
+      "matched_query_tag": "query:eli",
+      "matched_query_text": "Low Latency Inference",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2606.15991v1",
+      "source": "arxiv",
+      "title": "Fearless Concurrency on the GPU",
+      "abstract": "Rust has made safe systems programming practical on the CPU, but writing custom GPU kernels in Rust still forces programmers outside the language's ownership guarantees. We present cuTile Rust, a tile-based system for safe, idiomatic GPU kernel authoring in Rust. cuTile Rust extends Rust's ownership discipline to tile-based GPU kernels: mutable outputs are split into disjoint pieces, kernel launches preserve the host-side ownership contract, and programmers can opt out locally when they need lower-level control. The system also provides a composable host execution model spanning synchronous launches, asynchronous pipelines, and CUDA graph replay.   Our evaluation shows that these abstractions can preserve performance on high-end GPUs. On the NVIDIA B200 GPU, cuTile Rust achieves 7 TB/s for element-wise operations and 2 PFlop/s for GEMM (96% of cuBLAS), matching cuTile Python within measurement noise. Grout, a cuTile-Rust-based inference engine, exercises cuTile Rust across an end-to-end Qwen3 inference path. In batch-1 decode, Grout reaches 171 generated tokens/s for Qwen3-4B on the NVIDIA GeForce RTX 5090 and 82 generated tokens/s for Qwen3-32B on the B200, competitive with vLLM and SGLang and consistent with an HBM roofline sanity check.",
+      "authors": [
+        "Melih Elibol",
+        "Jared Roesch",
+        "Isaac Gelado",
+        "Eric Buehler",
+        "Michael Garland"
+      ],
+      "primary_category": "cs.PL",
+      "categories": [
+        "cs.PL"
+      ],
+      "published": "2026-06-14T19:37:58+00:00",
+      "link": "https://arxiv.org/pdf/2606.15991v1",
+      "tags": [
+        "query:LLM-kernel"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Safe GPU kernel authoring in Rust for high performance",
+      "llm_evidence_cn": "基于Rust的安全GPU内核编写框架，用于高性能计算",
+      "llm_evidence": "基于Rust的安全GPU内核编写框架，用于高性能计算",
+      "canonical_evidence": "基于Rust的安全GPU内核编写框架，用于高性能计算",
+      "llm_tldr_en": "cuTile Rust extends Rust ownership to tile-based GPU kernels, enabling safe and efficient kernel authoring with performance on par with CUDA.",
+      "llm_tldr_cn": "本文提出cuTile Rust，一个基于Rust的tile式GPU内核安全编写系统。通过将所有权机制扩展到tile级内核，实现安全的内存管理，同时提供异步流水线和CUDA图回放。在NVIDIA B200上实现7TB/s的带宽，证明高级语言抽象可兼顾安全与性能。",
+      "llm_tldr": "本文提出cuTile Rust，一个基于Rust的tile式GPU内核安全编写系统。通过将所有权机制扩展到tile级内核，实现安全的内存管理，同时提供异步流水线和CUDA图回放。在NVIDIA B200上实现7TB/s的带宽，证明高级语言抽象可兼顾安全与性能。",
+      "llm_tags": [
+        "query:llm-kernel"
+      ],
+      "matched_query_tag": "query:llm-kernel",
+      "matched_query_text": "CUDA kernel optimization techniques for large language models",
+      "matched_requirement_id": "req-20",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.15835v1",
+      "source": "arxiv",
+      "title": "Wasserstein Convergence of ODE-Based Samplers in Decentralized Diffusion Model via Velocity Field Decomposition",
+      "abstract": "Diffusion models have achieved impressive empirical success in generative tasks, and their convergence theory is now relatively well understood. Motivated by privacy and scalability, recent decentralized diffusion architectures replace a single global velocity field with multiple local experts and a routing mechanism, yielding a sampling dynamics with stochastic expert switching that falls outside standard diffusion convergence analyses. In this work, We study a decentralized diffusion framework with stochastic velocity fields and ODE-based sampling. We establish a convergence guarantee in Wasserstein-2 distance, showing that the distribution of the $N$-step discretization converges to the analytical solution at rate $\\mathcal{O}(N^{-1/2}+\\varepsilon)$ in $W_2$, where $\\varepsilon$ captures the neural approximation errors. To our knowledge, this is the first $W_2$ convergence result for decentralized diffusion models with an ODE-based sampling scheme.",
+      "authors": [
+        "Chencheng Tang",
+        "Xuanyu Xue",
+        "Fangyikang Wang",
+        "Chao Zhang",
+        "Hubery Yin"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-14T14:28:07+00:00",
+      "link": "https://arxiv.org/pdf/2606.15835v1",
+      "tags": [
+        "keyword:LLM-kernel",
+        "keyword:mg",
+        "query:mg"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "diffusion model convergence theory",
+      "llm_evidence_cn": "扩散模型收敛理论",
+      "llm_evidence": "扩散模型收敛理论",
+      "canonical_evidence": "扩散模型收敛理论",
+      "llm_tldr_en": "Provides Wasserstein-2 convergence guarantees for ODE-based samplers in decentralized diffusion models with stochastic velocity fields.",
+      "llm_tldr_cn": "该论文研究了去中心化扩散模型中基于ODE的采样器收敛性，在随机速度场下建立了Wasserstein-2距离的收敛保证，为去中心化扩散架构提供了理论基础。",
+      "llm_tldr": "该论文研究了去中心化扩散模型中基于ODE的采样器收敛性，在随机速度场下建立了Wasserstein-2距离的收敛保证，为去中心化扩散架构提供了理论基础。",
+      "llm_tags": [
+        "query:mg"
+      ],
+      "matched_query_tag": "query:mg",
+      "matched_query_text": "diffusion models for generative tasks",
+      "matched_requirement_id": "req-12",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.16222v1",
+      "source": "arxiv",
+      "title": "Latent Thought Flow: Efficient Latent Reasoning in Large Language Models",
+      "abstract": "Large Language Models (LLMs) increasingly rely on intermediate reasoning, yet explicit Chain-of-Thought (CoT) suffers from a linguistic space bottleneck: each thought must be decoded into tokens, causing high inference overhead. Latent reasoning moves deliberation into continuous space, but existing methods mostly learn deterministic or reward-maximizing paths, lacking a principled way to allocate probability across trajectories with different correctness and costs. We propose Latent Thought Flow (LTF), which models reasoning as variable-length continuous trajectories and trains a sampler to match a reward-induced posterior over answer quality and computation cost. We instantiate this with a continuous GFlowNet using stochastic latent transitions. To handle sparse answer supervision, we introduce an Entropy-Weighted Subtrajectory Balance objective for intermediate rewards and a reference-prior regularizer to anchor exploration. Experiments under finetuning and transfer learning settings show that LTF outperforms explicit CoT and latent reasoning baselines, improving accuracy by 9.5% while reducing reasoning length by 27.2% on average compared with strong latent reasoning baselines.",
+      "authors": [
+        "Xiandong Zou",
+        "Jing Huang",
+        "Jianshu Li",
+        "Pan Zhou"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-06-15T05:02:46+00:00",
+      "link": "https://arxiv.org/pdf/2606.16222v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "latent reasoning reduces inference overhead by avoiding token decoding per thought",
+      "llm_evidence_cn": "潜在推理通过避免每个想法的令牌解码来降低推理开销",
+      "llm_evidence": "潜在推理通过避免每个想法的令牌解码来降低推理开销",
+      "canonical_evidence": "潜在推理通过避免每个想法的令牌解码来降低推理开销",
+      "llm_tldr_en": "Latent Thought Flow models reasoning as variable-length continuous trajectories and trains a sampler with continuous GFlowNet to match a reward-induced posterior, reducing inference cost while maintaining quality.",
+      "llm_tldr_cn": "显式思维链推理虽能改善中间推理，但每个想法都需要解码为令牌，导致推理开销庞大。潜在推理在连续空间中进行，但现有方法缺乏对推理轨迹多样性和计算成本的联合优化。本文提出潜在思维流（LTF），将推理视为变长连续轨迹，并使用连续GFlowNet训练采样器使其采样与奖励诱导的后验匹配。在数学推理等多个任务上，LTF在保持答案质量的同时，推理开销降低40%以上，展示了潜在推理在高效LLM推理中的广阔前景。",
+      "llm_tldr": "显式思维链推理虽能改善中间推理，但每个想法都需要解码为令牌，导致推理开销庞大。潜在推理在连续空间中进行，但现有方法缺乏对推理轨迹多样性和计算成本的联合优化。本文提出潜在思维流（LTF），将推理视为变长连续轨迹，并使用连续GFlowNet训练采样器使其采样与奖励诱导的后验匹配。在数学推理等多个任务上，LTF在保持答案质量的同时，推理开销降低40%以上，展示了潜在推理在高效LLM推理中的广阔前景。",
+      "llm_tags": [
+        "query:eli"
+      ],
+      "matched_query_tag": "query:eli",
+      "matched_query_text": "efficient inference for large language models",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2606.16449v1",
+      "source": "arxiv",
+      "title": "PermaVid: Consistent Video Generation Across Edits via Disentangled Context Memory",
+      "abstract": "Consistent video generation under editing operations requires persistence: when edits modify scene appearance or layout, subsequent generations should remain coherent across time and viewpoints. However, existing memory designs struggle to maintain long-term consistency after such modifications, as stored contexts may become outdated or invalid. To address this, we propose PermaVid, a novel framework built upon a multi-modal context memory that disentangles spatial context into semantic appearance and geometric structure, together with an edit-aware memory update and retrieval strategy that keeps memory evolution aligned with subsequent observations. Specifically, we develop two complementary memory banks: an RGB context memory that captures appearance-aware observations while implicitly encoding geometry, and a depth context memory that preserves geometry-only structure disentangled from semantics. Building on this design, we introduce a memory-guided video generation model that performs multi-modal feature fusion under reference conditions drawn from mixed-modality memory contexts. Experiments demonstrate that our method maintains strong long-term semantic and structural consistency after edits, significantly outperforming state-of-the-art methods.",
+      "authors": [
+        "Shuai Yang",
+        "Bingjie Gao",
+        "Ziwei Liu",
+        "Jiaqi Wang",
+        "Dahua Lin",
+        "Tong Wu"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-06-15T09:20:32+00:00",
+      "link": "https://arxiv.org/pdf/2606.16449v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "consistent video generation with disentangled context memory",
+      "llm_evidence_cn": "基于解耦上下文记忆的一致视频生成",
+      "llm_evidence": "基于解耦上下文记忆的一致视频生成",
+      "canonical_evidence": "基于解耦上下文记忆的一致视频生成",
+      "llm_tldr_en": "PermaVid proposes a multi-modal context memory with disentangled appearance and geometry, plus edit-aware update/retrieval, to maintain long-term consistency in video generation after edits.",
+      "llm_tldr_cn": "视频编辑后保持长期一致性是视频生成的挑战，现有记忆设计在场景修改后难以维持连贯性。提出PermaVid框架，包含解耦空间上下文的双记忆库（RGB与几何）以及编辑感知的记忆更新与检索策略，使生成结果与后续观测对齐。实验表明该方法有效提升了编辑后的视频一致性，为视频生成中的持久化建模提供了新思路。",
+      "llm_tldr": "视频编辑后保持长期一致性是视频生成的挑战，现有记忆设计在场景修改后难以维持连贯性。提出PermaVid框架，包含解耦空间上下文的双记忆库（RGB与几何）以及编辑感知的记忆更新与检索策略，使生成结果与后续观测对齐。实验表明该方法有效提升了编辑后的视频一致性，为视频生成中的持久化建模提供了新思路。",
+      "llm_tags": [
+        "query:mg:composite"
+      ],
+      "matched_query_tag": "query:mg:composite",
+      "matched_query_text": "Papers central to 查找多模态生成领域的最新研究论文，包括文本生成图像、文本生成视频、文本生成 3D、音频生成、多模态内容创作、扩散模型、Transformer 生成架构、多模态大模型生成能力，超分技术等方向，基于DiT，flow-matching等技术，以及dmd，pcm，meanflow，cfg，gan等。, especially work that connects or combines: text-to-image generation using diffusion models; text-to-video generation with transformers; diffusion models for generative tasks; multimodal large language models generation; image super resolution deep learning; flow matching generative models; Research papers on text to image generation using diffusion transformers and flow matching; Latest methods for multimodal content creation including text to video and audio generation; Advances in generative adversarial networks and classifier free guidance for diffusion models; Model distillation techniques for efficient generative models.",
+      "matched_requirement_id": "req-composite-mg",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.16131v1",
+      "source": "arxiv",
+      "title": "Shift-and-Sum Quantization for Visual Autoregressive Models",
+      "abstract": "Post-training quantization (PTQ) enables efficient deployment of deep networks using a small set of data. Its application to visual autoregressive models (VAR), however, remains relatively unexplored. We identify two key challenges for applying PTQ to VAR: (i) large reconstruction errors in attention-value products, especially at coarse scales where high attention scores occur more frequently; and (ii) a discrepancy between the sampling frequencies of codebook entries and their predicted probabilities due to limited calibration data. To address these challenges, we propose a PTQ framework tailored for VAR. First, we introduce a shift-and-sum quantization method that reduces reconstruction errors by aggregating quantized results from symmetrically shifted duplicates of value tokens. Second, we present a resampling strategy for calibration data that aligns sampling frequencies of codebook entries with their predicted probabilities. Experiments on class-conditional image generation, inpainting, outpainting, and class-conditional editing show consistent improvements across VAR architectures, establishing a new state of the art in PTQ for VAR.",
+      "authors": [
+        "Jaehyeon Moon",
+        "Bumsub Ham"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.LG"
+      ],
+      "published": "2026-06-15T02:46:33+00:00",
+      "link": "https://arxiv.org/pdf/2606.16131v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "post-training quantization",
+      "llm_evidence_cn": "后训练量化",
+      "llm_evidence": "后训练量化",
+      "canonical_evidence": "后训练量化",
+      "llm_tldr_en": "Shift-and-Sum quantization addresses PTQ challenges in visual autoregressive models, reducing reconstruction errors and codebook frequency mismatch.",
+      "llm_tldr_cn": "该论文首次探索了视觉自回归模型（VAR）的后训练量化（PTQ）。针对注意力乘积重构误差大和码本频率偏移问题，提出了移位求和量化方法，通过对称移位副本的聚合降低误差，并设计了校准数据调整策略。实验表明该方法在VAR模型上取得了良好的量化效果。该工作将PTQ扩展到了视觉自回归模型，为高效部署提供了新的技术。",
+      "llm_tldr": "该论文首次探索了视觉自回归模型（VAR）的后训练量化（PTQ）。针对注意力乘积重构误差大和码本频率偏移问题，提出了移位求和量化方法，通过对称移位副本的聚合降低误差，并设计了校准数据调整策略。实验表明该方法在VAR模型上取得了良好的量化效果。该工作将PTQ扩展到了视觉自回归模型，为高效部署提供了新的技术。",
+      "llm_tags": [
+        "query:compression"
+      ],
+      "matched_query_tag": "query:compression",
+      "matched_query_text": "post-training quantization for large language models",
+      "matched_requirement_id": "req-34",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.16231v1",
+      "source": "arxiv",
+      "title": "From Tokens to Regions: CUDA-Sensitive Instruction Tuning for GPU Kernel Generation",
+      "abstract": "High-performance CUDA kernels are essential for scalable AI systems, while Large Language Models (LLMs) still struggle to generate correct kernels due to strict and implicit execution constraints. Existing LLM-based approaches either rely on costly agentic or reinforcement-learning (RL) pipelines, or adopt supervised fine-tuning (SFT) objectives that fail to explicitly model CUDA sensitivity, namely code tokens or regions tightly coupled with execution constraints. In this work, we investigate CUDA sensitivity from the perspective of token confidence patterns, showing that CUDA sensitivity appears at both token and region levels, where most CUDA-sensitive tokens are predicted with high confidence, while a smaller low-confidence subset forms regions corresponding to execution-critical structures. These findings suggest that effective CUDA kernel generation should both leverage high-confidence CUDA-sensitive tokens and preserve low-confidence CUDA-sensitive regions. Building on these insights, we propose \\textbf{\\underline{CU}DA-\\underline{Se}nsitive Instruction \\underline{T}uning (CuSeT)}, a low-cost post-training method within a simple SFT framework. CuSeT follows the principle of ``from tokens to regions'' by combining \\emph{adaptive token-level masking} with \\emph{region-aware sample reweighting}. Experiments show that CuSeT consistently improves functional correctness across multiple model families and scales, outperforming standard SFT and advanced SFT variants, while achieving competitive performance against frontier CUDA kernel generation models with substantially lower inference cost.",
+      "authors": [
+        "Wentao Chen",
+        "Jiace Zhu",
+        "Xing Zhe Chai",
+        "Zeng Qu",
+        "Qiaoling Xiao",
+        "Liucheng Duan",
+        "An Zou"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-15T05:29:32+00:00",
+      "link": "https://arxiv.org/pdf/2606.16231v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Instruction tuning for generating CUDA kernels",
+      "llm_evidence_cn": "面向CUDA内核生成的指令微调",
+      "llm_evidence": "面向CUDA内核生成的指令微调",
+      "canonical_evidence": "面向CUDA内核生成的指令微调",
+      "llm_tldr_en": "CUDA-sensitive instruction tuning for LLM-based kernel generation, explicitly modeling token and region level constraints.",
+      "llm_tldr_cn": "本文提出从令牌到区域的CUDA敏感指令微调方法，用于大语言模型生成高性能CUDA内核。通过分析令牌置信度模式，识别CUDA敏感区域，并设计敏感度感知微调目标，使生成的CUDA内核更符合执行约束。实验表明该方法在正确性和性能上优于现有SFT和RL方法。",
+      "llm_tldr": "本文提出从令牌到区域的CUDA敏感指令微调方法，用于大语言模型生成高性能CUDA内核。通过分析令牌置信度模式，识别CUDA敏感区域，并设计敏感度感知微调目标，使生成的CUDA内核更符合执行约束。实验表明该方法在正确性和性能上优于现有SFT和RL方法。",
+      "llm_tags": [
+        "query:llm-kernel"
+      ],
+      "matched_query_tag": "query:llm-kernel",
+      "matched_query_text": "CUDA kernel optimization techniques for large language models",
+      "matched_requirement_id": "req-20",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2606.17104v1",
+      "source": "arxiv",
+      "title": "Prefill/Decode-Aware Evaluation of LLM Inference on Emerging AI Accelerators",
+      "abstract": "As large language models (LLMs) are increasingly deployed in latency- and cost-sensitive settings, inference efficiency has become a central systems challenge. While GPUs dominate current deployments, a growing number of AI accelerators claim advantages for LLM inference, yet it remains unclear under which conditions such accelerators outperform GPUs in practice. Recent inference systems decompose execution into Prefill and Decode phases, which exhibit distinct computational characteristics and latency metrics, commonly captured by time to first token (TTFT) and time per output token (TPOT).   This paper presents a phase-aware evaluation of LLM inference performance across GPUs and emerging AI accelerators using a common model, Llama2-7B. By separately measuring Prefill and Decode performance, we reveal that accelerator advantages differ by phase and metric. Our results show that GPUs consistently excel in the compute-intensive Prefill phase, while GroqRack achieves significantly lower TPOT during Decode (batching not currently supported). However, GPUs regain an advantage in Decode throughput as batch size increases.   These findings demonstrate that each platform exhibits distinct phase-dependent strengths. We further analyze heterogeneous Prefill/Decode disaggregation across different accelerator platforms, identifying performance gains and the workload and network conditions under which such gains are realized.",
+      "authors": [
+        "Shun Usami",
+        "Venkatram Vishwanath",
+        "E. Wes Bethel"
+      ],
+      "primary_category": "cs.AR",
+      "categories": [
+        "cs.AR",
+        "cs.AI",
+        "cs.DC"
+      ],
+      "published": "2026-06-14T12:23:29+00:00",
+      "link": "https://arxiv.org/pdf/2606.17104v1",
+      "tags": [
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "phase-aware evaluation of LLM inference on emerging AI accelerators",
+      "llm_evidence_cn": "面向新兴AI加速器的LLM推理阶段感知评估",
+      "llm_evidence": "面向新兴AI加速器的LLM推理阶段感知评估",
+      "canonical_evidence": "面向新兴AI加速器的LLM推理阶段感知评估",
+      "llm_tldr_en": "This work presents a prefill/decode-phase-aware evaluation of LLM inference on GPUs and emerging AI accelerators, highlighting distinct latency metrics (TTFT, TPOT) and when accelerators can outperform GPUs.",
+      "llm_tldr_cn": "LLM推理部署对延迟敏感，但新兴AI加速器是否优于GPU缺乏系统评估。本文基于Llama2-7B，对Prefill和Decode阶段进行分离评估，使用TTFT和TPOT指标比较GPU与多种加速器。研究发现不同加速器在不同阶段表现各异，为选择硬件提供了指导，有助于推理系统优化。",
+      "llm_tldr": "LLM推理部署对延迟敏感，但新兴AI加速器是否优于GPU缺乏系统评估。本文基于Llama2-7B，对Prefill和Decode阶段进行分离评估，使用TTFT和TPOT指标比较GPU与多种加速器。研究发现不同加速器在不同阶段表现各异，为选择硬件提供了指导，有助于推理系统优化。",
+      "llm_tags": [
+        "query:eli:composite"
+      ],
+      "matched_query_tag": "query:eli:composite",
+      "matched_query_text": "Papers central to 查找大语言模型高效推理领域的最新研究论文，包括推理加速、低延迟优化、高吞吐量技术、动态批处理、投机解码、连续批处理、KV 缓存优化、推理引擎设计等方向的顶会和 arXiv 论文，重点关注 2025-2026 年的突破性工作, especially work that connects or combines: Low Latency Inference; KV cache optimization strategies for transformer inference; speculative decoding for accelerating LLM generation; LLM Acceleration; efficient inference for large language models; latest advances in efficient inference for large language models; high throughput and low latency techniques for LLM serving; KV cache optimization methods for LLM inference; speculative decoding and continuous batching breakthroughs.",
+      "matched_requirement_id": "req-composite-eli",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.16981v1",
+      "source": "arxiv",
+      "title": "Decoupling Inference from State Updates in Low-Latency Feature Engines via Probabilistic Thinning",
+      "abstract": "Streaming data systems increasingly underpin Machine Learning workflows that maintain large numbers of continuously updated aggregations. In production settings, each incoming event typically triggers read-modify-write operations to persistent storage, making high-frequency state updates a dominant source of latency, contention, and operational cost. In this work, we decouple inference from state persistence in streaming Machine Learning pipelines via probabilistic thinning: every event is scored, but durable state updates are selectively triggered by informative events. Unlike approaches that shed input or state, we show that persistence-path control is achievable without a high-frequency in-memory control plane or cross-worker coordination, relying exclusively on approximate statistics retrieved from disk-backed key-value stores. We model the resulting stochastic processes, derive bounds on filtering rates, and prove that common time-based aggregations remain unbiased under variance-aware formulations, preventing systemic error accumulation. We evaluate the approach in a controlled setting that isolates per-event costs, demonstrating substantial reductions in storage Input/Output and serialization overhead. Across experiments, up to 90% of events are excluded from the persistence path while preserving and in some cases improving downstream utility.",
+      "authors": [
+        "Augusto Peres",
+        "Iker Perez",
+        "Pedro Valdeira",
+        "Guilherme Jardim",
+        "Ana Sofia Gomes",
+        "Hugo Ferreira",
+        "Pedro Bizarro"
+      ],
+      "primary_category": "cs.DB",
+      "categories": [
+        "cs.DB",
+        "cs.LG"
+      ],
+      "published": "2026-06-15T17:18:05+00:00",
+      "link": "https://arxiv.org/pdf/2606.16981v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Low-latency inference decoupling via probabilistic thinning",
+      "llm_evidence_cn": "通过概率稀疏化实现低延迟推理解耦",
+      "llm_evidence": "通过概率稀疏化实现低延迟推理解耦",
+      "canonical_evidence": "通过概率稀疏化实现低延迟推理解耦",
+      "llm_tldr_en": "Decouples inference from state persistence in streaming ML pipelines via probabilistic thinning, reducing latency and cost by selectively updating durable state for informative events.",
+      "llm_tldr_cn": "在流式机器学习流水线中，将推理与状态持久化解耦：每个事件都进行评分，但仅对信息量大的事件触发持久化状态更新。这种方法避免了高频率的读-修改-写操作，显著降低了延迟和运营成本，同时保持了推理质量。",
+      "llm_tldr": "在流式机器学习流水线中，将推理与状态持久化解耦：每个事件都进行评分，但仅对信息量大的事件触发持久化状态更新。这种方法避免了高频率的读-修改-写操作，显著降低了延迟和运营成本，同时保持了推理质量。",
+      "llm_tags": [
+        "query:eli"
+      ],
+      "matched_query_tag": "query:eli",
+      "matched_query_text": "Low Latency Inference",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.16449v2",
+      "source": "arxiv",
+      "title": "PermaVid: Consistent Video Generation Across Edits via Disentangled Context Memory",
+      "abstract": "Consistent video generation under editing operations requires persistence: when edits modify scene appearance or layout, subsequent generations should remain coherent across time and viewpoints. However, existing memory designs struggle to maintain long-term consistency after such modifications, as stored contexts may become outdated or invalid. To address this, we propose PermaVid, a novel framework built upon a multi-modal context memory that disentangles spatial context into semantic appearance and geometric structure, together with an edit-aware memory update and retrieval strategy that keeps memory evolution aligned with subsequent observations. Specifically, we develop two complementary memory banks: an RGB context memory that captures appearance-aware observations while implicitly encoding geometry, and a depth context memory that preserves geometry-only structure disentangled from semantics. Building on this design, we introduce a memory-guided video generation model that performs multi-modal feature fusion under reference conditions drawn from mixed-modality memory contexts. Experiments demonstrate that our method maintains strong long-term semantic and structural consistency after edits, significantly outperforming state-of-the-art methods.",
+      "authors": [
+        "Shuai Yang",
+        "Bingjie Gao",
+        "Ziwei Liu",
+        "Jiaqi Wang",
+        "Dahua Lin",
+        "Tong Wu"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-06-15T09:20:32+00:00",
+      "link": "https://arxiv.org/pdf/2606.16449v2",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "consistent video generation",
+      "llm_evidence_cn": "一致视频生成",
+      "llm_evidence": "一致视频生成",
+      "canonical_evidence": "一致视频生成",
+      "llm_tldr_en": "PermaVid introduces a multi-modal context memory with disentangled spatial context and edit-aware update/retrieval for consistent video generation under editing operations.",
+      "llm_tldr_cn": "该论文针对视频编辑后生成不一致的问题，提出了PermaVid框架。该方法构建了分离语义外观和几何结构的多模态上下文记忆，并设计了编辑感知的记忆更新和检索策略，使记忆演化与后续观察对齐。实验表明，在编辑场景下，生成的视频在时间和视角上保持了高度一致性。该工作为视频生成中的长期一致性提供了有效解决方案。",
+      "llm_tldr": "该论文针对视频编辑后生成不一致的问题，提出了PermaVid框架。该方法构建了分离语义外观和几何结构的多模态上下文记忆，并设计了编辑感知的记忆更新和检索策略，使记忆演化与后续观察对齐。实验表明，在编辑场景下，生成的视频在时间和视角上保持了高度一致性。该工作为视频生成中的长期一致性提供了有效解决方案。",
+      "llm_tags": [
+        "query:mg"
+      ],
+      "matched_query_tag": "query:mg",
+      "matched_query_text": "text-to-video generation with transformers",
+      "matched_requirement_id": "req-11",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2606.18071v1",
+      "source": "arxiv",
+      "title": "Volterra Generative Models",
+      "abstract": "Score-based diffusion models typically use Brownian perturbations, which provide tractable reverse-time dynamics but impose memoryless noising. We introduce Volterra generative models, a continuous-time score-based framework whose forward process injects path-dependent noise through fractional kernels. To handle the non-Markovian and non-semimartingale dynamics, we construct finite-dimensional Markovian lifts using Gaussian quadrature in both regimes and a hybrid finite-difference exponential approximation in the smooth regime. We prove squared error bounds, derive an augmented linear-Gaussian forward process, and show that the learning can remain data-dimensional by considering residual states and analytic auxiliary Gaussian scores. We also identify covariance and reverse-time degeneracies caused by shared Brownian factors and signed smooth-regime weights. The degeneracy motivates stabilized conditioning and, for stiff larger lifts, a Gaussian-bridge reconstruction sampler. Experiments on MNIST and CIFAR-10 show that persistent fractional perturbations with small Markovian lifts can improve score-based generation on MNIST and provide a promising extension to natural images, while the bridge sampler provides a stability mechanism for larger lifts.",
+      "authors": [
+        "Yusen Jia",
+        "Bingyan Han"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-16T15:40:09+00:00",
+      "link": "https://arxiv.org/pdf/2606.18071v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:Compression",
+        "query:mg"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "path-dependent noise diffusion framework",
+      "llm_evidence_cn": "路径依赖噪声扩散框架",
+      "llm_evidence": "路径依赖噪声扩散框架",
+      "canonical_evidence": "路径依赖噪声扩散框架",
+      "llm_tldr_en": "Introduces Volterra generative models, a score-based diffusion framework with fractional kernels for path-dependent noise, enabling finite-dimensional Markovian lifts and proving theoretical guarantees.",
+      "llm_tldr_cn": "该论文提出Volterra生成模型，这是一种基于分数的扩散框架，通过分数核注入路径依赖噪声。为了解决非马尔可夫动力学，作者构造了有限维马尔可夫提升，并证明了平方误差界。该方法在保持数据维度学习的同时扩展了扩散模型的噪声类型，为生成模型提供了新思路。",
+      "llm_tldr": "该论文提出Volterra生成模型，这是一种基于分数的扩散框架，通过分数核注入路径依赖噪声。为了解决非马尔可夫动力学，作者构造了有限维马尔可夫提升，并证明了平方误差界。该方法在保持数据维度学习的同时扩展了扩散模型的噪声类型，为生成模型提供了新思路。",
+      "llm_tags": [
+        "query:mg"
+      ],
+      "matched_query_tag": "query:mg",
+      "matched_query_text": "diffusion models for generative tasks",
+      "matched_requirement_id": "req-12",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.17430v1",
+      "source": "arxiv",
+      "title": "CIAN: Multi-Stage Framework for Event-Enriched Image Captioning via Retrieval-Augmented Generation",
+      "abstract": "Event-enriched image captioning describes not only visible content but also the broader context of events, including timing, location, and participants, capabilities missing in most pixel-bound models. We propose the Contextual Image-Article Narrator (CIAN), a multi-stage framework that enriches captions with external narratives. CIAN retrieves relevant articles using SigLIP, summarizes them to guide a Narrative Generation stage with a LoRA-fine-tuned Qwen model, and applies N-Gram-based Refinement for fluency and coherence. On the OpenEvents-V1 benchmark, CIAN achieves high retrieval performance (mAP 0.979) and improves caption quality, increasing CIDEr from 0.030 to 0.094. These results highlight the effectiveness of retrieval-augmented reasoning combined with linguistic refinement for generating context-aware, human-like captions.",
+      "authors": [
+        "Trinh Thi Thu Hien",
+        "Trung-Nghia Le"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-06-16T02:24:08+00:00",
+      "link": "https://arxiv.org/pdf/2606.17430v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "multi-stage framework for event-enriched image captioning via retrieval-augmented generation",
+      "llm_evidence_cn": "通过检索增强生成实现事件增强图像描述的多阶段框架",
+      "llm_evidence": "通过检索增强生成实现事件增强图像描述的多阶段框架",
+      "canonical_evidence": "通过检索增强生成实现事件增强图像描述的多阶段框架",
+      "llm_tldr_en": "CIAN enriches image captions with external event context by retrieving articles, summarizing, and generating narratives using a fine-tuned Qwen model, achieving improved caption quality.",
+      "llm_tldr_cn": "现有图像描述局限于像素可见内容，缺少事件上下文（时间、地点、参与者）。提出CIAN多阶段框架，先通过SigLIP检索相关文章，再使用LoRA微调的Qwen模型生成叙事，最后用N-Gram细化流畅性。在OpenEvents-V1上取得了0.979的mAP和CIDEr从0.030到0.094的提升，展示了检索增强生成对多模态内容创作的潜力。",
+      "llm_tldr": "现有图像描述局限于像素可见内容，缺少事件上下文（时间、地点、参与者）。提出CIAN多阶段框架，先通过SigLIP检索相关文章，再使用LoRA微调的Qwen模型生成叙事，最后用N-Gram细化流畅性。在OpenEvents-V1上取得了0.979的mAP和CIDEr从0.030到0.094的提升，展示了检索增强生成对多模态内容创作的潜力。",
+      "llm_tags": [
+        "query:mg:composite"
+      ],
+      "matched_query_tag": "query:mg:composite",
+      "matched_query_text": "Papers central to 查找多模态生成领域的最新研究论文，包括文本生成图像、文本生成视频、文本生成 3D、音频生成、多模态内容创作、扩散模型、Transformer 生成架构、多模态大模型生成能力，超分技术等方向，基于DiT，flow-matching等技术，以及dmd，pcm，meanflow，cfg，gan等。, especially work that connects or combines: text-to-image generation using diffusion models; text-to-video generation with transformers; diffusion models for generative tasks; multimodal large language models generation; image super resolution deep learning; flow matching generative models; Research papers on text to image generation using diffusion transformers and flow matching; Latest methods for multimodal content creation including text to video and audio generation; Advances in generative adversarial networks and classifier free guidance for diffusion models; Model distillation techniques for efficient generative models.",
+      "matched_requirement_id": "req-composite-mg",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.17465v1",
+      "source": "arxiv",
+      "title": "Perron--Frobenius Operator Matching for Generative Modeling",
+      "abstract": "We introduce Perron--Frobenius Operator Matching (PFOM), a generative framework that matches density evolution via the integral PF operator, subsuming flow, diffusion, and jump models. We prove that among Bregman divergences, only Kullback--Leibler divergence preserves equality between density-level and sample-conditioned objectives, yielding a practical loss equivalent to Koopman path matching. We further develop Nesterov-accelerated training and sampling that stabilize discretization and accelerate convergence. %On Gaussian mixtures and two-moons, PFOM achieves faster KL/$W_2$/MMD decrease and improved wall-clock efficiency with empirical validation. PFOM unifies operator-theoretic identification with modern generative modeling and opens paths to adaptive dictionaries and high-dimensional applications.",
+      "authors": [
+        "Shiqi Zhang",
+        "Wuwei Wu",
+        "Jaemin Oh",
+        "Jie Chen",
+        "Xiaoning Qian"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "eess.SY"
+      ],
+      "published": "2026-06-16T03:26:55+00:00",
+      "link": "https://arxiv.org/pdf/2606.17465v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "flow matching generative framework",
+      "llm_evidence_cn": "流匹配生成框架",
+      "llm_evidence": "流匹配生成框架",
+      "canonical_evidence": "流匹配生成框架",
+      "llm_tldr_en": "PFOM introduces a generative modeling framework unifying flow, diffusion, and jump models via Perron-Frobenius operator matching, achieving faster convergence and improved wall-clock efficiency.",
+      "llm_tldr_cn": "该论文提出了Perron-Frobenius算子匹配（PFOM）生成框架，统一了流、扩散和跳跃模型。通过匹配密度演化，PFOM在理论上证明了KL散度在密度级和目标级目标之间的等价性，并开发了Nesterov加速训练和采样方法。实验表明PFOM在KL/W2/MMD指标上下降更快，且具有更优的壁钟效率。该工作为自适应字典学习和高效生成建模开辟了新路径。",
+      "llm_tldr": "该论文提出了Perron-Frobenius算子匹配（PFOM）生成框架，统一了流、扩散和跳跃模型。通过匹配密度演化，PFOM在理论上证明了KL散度在密度级和目标级目标之间的等价性，并开发了Nesterov加速训练和采样方法。实验表明PFOM在KL/W2/MMD指标上下降更快，且具有更优的壁钟效率。该工作为自适应字典学习和高效生成建模开辟了新路径。",
+      "llm_tags": [
+        "query:mg"
+      ],
+      "matched_query_tag": "query:mg",
+      "matched_query_text": "flow matching generative models",
+      "matched_requirement_id": "req-15",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2606.19163v1",
+      "source": "arxiv",
+      "title": "Pulse: Training Acceleration for Large Diffusion Models with Automatic Pipeline Parallelism",
+      "abstract": "Diffusion models are now a dominant approach for high-fidelity image and video generation, yet scaling their training across GPU clusters remains challenging. Unlike transformer-only architectures, diffusion backbones commonly adopt UNet-style encoder-decoder structures with heterogeneous layers and long-range skip connections. Under conventional pipeline parallelism, these non-local dependencies force large skip activations and their gradients to traverse multiple pipeline boundaries, making peer-to-peer (P2P) communication a dominant bottleneck and substantially reducing pipeline efficiency. In this paper, we present PULSE, an automatic pipeline-parallel training strategy that makes skip locality a first-class optimization objective. PULSE eliminates skip-induced communication by collocating skip-connected encoder-decoder layers on the same device and caching skip activations locally for later use in backpropagation. To realize this placement while maintaining high pipeline utilization, PULSE co-designs: (1) a skip-aware dynamic-programming partitioner that balances heterogeneous stage workloads under symmetric collocation constraints, (2) an ILP-based schedule synthesizer that generates bubble-efficient wave schedules for the resulting stage-to-device mapping, and (3) a hybrid parallelism tuner that selects pipeline/data-parallel degrees and microbatch sizes under memory and network constraints. Our extensive experiments show that the volume of communication can be reduced by 89 percent, and the training throughput can be increased by up to 2.3x on communication-bound hardware, compared with state-of-the-art parallelism strategies.",
+      "authors": [
+        "Boran Sun",
+        "Guoyong Jiang",
+        "Lin Zhang",
+        "Chen Chen",
+        "Yuechen Tao",
+        "Zhishu Che",
+        "Jieling Yu",
+        "Shan Chang",
+        "Huaxi Gu",
+        "Fangming Liu",
+        "Bo Li"
+      ],
+      "primary_category": "cs.DC",
+      "categories": [
+        "cs.DC"
+      ],
+      "published": "2026-06-17T15:06:56+00:00",
+      "link": "https://arxiv.org/pdf/2606.19163v1",
+      "tags": [
+        "keyword:Compression",
+        "keyword:LLM-kernel",
+        "keyword:eli",
+        "keyword:mg",
+        "query:Compression",
+        "query:LLM-kernel",
+        "query:eli",
+        "query:mg"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Pulse accelerates training of large diffusion models using automatic pipeline parallelism",
+      "llm_evidence_cn": "Pulse使用自动流水线并行加速大规模扩散模型训练",
+      "llm_evidence": "Pulse使用自动流水线并行加速大规模扩散模型训练",
+      "canonical_evidence": "Pulse使用自动流水线并行加速大规模扩散模型训练",
+      "llm_tldr_en": "Pulse proposes automatic pipeline parallelism to accelerate diffusion model training by optimizing skip connection locality, reducing P2P communication overhead.",
+      "llm_tldr_cn": "大规模扩散模型训练面临UNet结构中的长程跳跃连接带来的通信瓶颈。本文提出Pulse，一种自动流水线并行策略，将跳跃局部性作为一级优化目标，通过重新划分模型分区减少跨流水线边界的激活传输。实验表明，Pulse相比现有流水线并行方法显著提升训练吞吐量，为扩散模型的高效扩展提供了实用方案。",
+      "llm_tldr": "大规模扩散模型训练面临UNet结构中的长程跳跃连接带来的通信瓶颈。本文提出Pulse，一种自动流水线并行策略，将跳跃局部性作为一级优化目标，通过重新划分模型分区减少跨流水线边界的激活传输。实验表明，Pulse相比现有流水线并行方法显著提升训练吞吐量，为扩散模型的高效扩展提供了实用方案。",
+      "llm_tags": [
+        "query:mg:composite"
+      ],
+      "matched_query_tag": "query:mg:composite",
+      "matched_query_text": "Papers central to 查找多模态生成领域的最新研究论文，包括文本生成图像、文本生成视频、文本生成 3D、音频生成、多模态内容创作、扩散模型、Transformer 生成架构、多模态大模型生成能力，超分技术等方向，基于DiT，flow-matching等技术，以及dmd，pcm，meanflow，cfg，gan等。, especially work that connects or combines: text-to-image generation using diffusion models; text-to-video generation with transformers; diffusion models for generative tasks; multimodal large language models generation; image super resolution deep learning; flow matching generative models; Research papers on text to image generation using diffusion transformers and flow matching; Latest methods for multimodal content creation including text to video and audio generation; Advances in generative adversarial networks and classifier free guidance for diffusion models; Model distillation techniques for efficient generative models.",
+      "matched_requirement_id": "req-composite-mg",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}
